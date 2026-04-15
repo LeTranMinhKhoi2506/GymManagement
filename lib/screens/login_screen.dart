@@ -5,7 +5,7 @@ import '../controllers/auth_controller.dart';
 import '../common/styles/app_styles.dart';
 import '../common/widgets/custom_button.dart';
 import '../common/widgets/custom_text_field.dart';
-import 'signup_screen.dart';
+import '../app/route/Routes.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -38,6 +38,13 @@ class _LoginScreenState extends State<LoginScreen> {
           _showSnackBar("Vui lòng dùng App cho Thành viên.", Colors.red);
         } else {
           _showSnackBar("Chào mừng ${user?.fullName}!", Colors.green);
+          
+          // ĐIỀU HƯỚNG DỰA TRÊN ROLE
+          if (user?.role == 'admin') {
+            Navigator.pushReplacementNamed(context, Routes.adminDashboard);
+          } else {
+            // Navigator.pushReplacementNamed(context, Routes.userHome);
+          }
         }
       } else {
         _showSnackBar(result['message'] ?? "Lỗi đăng nhập", Colors.red);
@@ -125,7 +132,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     children: [
                       const Text("Chưa có tài khoản?"),
                       TextButton(
-                        onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const SignUpScreen())),
+                        onPressed: () => Navigator.pushNamed(context, Routes.signup),
                         child: const Text("Đăng ký", style: TextStyle(fontWeight: FontWeight.bold, color: AppStyles.primaryColor)),
                       ),
                     ],
