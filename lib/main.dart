@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:provider/provider.dart';
 import 'controllers/auth_controller.dart';
-import 'screens/login_screen.dart';
+import 'controllers/admin_controller.dart';
+import 'app/route/Routes.dart';
 import 'firebase_options.dart';
 
 void main() async {
@@ -14,6 +15,7 @@ void main() async {
     MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => AuthController()),
+        ChangeNotifierProvider(create: (_) => AdminController()),
       ],
       child: const MyApp(),
     ),
@@ -32,7 +34,8 @@ class MyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
       ),
-      home: const LoginScreen(),
+      initialRoute: Routes.login,
+      routes: Routes.getRoutes(),
     );
   }
 }
