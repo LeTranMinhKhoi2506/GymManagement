@@ -1,6 +1,10 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import '../data/services/auth_service.dart';
+import 'package:provider/provider.dart';
+import '../controllers/auth_controller.dart';
+import '../common/styles/app_styles.dart';
+import '../common/widgets/custom_button.dart';
+import '../common/widgets/custom_text_field.dart';
 
 class SignUpScreen extends StatefulWidget {
   const SignUpScreen({super.key});
@@ -11,150 +15,128 @@ class SignUpScreen extends StatefulWidget {
 
 class _SignUpScreenState extends State<SignUpScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _emailController = TextEditingController();
-  final _passwordController = TextEditingController();
-  final _fullNameController = TextEditingController();
-  final _authService = AuthService();
-  bool _isLoading = false;
+  String _fullName = '';
+  String _email = '';
+  String _password = '';
   bool _obscurePassword = true;
 
-  void _signUp() async {
-    if (!_formKey.currentState!.validate()) return;
+  void _submit() async {
+    if (_formKey.currentState!.validate()) {
+      _formKey.currentState!.save();
+      
+      final authController = Provider.of<AuthController>(context, listen: false);
+      String role = kIsWeb ? 'admin' : 'user';
 
-    setState(() => _isLoading = true);
-    
-    String role = kIsWeb ? 'admin' : 'user';
-
-    var result = await _authService.signUp(
-      _emailController.text.trim(),
-      _passwordController.text.trim(),
-      _fullNameController.text.trim(),
-      role,
-    );
-
-    setState(() => _isLoading = false);
-
-    if (result == "success") {
-      _showDialog(
-        "Thành công", 
-        "Một email xác thực đã được gửi đến ${_emailController.text}. Vui lòng kiểm tra hộp thư trước khi đăng nhập.",
-        isSuccess: true
+      String? result = await authController.signUp(
+        email: _email,
+        password: _password,
+        fullName: _fullName,
+        role: role,
       );
-    } else {
-      _showError(result ?? "Đã có lỗi xảy ra.");
+
+      if (result == "success") {
+        _showSuccessDialog("Đăng ký thành công", "Vui lòng kiểm tra email để xác thực tài khoản.");
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(result ?? "Lỗi đăng ký"), backgroundColor: Colors.red),
+        );
+      }
     }
   }
 
-  void _showError(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message), backgroundColor: Colors.red),
-    );
-  }
-
-  void _showDialog(String title, String content, {bool isSuccess = false}) {
+  void _showSuccessDialog(String title, String content) {
     showDialog(
       context: context,
+      barrierDismissible: false,
       builder: (context) => AlertDialog(
-        title: Text(title),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+        title: Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
         content: Text(content),
         actions: [
-          TextButton(
+          ElevatedButton(
             onPressed: () {
               Navigator.pop(context);
-              if (isSuccess) Navigator.pop(context); // Quay lại trang Login
+              Navigator.pop(context);
             },
-            child: const Text("OK"),
+            style: ElevatedButton.styleFrom(backgroundColor: AppStyles.primaryColor, foregroundColor: Colors.white),
+            child: const Text("Đã hiểu"),
           )
         ],
       ),
     );
   }
 
-  String? _validateEmail(String? value) {
-    if (value == null || value.isEmpty) return 'Vui lòng nhập email';
-    final emailRegExp = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
-    if (!emailRegExp.hasMatch(value)) return 'Email không hợp lệ';
-    return null;
-  }
-
-  String? _validatePassword(String? value) {
-    if (value == null || value.isEmpty) return 'Vui lòng nhập mật khẩu';
-    if (value.length < 6) return 'Mật khẩu phải từ 6 ký tự trở lên';
-    return null;
-  }
-
   @override
   Widget build(BuildContext context) {
+    final authController = Provider.of<AuthController>(context);
     return Scaffold(
-      appBar: AppBar(title: Text(kIsWeb ? "Đăng ký Admin" : "Đăng ký Thành viên")),
+      backgroundColor: AppStyles.backgroundColor,
+      appBar: AppBar(
+        title: Text(kIsWeb ? "Đăng ký Admin" : "Đăng ký Thành viên"),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        centerTitle: true,
+      ),
       body: Center(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(24.0),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(
-                  "Tạo tài khoản mới",
-                  style: Theme.of(context).textTheme.headlineMedium,
-                ),
-                const SizedBox(height: 30),
-                TextFormField(
-                  controller: _fullNameController,
-                  decoration: const InputDecoration(
-                    labelText: "Họ và Tên",
-                    prefixIcon: Icon(Icons.person),
-                    border: OutlineInputBorder(),
+          child: Container(
+            constraints: const BoxConstraints(maxWidth: 450),
+            padding: const EdgeInsets.all(32.0),
+            decoration: AppStyles.containerDecoration,
+            child: Form(
+              key: _formKey,
+              autovalidateMode: AutovalidateMode.onUserInteraction,
+              child: Column(
+                children: [
+                  const Icon(Icons.person_add_rounded, size: 70, color: AppStyles.primaryColor),
+                  const SizedBox(height: 32),
+                  CustomTextField(
+                    label: "Họ và Tên",
+                    icon: Icons.person,
+                    onChanged: (val) => _fullName = val.trim(),
+                    onSaved: (val) => _fullName = val!.trim(),
+                    validator: (val) => (val == null || val.isEmpty) ? 'Vui lòng nhập họ tên' : null,
                   ),
-                  validator: (val) => val!.isEmpty ? 'Vui lòng nhập họ tên' : null,
-                ),
-                const SizedBox(height: 16),
-                TextFormField(
-                  controller: _emailController,
-                  keyboardType: TextInputType.emailAddress,
-                  decoration: const InputDecoration(
-                    labelText: "Email",
-                    prefixIcon: Icon(Icons.email),
-                    border: OutlineInputBorder(),
+                  const SizedBox(height: 16),
+                  CustomTextField(
+                    label: "Email",
+                    icon: Icons.email,
+                    keyboardType: TextInputType.emailAddress,
+                    onChanged: (val) => _email = val.trim(),
+                    onSaved: (val) => _email = val!.trim(),
+                    validator: (val) {
+                      if (val == null || val.isEmpty) return 'Vui lòng nhập email';
+                      if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(val)) return 'Email không hợp lệ';
+                      return null;
+                    },
                   ),
-                  validator: _validateEmail,
-                ),
-                const SizedBox(height: 16),
-                TextFormField(
-                  controller: _passwordController,
-                  obscureText: _obscurePassword,
-                  decoration: InputDecoration(
-                    labelText: "Mật khẩu",
-                    prefixIcon: const Icon(Icons.lock),
-                    border: const OutlineInputBorder(),
+                  const SizedBox(height: 16),
+                  CustomTextField(
+                    label: "Mật khẩu",
+                    icon: Icons.lock,
+                    obscureText: _obscurePassword,
+                    onChanged: (val) => _password = val,
+                    onSaved: (val) => _password = val!,
+                    validator: (val) => (val != null && val.length < 6) ? 'Mật khẩu phải từ 6 ký tự' : null,
                     suffixIcon: IconButton(
                       icon: Icon(_obscurePassword ? Icons.visibility : Icons.visibility_off),
                       onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
                     ),
                   ),
-                  validator: _validatePassword,
-                ),
-                const SizedBox(height: 24),
-                _isLoading 
-                  ? const CircularProgressIndicator() 
-                  : SizedBox(
-                      width: double.infinity,
-                      height: 50,
-                      child: ElevatedButton(
-                        onPressed: _signUp,
-                        style: ElevatedButton.styleFrom(
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                        ),
-                        child: const Text("ĐĂNG KÝ", style: TextStyle(fontSize: 16)),
-                      ),
-                    ),
-                const SizedBox(height: 16),
-                TextButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: const Text("Đã có tài khoản? Đăng nhập ngay"),
-                ),
-              ],
+                  const SizedBox(height: 32),
+                  CustomButton(
+                    text: "ĐĂNG KÝ NGAY",
+                    isLoading: authController.isLoading,
+                    onPressed: _submit,
+                  ),
+                  const SizedBox(height: 20),
+                  TextButton(
+                    onPressed: () => Navigator.pop(context),
+                    child: const Text("Đã có tài khoản? Đăng nhập", style: TextStyle(color: AppStyles.primaryColor)),
+                  ),
+                ],
+              ),
             ),
           ),
         ),
