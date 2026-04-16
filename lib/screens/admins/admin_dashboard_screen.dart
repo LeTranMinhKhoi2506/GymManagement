@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../controllers/admin_controller.dart';
-import '../../common/styles/sidebar_widget.dart';
-import '../../common/styles/header_widget.dart';
-import '../../common/styles/summary_cards.dart';
-import '../../common/styles/revenue_chart.dart';
-import '../../common/styles/member_flow_chart.dart';
-import '../../common/styles/recent_checkins_log.dart';
-import '../../common/styles/upcoming_classes_stream.dart';
-import '../../common/styles/equipment_status_stream.dart';
+import '../../common/widgets/admin_dashboard_widgets/sidebar_widget.dart';
+import '../../common/widgets/admin_dashboard_widgets/header_widget.dart';
+import '../../common/widgets/admin_dashboard_widgets/summary_cards.dart';
+import '../../common/widgets/admin_dashboard_widgets/revenue_chart.dart';
+import '../../common/widgets/admin_dashboard_widgets/member_flow_chart.dart';
+import '../../common/widgets/admin_dashboard_widgets/recent_checkins_log.dart';
+import '../../common/widgets/admin_dashboard_widgets/upcoming_classes_stream.dart';
+import '../../common/widgets/admin_dashboard_widgets/equipment_status_stream.dart';
 
 class AdminDashboardScreen extends StatefulWidget {
   const AdminDashboardScreen({super.key});
@@ -51,7 +51,20 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                             Row(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Expanded(flex: 2, child: RevenueChart(data: adminController.monthlyRevenue)),
+                                Expanded(
+                                  flex: 2, 
+                                  child: StreamBuilder(
+                                    stream: adminController.paymentsUpdateStream,
+                                    builder: (context, snapshot) {
+                                      if (snapshot.connectionState == ConnectionState.active) {
+                                        WidgetsBinding.instance.addPostFrameCallback((_) {
+                                          adminController.refreshData();
+                                        });
+                                      }
+                                      return RevenueChart(controller: adminController);
+                                    },
+                                  )
+                                ),
                                 const SizedBox(width: 32),
                                 Expanded(flex: 1, child: MemberFlowChart(controller: adminController)),
                               ],
