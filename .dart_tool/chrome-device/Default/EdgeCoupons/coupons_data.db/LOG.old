@@ -1,17 +1,23 @@
-2026/04/15-20:37:27.681 5d68 Reusing MANIFEST C:\Users\anhla\AppData\Local\Temp\flutter_tools.ba144ae9\flutter_tools_chrome_device.31b4a537\Default\EdgeCoupons/coupons_data.db/MANIFEST-000001
-2026/04/15-20:37:27.683 5d68 Recovering log #26
-2026/04/15-20:37:27.684 5d68 Reusing old log C:\Users\anhla\AppData\Local\Temp\flutter_tools.ba144ae9\flutter_tools_chrome_device.31b4a537\Default\EdgeCoupons/coupons_data.db/000026.log 
-2026/04/15-20:37:27.686 5d68 Delete type=0 #4
-2026/04/15-20:37:27.687 5d68 Delete type=0 #7
-2026/04/15-20:37:27.688 5d68 Delete type=2 #8
-2026/04/15-20:37:27.689 5d68 Delete type=0 #10
-2026/04/15-20:37:27.690 5d68 Delete type=2 #11
-2026/04/15-20:37:27.690 5d68 Delete type=0 #13
-2026/04/15-20:37:27.690 5d68 Delete type=2 #14
-2026/04/15-20:37:27.720 5d68 Delete type=0 #16
-2026/04/15-20:37:27.721 5d68 Delete type=2 #17
-2026/04/15-20:37:27.721 5d68 Delete type=0 #19
-2026/04/15-20:37:27.721 5d68 Delete type=0 #23
-2026/04/15-20:37:28.220 5158 Level-0 table #30: started
-2026/04/15-20:37:28.225 5158 Level-0 table #30: 682276 bytes OK
-2026/04/15-20:37:28.228 5158 Delete type=0 #26
+2026/04/16-19:40:04.086 57b0 Reusing MANIFEST C:\Users\anhla\AppData\Local\Temp\flutter_tools.98c5679e\flutter_tools_chrome_device.df592b9b\Default\EdgeCoupons/coupons_data.db/MANIFEST-000001
+2026/04/16-19:40:04.088 57b0 Recovering log #32
+2026/04/16-19:40:04.089 57b0 Reusing old log C:\Users\anhla\AppData\Local\Temp\flutter_tools.98c5679e\flutter_tools_chrome_device.df592b9b\Default\EdgeCoupons/coupons_data.db/000032.log 
+2026/04/16-19:40:04.093 57b0 Delete type=0 #4
+2026/04/16-19:40:04.093 57b0 Delete type=0 #7
+2026/04/16-19:40:04.093 57b0 Delete type=2 #8
+2026/04/16-19:40:04.093 57b0 Delete type=0 #10
+2026/04/16-19:40:04.093 57b0 Delete type=2 #11
+2026/04/16-19:40:04.093 57b0 Delete type=0 #13
+2026/04/16-19:40:04.094 57b0 Delete type=2 #14
+2026/04/16-19:40:04.094 57b0 Delete type=0 #16
+2026/04/16-19:40:04.094 57b0 Delete type=2 #17
+2026/04/16-19:40:04.094 57b0 Delete type=0 #19
+2026/04/16-19:40:04.095 57b0 Delete type=2 #21
+2026/04/16-19:40:04.095 57b0 Delete type=0 #23
+2026/04/16-19:40:04.095 57b0 Delete type=2 #24
+2026/04/16-19:40:04.095 57b0 Delete type=0 #26
+2026/04/16-19:40:04.095 57b0 Delete type=2 #27
+2026/04/16-19:40:04.095 57b0 Delete type=0 #29
+2026/04/16-19:40:04.096 57b0 Delete type=2 #30
+2026/04/16-19:40:07.096 4d28 Level-0 table #37: started
+2026/04/16-19:40:07.108 4d28 Level-0 table #37: 682276 bytes OK
+2026/04/16-19:40:07.112 4d28 Delete type=0 #32
