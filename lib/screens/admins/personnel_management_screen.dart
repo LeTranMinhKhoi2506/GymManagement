@@ -148,7 +148,7 @@ class _PersonnelManagementScreenState extends State<PersonnelManagementScreen> {
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(16),
-          boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10)],
+          boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 10)],
         ),
         child: Row(
           children: [
@@ -221,7 +221,7 @@ class _PersonnelManagementScreenState extends State<PersonnelManagementScreen> {
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(16),
-                boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10)],
+                boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 10)],
               ),
               child: DataTable(
                 columns: const [
@@ -235,7 +235,7 @@ class _PersonnelManagementScreenState extends State<PersonnelManagementScreen> {
                   DataCell(Text(staff.position ?? "-")),
                   DataCell(Container(
                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    decoration: BoxDecoration(color: (staff.status == 'active' ? Colors.green : Colors.red).withOpacity(0.1), borderRadius: BorderRadius.circular(12)),
+                    decoration: BoxDecoration(color: (staff.status == 'active' ? Colors.green : Colors.red).withValues(alpha: 0.1), borderRadius: BorderRadius.circular(12)),
                     child: Text(staff.status == 'active' ? "Đang làm" : "Nghỉ", style: TextStyle(color: staff.status == 'active' ? Colors.green : Colors.red, fontSize: 11)),
                   )),
                   DataCell(Row(
@@ -315,14 +315,14 @@ class _PersonnelManagementScreenState extends State<PersonnelManagementScreen> {
                     ),
                     const SizedBox(height: 12),
                     DropdownButtonFormField<String>(
-                      value: gender,
+                      initialValue: gender,
                       decoration: const InputDecoration(labelText: "Giới tính", prefixIcon: Icon(Icons.wc)),
                       items: ["Nam", "Nữ", "Khác"].map((e) => DropdownMenuItem(value: e, child: Text(e))).toList(),
                       onChanged: (val) => gender = val!,
                     ),
                     const SizedBox(height: 12),
                     DropdownButtonFormField<String>(
-                      value: status,
+                      initialValue: status,
                       decoration: const InputDecoration(labelText: "Trạng thái", prefixIcon: Icon(Icons.info_outline)),
                       items: [
                         const DropdownMenuItem(value: "active", child: Text("Đang làm việc")),
@@ -333,7 +333,7 @@ class _PersonnelManagementScreenState extends State<PersonnelManagementScreen> {
                   ],
                   const SizedBox(height: 12),
                   DropdownButtonFormField<String>(
-                    value: position,
+                    initialValue: position,
                     decoration: const InputDecoration(labelText: "Chức vụ", prefixIcon: Icon(Icons.badge_outlined)),
                     items: ["Quản lý", "PT/Trainer", "Lễ tân"].map((e) => DropdownMenuItem(value: e, child: Text(e))).toList(),
                     onChanged: (val) => position = val!,

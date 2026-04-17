@@ -115,10 +115,10 @@ class _ActiveShiftsWidgetState extends State<ActiveShiftsWidget> {
                 width: 12,
                 height: 12,
                 decoration: BoxDecoration(
-                  color: schedule.status == 'ongoing' ? Colors.orange : Colors.blueGrey.withOpacity(0.5),
+                  color: schedule.status == 'ongoing' ? Colors.orange : Colors.blueGrey.withValues(alpha: 0.5),
                   shape: BoxShape.circle,
                   boxShadow: schedule.status == 'ongoing' 
-                    ? [BoxShadow(color: Colors.orange.withOpacity(0.5), blurRadius: 8)] 
+                    ? [BoxShadow(color: Colors.orange.withValues(alpha: 0.5), blurRadius: 8)] 
                     : [],
                 ),
               ),
@@ -126,7 +126,7 @@ class _ActiveShiftsWidgetState extends State<ActiveShiftsWidget> {
                 Expanded(
                   child: Container(
                     width: 2,
-                    color: Colors.white.withOpacity(0.1),
+                    color: Colors.white.withValues(alpha: 0.1),
                   ),
                 ),
             ],
@@ -153,7 +153,7 @@ class _ActiveShiftsWidgetState extends State<ActiveShiftsWidget> {
                     Text(
                       "${DateFormat('HH:mm').format(schedule.startTime)} - ${DateFormat('HH:mm').format(schedule.endTime)}",
                       style: TextStyle(
-                        color: Colors.white.withOpacity(0.6),
+                        color: Colors.white.withValues(alpha: 0.6),
                         fontSize: 12,
                       ),
                     ),
@@ -164,7 +164,7 @@ class _ActiveShiftsWidgetState extends State<ActiveShiftsWidget> {
                   children: [
                     CircleAvatar(
                       radius: 14,
-                      backgroundColor: Colors.blue.withOpacity(0.2),
+                      backgroundColor: Colors.blue.withValues(alpha: 0.2),
                       child: Text(
                         schedule.staffName.isNotEmpty ? schedule.staffName[0] : "?",
                         style: const TextStyle(fontSize: 10, color: Colors.blue),
@@ -173,7 +173,7 @@ class _ActiveShiftsWidgetState extends State<ActiveShiftsWidget> {
                     const SizedBox(width: 8),
                     Text(
                       schedule.staffName,
-                      style: TextStyle(color: Colors.white.withOpacity(0.4), fontSize: 13),
+                      style: TextStyle(color: Colors.white.withValues(alpha: 0.4), fontSize: 13),
                     ),
                   ],
                 ),
