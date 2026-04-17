@@ -14,7 +14,8 @@
         "fl_chart",
         "flutter",
         "intl",
-        "provider"
+        "provider",
+        "uuid"
       ],
       "devDependencies": [
         "flutter_lints",
@@ -44,6 +45,14 @@
         "stream_channel",
         "test_api",
         "vector_math"
+      ]
+    },
+    {
+      "name": "uuid",
+      "version": "4.5.3",
+      "dependencies": [
+        "crypto",
+        "fixnum"
       ]
     },
     {
@@ -426,6 +435,18 @@
       "version": "1.4.0",
       "dependencies": [
         "collection"
+      ]
+    },
+    {
+      "name": "fixnum",
+      "version": "1.1.1",
+      "dependencies": []
+    },
+    {
+      "name": "crypto",
+      "version": "3.0.7",
+      "dependencies": [
+        "typed_data"
       ]
     }
   ],
