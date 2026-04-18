@@ -56,12 +56,16 @@ class FirestoreService {
 
   Future<void> ensureUserRoot({
     String? fullName,
+    String? email,
+    String? phone,
     String? role,
     Map<String, dynamic>? bodyMetrics, // Chứa height, weight, bmi
   }) async {
     await _userDoc.set(
       _clean({
         'fullName': fullName,
+        'email': email,
+        'phone': phone,
         'role': role,
         'bodyMetrics': bodyMetrics,
         'updatedAt': FieldValue.serverTimestamp(),
