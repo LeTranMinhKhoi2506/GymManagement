@@ -3,7 +3,6 @@ import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import '../../../controllers/schedule_controller.dart';
 import '../../../controllers/staff_controller.dart';
-import '../../../data/models/schedule_model.dart';
 import '../../../data/models/user_model.dart';
 
 class AddScheduleDialog extends StatefulWidget {
