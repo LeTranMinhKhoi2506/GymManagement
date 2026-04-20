@@ -3,12 +3,14 @@ import '../../screens/login_screen.dart';
 import '../../screens/signup_screen.dart';
 import '../../screens/admins/admin_dashboard_screen.dart';
 import '../../screens/admins/personnel_management_screen.dart';
+import '../../screens/admins/schedule_management_screen.dart';
 
 class Routes {
   static const String login = '/login';
   static const String signup = '/signup';
   static const String adminDashboard = '/admin-dashboard';
   static const String personnelManagement = '/personnel-management';
+  static const String scheduleManagement = '/schedule-management';
 
   static Map<String, WidgetBuilder> getRoutes() {
     return {
@@ -16,6 +18,7 @@ class Routes {
       signup: (context) => const SignUpScreen(),
       adminDashboard: (context) => const AdminDashboardScreen(),
       personnelManagement: (context) => const PersonnelManagementScreen(),
+      scheduleManagement: (context) => const ScheduleManagementScreen(),
     };
   }
 }
