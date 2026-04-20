@@ -8,7 +8,7 @@ import '../../data/models/schedule_model.dart';
 import '../../common/widgets/admin_dashboard_widgets/sidebar_widget.dart';
 import '../../common/widgets/admin_dashboard_widgets/header_widget.dart';
 import '../../common/widgets/admin_personnel_widgets/active_shifts_widget.dart';
-import '../../common/utils/validators.dart';
+import '../../utils/validators.dart';
 
 class PersonnelManagementScreen extends StatefulWidget {
   const PersonnelManagementScreen({super.key});
