@@ -12,6 +12,7 @@
         "file_picker",
         "firebase_auth",
         "firebase_core",
+        "fl_chart",
         "flutter",
         "go_router",
         "intl",
@@ -48,6 +49,23 @@
         "stream_channel",
         "test_api",
         "vector_math"
+      ]
+    },
+    {
+      "name": "fl_chart",
+      "version": "0.71.0",
+      "dependencies": [
+        "equatable",
+        "flutter",
+        "vector_math"
+      ]
+    },
+    {
+      "name": "uuid",
+      "version": "4.5.3",
+      "dependencies": [
+        "crypto",
+        "fixnum"
       ]
     },
     {
@@ -245,6 +263,18 @@
         "stream_channel",
         "string_scanner",
         "term_glyph"
+      ]
+    },
+    {
+      "name": "fixnum",
+      "version": "1.1.1",
+      "dependencies": []
+    },
+    {
+      "name": "crypto",
+      "version": "3.0.7",
+      "dependencies": [
+        "typed_data"
       ]
     },
     {
@@ -494,6 +524,13 @@
       ]
     },
     {
+      "name": "typed_data",
+      "version": "1.4.0",
+      "dependencies": [
+        "collection"
+      ]
+    },
+    {
       "name": "http_parser",
       "version": "4.1.2",
       "dependencies": [
@@ -530,30 +567,11 @@
       "dependencies": []
     },
     {
-      "name": "typed_data",
-      "version": "1.4.0",
+      "name": "equatable",
+      "version": "2.0.8",
       "dependencies": [
-        "collection"
-      ]
-    },
-    {
-      "name": "uuid",
-      "version": "4.5.3",
-      "dependencies": [
-        "crypto",
-        "fixnum"
-      ]
-    },
-    {
-      "name": "fixnum",
-      "version": "1.1.1",
-      "dependencies": []
-    },
-    {
-      "name": "crypto",
-      "version": "3.0.7",
-      "dependencies": [
-        "typed_data"
+        "collection",
+        "meta"
       ]
     }
   ],
