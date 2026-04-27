@@ -38,8 +38,7 @@ class _LoginScreenState extends State<LoginScreen> {
           _showSnackBar("Vui lòng dùng App cho Thành viên.", Colors.red);
         } else {
           _showSnackBar("Chào mừng ${user?.fullName}!", Colors.green);
-          
-          // ĐIỀU HƯỚNG DỰA TRÊN ROLE
+
           if (user?.role == 'admin') {
             Navigator.pushReplacementNamed(context, Routes.adminDashboard);
           } else {

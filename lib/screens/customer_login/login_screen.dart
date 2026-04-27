@@ -8,6 +8,7 @@ import '../../widget/loginAndSignInWidget/brand_logo.dart';
 import '../../widget/loginAndSignInWidget/divider_text.dart';
 import '../../widget/loginAndSignInWidget/primary_button.dart';
 import '../../widget/loginAndSignInWidget/social_button.dart';
+import '../customer_home/customer_home_screen.dart';
 import 'signup_screen.dart';
 
 class LoginScreen extends StatelessWidget {
@@ -71,7 +72,15 @@ class LoginScreen extends StatelessWidget {
                 PrimaryButton(
                   text: 'SIGN IN',
                   loading: loading,
-                  onPressed: () => context.read<AuthProvider>().signIn(context),
+                  onPressed: () async {
+                    final success = await context.read<AuthProvider>().signIn(context);
+                    if (!context.mounted || !success) return;
+                    Navigator.pushNamedAndRemoveUntil(
+                      context,
+                      CustomerHomeScreen.routeName,
+                      (route) => false,
+                    );
+                  },
                 ),
                 const SizedBox(height: 52),
                 const DividerText(text: 'OR CONTINUE WITH'),

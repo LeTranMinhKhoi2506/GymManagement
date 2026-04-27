@@ -1,0 +1,40 @@
+registry: https://github.com/HoangNguyen0403/agent-skills-standard [cite: 114]
+
+## Feature Clarification Rule
+# Trước khi lập kế hoạch hoặc viết code, AI PHẢI làm rõ các yêu cầu sau để tránh sai sót kiến trúc: [cite: 115, 116]
+
+1. Screens: Các màn hình cụ thể cần phát triển và luồng điều hướng (navigation)? [cite: 116]
+2. Data Model: Các trường dữ liệu cần thiết cho tính năng này? [cite: 116]
+3. Storage: Dữ liệu được lưu trữ ở đâu: API, SQLite, Firebase, hay SharedPreferences? [cite: 117]
+4. State Management: Sử dụng Provider, Riverpod, hay BLoC? [cite: 118]
+5. Performance Strategy: Có cần dùng Selector/context.select để tối ưu rebuild cho các widget phức tạp không?
+6. Error Handling: Xử lý trạng thái Loading, Empty, và Error như thế nào? [cite: 119]
+7. Validation: Các quy tắc kiểm tra dữ liệu đầu vào (Form validation)? [cite: 118]
+8. Roles: Tính năng này dành cho đối tượng người dùng nào? [cite: 119]
+9. Folder Structure: Sử dụng cấu trúc Feature-based hay Layer-based? [cite: 120]
+10. Testing: Có yêu cầu viết Unit Test hay Widget Test kèm theo không?
+
+# Sau khi người dùng trả lời (hoặc chọn "tự quyết định"), AI mới bắt đầu thực hiện quy trình Plan -> Code -> Review. [cite: 121]
+
+agents: [cite: 122]
+  - claude
+  - cursor
+  - copilot
+  - gemini
+
+workflows: [cite: 122]
+  - code-review
+  - codebase-review
+  - plan-feature
+  - performance-optimization
+
+skills: [cite: 122]
+  flutter:
+    ref: flutter-v1.7.0
+    exclude:
+      - flutter-getx-navigation
+      - flutter-getx-state-management
+    custom_overrides: ["clean-architecture", "optimized-rebuilds"]
+
+  dart:
+    ref: dart-v1.3.4
