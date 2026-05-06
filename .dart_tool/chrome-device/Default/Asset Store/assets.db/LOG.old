@@ -1,3 +1,2 @@
-2026/04/16-20:10:55.808 3690 Reusing MANIFEST C:\Users\anhla\AppData\Local\Temp\flutter_tools.578f30fb\flutter_tools_chrome_device.f716410e\Default\Asset Store\assets.db/MANIFEST-000001
-2026/04/16-20:10:55.828 3690 Recovering log #4
-2026/04/16-20:10:55.836 3690 Reusing old log C:\Users\anhla\AppData\Local\Temp\flutter_tools.578f30fb\flutter_tools_chrome_device.f716410e\Default\Asset Store\assets.db/000004.log 
+2026/05/06-08:01:29.112 66f0 Creating DB C:\Users\anhla\AppData\Local\Temp\flutter_tools.f248c069\flutter_tools_chrome_device.ca926773\Default\Asset Store\assets.db since it was missing.
+2026/05/06-08:01:29.414 66f0 Reusing MANIFEST C:\Users\anhla\AppData\Local\Temp\flutter_tools.f248c069\flutter_tools_chrome_device.ca926773\Default\Asset Store\assets.db/MANIFEST-000001
