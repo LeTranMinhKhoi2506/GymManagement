@@ -5,6 +5,7 @@ import '../../screens/admins/admin_dashboard_screen.dart';
 import '../../screens/admins/personnel_management_screen.dart';
 import '../../screens/admins/schedule_management_screen.dart';
 import '../../screens/admins/customer_management_screen.dart';
+import '../../screens/admins/store_management_screen.dart';
 
 class Routes {
   static const String login = '/login';
@@ -13,6 +14,7 @@ class Routes {
   static const String personnelManagement = '/personnel-management';
   static const String scheduleManagement = '/schedule-management';
   static const String customerManagement = '/customer-management';
+  static const String storeManagement = '/store-management';
 
   static Map<String, WidgetBuilder> getRoutes() {
     return {
@@ -22,6 +24,7 @@ class Routes {
       personnelManagement: (context) => const PersonnelManagementScreen(),
       scheduleManagement: (context) => const ScheduleManagementScreen(),
       customerManagement: (context) => const CustomerManagementScreen(),
+      storeManagement: (context) => const StoreManagementScreen(),
     };
   }
 }
