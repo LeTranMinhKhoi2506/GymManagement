@@ -33,8 +33,11 @@ class AdminRepository {
           
           if (lastMonthCount > 0) {
             growth = ((current - lastMonthCount) / lastMonthCount) * 100;
-            if (growth > 10) status = "PEAK";
-            else if (growth < -10) status = "DROPPING";
+            if (growth > 10) {
+              status = "PEAK";
+            } else if (growth < -10) {
+              status = "DROPPING";
+            }
           } else {
             growth = current > 0 ? 100 : 0;
             status = current > 0 ? "PEAK" : "STABLE";
@@ -93,8 +96,8 @@ class AdminRepository {
           .where('timestamp', isGreaterThanOrEqualTo: startOfYesterday)
           .where('timestamp', isLessThan: startOfToday).get();
 
-      double todaySum = todayDocs.docs.fold(0.0, (sum, doc) => sum + (doc.data()['amount'] ?? 0).toDouble());
-      double yesterdaySum = yesterdayDocs.docs.fold(0.0, (sum, doc) => sum + (doc.data()['amount'] ?? 0).toDouble());
+      double todaySum = todayDocs.docs.fold(0.0, (acc, doc) => acc + (doc.data()['amount'] ?? 0).toDouble());
+      double yesterdaySum = yesterdayDocs.docs.fold(0.0, (acc, doc) => acc + (doc.data()['amount'] ?? 0).toDouble());
 
       double diff = 0;
       String status = "STABLE";
@@ -102,8 +105,11 @@ class AdminRepository {
 
       if (yesterdaySum > 0) {
         diff = ((todaySum - yesterdaySum) / yesterdaySum) * 100;
-        if (diff > 10) status = "PEAK";
-        else if (diff < -10) status = "DROPPING";
+        if (diff > 10) {
+          status = "PEAK";
+        } else if (diff < -10) {
+          status = "DROPPING";
+        }
         message = "${diff.abs().toStringAsFixed(0)}% ${diff >= 0 ? 'higher' : 'lower'} than yesterday";
       } else {
         status = todaySum > 0 ? "PEAK" : "STABLE";

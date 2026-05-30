@@ -14,6 +14,7 @@ class CustomerController extends ChangeNotifier {
   bool _isLoadingLogs = false;
 
   List<MemberModel> get members => _filteredMembers;
+  List<MemberModel> get allMembers => _allMembers;
   String get filterStatus => _filterStatus;
   MemberModel? get selectedMember => _selectedMember;
   List<ActivityLog> get selectedMemberLogs => _selectedMemberLogs;
@@ -80,15 +81,47 @@ class CustomerController extends ChangeNotifier {
     }).toList();
   }
 
+  String? _errorMessage;
+  String? get errorMessage => _errorMessage;
+
+  void clearError() {
+    _errorMessage = null;
+    notifyListeners();
+  }
+
   Future<void> addMember(MemberModel member) async {
-    await _repository.addMember(member);
+    _errorMessage = null;
+    notifyListeners();
+    try {
+      await _repository.addMember(member);
+    } catch (e) {
+      _errorMessage = e.toString();
+      notifyListeners();
+      rethrow;
+    }
   }
 
   Future<void> updateMember(MemberModel member) async {
-    await _repository.updateMember(member);
+    _errorMessage = null;
+    notifyListeners();
+    try {
+      await _repository.updateMember(member);
+    } catch (e) {
+      _errorMessage = e.toString();
+      notifyListeners();
+      rethrow;
+    }
   }
 
   Future<void> deleteMember(String id) async {
-    await _repository.deleteMember(id);
+    _errorMessage = null;
+    notifyListeners();
+    try {
+      await _repository.deleteMember(id);
+    } catch (e) {
+      _errorMessage = e.toString();
+      notifyListeners();
+      rethrow;
+    }
   }
 }

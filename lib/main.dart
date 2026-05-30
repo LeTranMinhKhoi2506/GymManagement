@@ -7,7 +7,8 @@ import 'controllers/staff_controller.dart';
 import 'controllers/schedule_controller.dart';
 import 'controllers/customer_controller.dart';
 import 'controllers/store_controller.dart';
-import 'app/route/Routes.dart';
+import 'controllers/membership_controller.dart';
+import 'app/route/routes.dart';
 import 'firebase_options.dart';
 
 void main() async {
@@ -24,6 +25,7 @@ void main() async {
         ChangeNotifierProvider(create: (_) => ScheduleController()),
         ChangeNotifierProvider(create: (_) => CustomerController()),
         ChangeNotifierProvider(create: (_) => StoreController()),
+        ChangeNotifierProvider(create: (_) => MembershipController()),
       ],
       child: const MyApp(),
     ),

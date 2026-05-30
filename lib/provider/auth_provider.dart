@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
-import '../app/database/DatabaseSetupActivity.dart';
+import '../app/database/database_setup_activity.dart';
 import '../app/database/auth_service.dart';
 
 class AuthProvider extends ChangeNotifier {
