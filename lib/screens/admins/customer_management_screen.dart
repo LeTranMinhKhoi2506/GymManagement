@@ -11,6 +11,31 @@ class CustomerManagementScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final controller = Provider.of<CustomerController>(context);
+
+    if (controller.errorMessage != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Row(
+                children: [
+                  const Icon(Icons.error_outline, color: Colors.white),
+                  const SizedBox(width: 12),
+                  Expanded(child: Text("Lỗi thành viên: ${controller.errorMessage!}")),
+                ],
+              ),
+              backgroundColor: Colors.redAccent,
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              margin: const EdgeInsets.all(16),
+            ),
+          );
+          controller.clearError();
+        }
+      });
+    }
+
     return Scaffold(
       backgroundColor: const Color(0xFFF8F9FA),
       body: Row(

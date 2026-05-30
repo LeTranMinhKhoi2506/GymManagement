@@ -50,15 +50,47 @@ class StoreController extends ChangeNotifier {
     }).toList();
   }
 
+  String? _errorMessage;
+  String? get errorMessage => _errorMessage;
+
+  void clearError() {
+    _errorMessage = null;
+    notifyListeners();
+  }
+
   Future<void> addProduct(ProductModel product) async {
-    await _repository.addProduct(product);
+    _errorMessage = null;
+    notifyListeners();
+    try {
+      await _repository.addProduct(product);
+    } catch (e) {
+      _errorMessage = e.toString();
+      notifyListeners();
+      rethrow;
+    }
   }
 
   Future<void> updateProduct(ProductModel product) async {
-    await _repository.updateProduct(product);
+    _errorMessage = null;
+    notifyListeners();
+    try {
+      await _repository.updateProduct(product);
+    } catch (e) {
+      _errorMessage = e.toString();
+      notifyListeners();
+      rethrow;
+    }
   }
 
   Future<void> deleteProduct(String id) async {
-    await _repository.deleteProduct(id);
+    _errorMessage = null;
+    notifyListeners();
+    try {
+      await _repository.deleteProduct(id);
+    } catch (e) {
+      _errorMessage = e.toString();
+      notifyListeners();
+      rethrow;
+    }
   }
 }

@@ -24,6 +24,31 @@ class _PersonnelManagementScreenState extends State<PersonnelManagementScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final staffController = Provider.of<StaffController>(context);
+
+    if (staffController.errorMessage != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Row(
+                children: [
+                  const Icon(Icons.error_outline, color: Colors.white),
+                  const SizedBox(width: 12),
+                  Expanded(child: Text("Lỗi nhân sự: ${staffController.errorMessage!}")),
+                ],
+              ),
+              backgroundColor: Colors.redAccent,
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              margin: const EdgeInsets.all(16),
+            ),
+          );
+          staffController.clearError();
+        }
+      });
+    }
+
     return Scaffold(
       backgroundColor: const Color(0xFFF8F9FA),
       body: Row(
@@ -370,7 +395,9 @@ class _PersonnelManagementScreenState extends State<PersonnelManagementScreen> {
                       address: "",
                       status: "active",
                     );
-                    _showSnackBar(context, "Thêm nhân viên thành công", Colors.green);
+                    if (context.mounted) {
+                      _showSnackBar(context, "Thêm nhân viên thành công", Colors.green);
+                    }
                   } else {
                     await controller.updateStaff(staff.copyWith(
                       fullName: fullName,
@@ -382,11 +409,15 @@ class _PersonnelManagementScreenState extends State<PersonnelManagementScreen> {
                       gender: gender,
                       status: status,
                     ));
-                    _showSnackBar(context, "Cập nhật thành công", Colors.green);
+                    if (context.mounted) {
+                      _showSnackBar(context, "Cập nhật thành công", Colors.green);
+                    }
                   }
                   if (context.mounted) Navigator.pop(context);
                 } catch (e) {
-                  _showSnackBar(context, "Có lỗi xảy ra: $e", Colors.red);
+                  if (context.mounted) {
+                    _showSnackBar(context, "Có lỗi xảy ra: $e", Colors.red);
+                  }
                 }
               }
             },
@@ -410,10 +441,14 @@ class _PersonnelManagementScreenState extends State<PersonnelManagementScreen> {
             onPressed: () async {
               try {
                 await controller.deleteStaff(staff.uid);
-                _showSnackBar(context, "Đã xóa nhân viên", Colors.orange);
+                if (context.mounted) {
+                  _showSnackBar(context, "Đã xóa nhân viên", Colors.orange);
+                }
                 if (context.mounted) Navigator.pop(context);
               } catch (e) {
-                _showSnackBar(context, "Lỗi khi xóa: $e", Colors.red);
+                if (context.mounted) {
+                  _showSnackBar(context, "Lỗi khi xóa: $e", Colors.red);
+                }
               }
             }, 
             child: const Text("Xóa", style: TextStyle(color: Colors.red)),

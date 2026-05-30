@@ -5,7 +5,7 @@ import '../controllers/auth_controller.dart';
 import '../common/styles/app_styles.dart';
 import '../common/widgets/custom_button.dart';
 import '../common/widgets/custom_text_field.dart';
-import '../app/route/Routes.dart';
+import '../app/route/routes.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -30,6 +30,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
       if (result['status'] == 'success') {
         final user = authController.currentUser;
+        if (!mounted) return;
         if (kIsWeb && user?.role != 'admin') {
           await authController.signOut();
           _showSnackBar("Tài khoản không có quyền Admin.", Colors.red);
@@ -39,11 +40,8 @@ class _LoginScreenState extends State<LoginScreen> {
         } else {
           _showSnackBar("Chào mừng ${user?.fullName}!", Colors.green);
           
-          // ĐIỀU HƯỚNG DỰA TRÊN ROLE
           if (user?.role == 'admin') {
             Navigator.pushReplacementNamed(context, Routes.adminDashboard);
-          } else {
-            // Navigator.pushReplacementNamed(context, Routes.userHome);
           }
         }
       } else {

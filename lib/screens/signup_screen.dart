@@ -34,6 +34,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
         role: role,
       );
 
+      if (!mounted) return;
       if (result == "success") {
         _showSuccessDialog("Đăng ký thành công", "Vui lòng kiểm tra email để xác thực tài khoản.");
       } else {

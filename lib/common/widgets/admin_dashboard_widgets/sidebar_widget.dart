@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../../app/route/Routes.dart';
+import '../../../app/route/routes.dart';
 
 class SidebarWidget extends StatelessWidget {
   const SidebarWidget({super.key});
@@ -30,6 +30,7 @@ class SidebarWidget extends StatelessWidget {
             ),
           ),
           _sidebarItem(context, Icons.dashboard, "Bảng điều khiển", Routes.adminDashboard, currentRoute == Routes.adminDashboard),
+          _sidebarItem(context, Icons.card_membership, "Gói tập", Routes.membershipManagement, currentRoute == Routes.membershipManagement),
           _sidebarItem(context, Icons.badge, "Nhân sự", Routes.personnelManagement, currentRoute == Routes.personnelManagement),
           _sidebarItem(context, Icons.calendar_month, "Lịch làm việc", Routes.scheduleManagement, currentRoute == Routes.scheduleManagement),
           _sidebarItem(context, Icons.group, "Khách hàng", Routes.customerManagement, currentRoute == Routes.customerManagement),

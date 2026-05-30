@@ -17,13 +17,23 @@ class AdminController extends ChangeNotifier {
   bool _isLoading = false;
   bool get isLoading => _isLoading;
 
+  String? _errorMessage;
+  String? get errorMessage => _errorMessage;
+
+  void clearError() {
+    _errorMessage = null;
+    notifyListeners();
+  }
+
   // Lấy dữ liệu khởi tạo cho biểu đồ
   Future<void> fetchDashboardStats() async {
     _isLoading = true;
+    _errorMessage = null;
     notifyListeners();
     try {
       await refreshData();
     } catch (e) {
+      _errorMessage = e.toString();
       debugPrint("AdminController - fetchDashboardStats error: $e");
     } finally {
       _isLoading = false;
@@ -32,9 +42,15 @@ class AdminController extends ChangeNotifier {
   }
 
   Future<void> refreshData() async {
-    _monthlyRevenue = await _repository.getMonthlyRevenue();
-    _weeklyRevenue = await _repository.getWeeklyRevenue();
-    notifyListeners();
+    try {
+      _errorMessage = null;
+      _monthlyRevenue = await _repository.getMonthlyRevenue();
+      _weeklyRevenue = await _repository.getWeeklyRevenue();
+      notifyListeners();
+    } catch (e) {
+      _errorMessage = e.toString();
+      notifyListeners();
+    }
   }
 
   void setChartType(bool monthly) {

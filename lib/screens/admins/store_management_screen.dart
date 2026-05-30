@@ -11,6 +11,31 @@ class StoreManagementScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final controller = Provider.of<StoreController>(context);
+
+    if (controller.errorMessage != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Row(
+                children: [
+                  const Icon(Icons.error_outline, color: Colors.white),
+                  const SizedBox(width: 12),
+                  Expanded(child: Text("Lỗi cửa hàng: ${controller.errorMessage!}")),
+                ],
+              ),
+              backgroundColor: Colors.redAccent,
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              margin: const EdgeInsets.all(16),
+            ),
+          );
+          controller.clearError();
+        }
+      });
+    }
+
     return Scaffold(
       backgroundColor: const Color(0xFFF8F9FA),
       body: Row(
@@ -185,7 +210,7 @@ class StoreManagementScreen extends StatelessWidget {
                   TextField(controller: nameController, decoration: const InputDecoration(labelText: "Tên sản phẩm")),
                   const SizedBox(height: 12),
                   DropdownButtonFormField<String>(
-                    value: selectedCat,
+                    initialValue: selectedCat,
                     decoration: const InputDecoration(labelText: "Danh mục"),
                     items: ['Supplements', 'Equipment', 'Apparel', 'Drinks']
                         .map((cat) => DropdownMenuItem(value: cat, child: Text(cat)))
