@@ -8,6 +8,10 @@ import 'controllers/schedule_controller.dart';
 import 'controllers/customer_controller.dart';
 import 'controllers/store_controller.dart';
 import 'controllers/membership_controller.dart';
+import 'controllers/financial_controller.dart';
+import 'controllers/payment_controller.dart';
+import 'controllers/payroll_controller.dart';
+import 'controllers/equipment_controller.dart';
 import 'app/route/routes.dart';
 import 'firebase_options.dart';
 
@@ -26,6 +30,10 @@ void main() async {
         ChangeNotifierProvider(create: (_) => CustomerController()),
         ChangeNotifierProvider(create: (_) => StoreController()),
         ChangeNotifierProvider(create: (_) => MembershipController()),
+        ChangeNotifierProvider(create: (_) => FinancialController()),
+        ChangeNotifierProvider(create: (_) => PaymentController()),
+        ChangeNotifierProvider(create: (_) => PayrollController()),
+        ChangeNotifierProvider(create: (_) => EquipmentController()),
       ],
       child: const MyApp(),
     ),
