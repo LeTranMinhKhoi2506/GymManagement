@@ -20,7 +20,7 @@ class _PayrollManagementScreenState extends State<PayrollManagementScreen>
   void initState() {
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
-    Future.microtask(() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
       Provider.of<PayrollController>(context, listen: false).fetchAllPayrolls();
     });
   }

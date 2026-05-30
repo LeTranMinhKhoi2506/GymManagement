@@ -21,7 +21,7 @@ class _FinancialManagementScreenState extends State<FinancialManagementScreen>
   void initState() {
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
-    Future.microtask(() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
       Provider.of<FinancialController>(context, listen: false)
           .fetchAllTransactions();
       Provider.of<PaymentController>(context, listen: false).fetchAllPayments();
@@ -198,6 +198,7 @@ class _FinancialManagementScreenState extends State<FinancialManagementScreen>
           physics: const NeverScrollableScrollPhysics(),
           mainAxisSpacing: 12,
           crossAxisSpacing: 12,
+          childAspectRatio: 2.0,
           children: [
             _buildActionButton(
               title: 'Thêm Doanh Thu',

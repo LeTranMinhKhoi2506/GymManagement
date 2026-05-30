@@ -20,7 +20,7 @@ class _PaymentManagementScreenState extends State<PaymentManagementScreen>
   void initState() {
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
-    Future.microtask(() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
       Provider.of<PaymentController>(context, listen: false).fetchAllPayments();
     });
   }
