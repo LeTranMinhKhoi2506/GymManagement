@@ -3,6 +3,8 @@ import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import '../../controllers/payroll_controller.dart';
 import '../../data/models/payroll_model.dart';
+import '../../common/widgets/admin_dashboard_widgets/sidebar_widget.dart';
+import '../../common/widgets/admin_dashboard_widgets/header_widget.dart';
 
 class PayrollManagementScreen extends StatefulWidget {
   const PayrollManagementScreen({super.key});
@@ -20,6 +22,11 @@ class _PayrollManagementScreenState extends State<PayrollManagementScreen>
   void initState() {
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
+    _tabController.addListener(() {
+      if (!_tabController.indexIsChanging) {
+        setState(() {});
+      }
+    });
     WidgetsBinding.instance.addPostFrameCallback((_) {
       Provider.of<PayrollController>(context, listen: false).fetchAllPayrolls();
     });
@@ -34,31 +41,114 @@ class _PayrollManagementScreenState extends State<PayrollManagementScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Quản Lý Lương Nhân Viên'),
-        elevation: 0,
-        bottom: TabBar(
-          controller: _tabController,
-          tabs: const [
-            Tab(text: 'Tất Cả'),
-            Tab(text: 'Chờ Duyệt'),
-            Tab(text: 'Đã Thanh Toán'),
-          ],
-        ),
-      ),
-      body: TabBarView(
-        controller: _tabController,
+      backgroundColor: const Color(0xFFF8F9FA),
+      body: Row(
         children: [
-          _buildPayrollsList(null),
-          _buildPayrollsList('Pending'),
-          _buildPayrollsList('Paid'),
+          const SidebarWidget(),
+          Expanded(
+            child: Column(
+              children: [
+                const HeaderWidget(),
+                Expanded(
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.all(32.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _buildBreadcrumbs(),
+                        const SizedBox(height: 12),
+                        _buildHeaderSection(),
+                        const SizedBox(height: 24),
+                        _buildTabs(),
+                        const SizedBox(height: 24),
+                        _buildTabContent(),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
         ],
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => _showAddPayrollDialog(),
-        child: const Icon(Icons.add),
-      ),
     );
+  }
+
+  Widget _buildBreadcrumbs() {
+    return Row(
+      children: [
+        Text("Admin", style: TextStyle(color: Colors.grey[600], fontSize: 14)),
+        const Icon(Icons.chevron_right, size: 16, color: Colors.grey),
+        const Text(" Quản lý tài chính",
+            style: TextStyle(color: Colors.grey, fontSize: 14)),
+        const Icon(Icons.chevron_right, size: 16, color: Colors.grey),
+        const Text(" Lương nhân viên",
+            style: TextStyle(
+                color: Color(0xFFFF6B35),
+                fontWeight: FontWeight.bold,
+                fontSize: 14)),
+      ],
+    );
+  }
+
+  Widget _buildHeaderSection() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        const Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            SizedBox(height: 4),
+            Text("Lương nhân viên",
+                style: TextStyle(
+                    fontSize: 32,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF0A192F))),
+          ],
+        ),
+        ElevatedButton.icon(
+          onPressed: _showAddPayrollDialog,
+          icon: const Icon(Icons.add_circle_outline, size: 20),
+          label: const Text("Tạo bảng lương",
+              style: TextStyle(fontWeight: FontWeight.bold)),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: const Color(0xFFFF6B35),
+            foregroundColor: Colors.white,
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildTabs() {
+    return TabBar(
+      controller: _tabController,
+      isScrollable: true,
+      indicatorColor: const Color(0xFFFF6B35),
+      labelColor: const Color(0xFF0A192F),
+      unselectedLabelColor: Colors.grey,
+      labelStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+      indicatorSize: TabBarIndicatorSize.label,
+      tabs: const [
+        Tab(text: "TẤT CẢ"),
+        Tab(text: "CHỜ DUYỆT"),
+        Tab(text: "ĐÃ THANH TOÁN"),
+      ],
+    );
+  }
+
+  Widget _buildTabContent() {
+    switch (_tabController.index) {
+      case 1:
+        return _buildPayrollsList('Pending');
+      case 2:
+        return _buildPayrollsList('Paid');
+      case 0:
+      default:
+        return _buildPayrollsList(null);
+    }
   }
 
   Widget _buildPayrollsList(String? filter) {
@@ -77,19 +167,44 @@ class _PayrollManagementScreenState extends State<PayrollManagementScreen>
           payrolls = controller.paidPayrolls;
         }
 
-        if (payrolls.isEmpty) {
-          return const Center(
-            child: Text('Không có bảng lương nào'),
-          );
-        }
-
-        return ListView.builder(
-          itemCount: payrolls.length,
-          padding: const EdgeInsets.all(8),
-          itemBuilder: (context, index) {
-            final payroll = payrolls[index];
-            return _buildPayrollCard(context, payroll);
-          },
+        return Container(
+          padding: const EdgeInsets.all(24),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.04),
+                blurRadius: 24,
+                offset: const Offset(0, 8),
+              ),
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                "Danh sách bảng lương",
+                style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF0A192F)),
+              ),
+              const SizedBox(height: 16),
+              if (payrolls.isEmpty)
+                const Text('Không có bảng lương nào')
+              else
+                ListView.builder(
+                  itemCount: payrolls.length,
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  itemBuilder: (context, index) {
+                    final payroll = payrolls[index];
+                    return _buildPayrollCard(context, payroll);
+                  },
+                ),
+            ],
+          ),
         );
       },
     );
@@ -108,43 +223,66 @@ class _PayrollManagementScreenState extends State<PayrollManagementScreen>
             ? Colors.blue
             : Colors.orange;
 
-    return Card(
-      margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      child: ListTile(
-        leading: Icon(Icons.person, color: statusColor),
-        title: Text(payroll.staffName),
-        subtitle: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+    return InkWell(
+      onTap: () => _showPayrollDetailsDialog(context, payroll),
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        decoration: BoxDecoration(
+          color: const Color(0xFFF8F9FA),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Row(
           children: [
-            Text(payroll.position),
-            Text(
-              'Tháng: ${DateFormat('MM/yyyy').format(payroll.paymentMonth)}',
-              style: const TextStyle(fontSize: 12),
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: statusColor.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Icon(Icons.person, color: statusColor, size: 20),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(payroll.staffName,
+                      style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFF0A192F))),
+                  const SizedBox(height: 2),
+                  Text(
+                    '${payroll.position} • Tháng: ${DateFormat('MM/yyyy').format(payroll.paymentMonth)}',
+                    style: TextStyle(color: Colors.grey[600], fontSize: 12),
+                  ),
+                ],
+              ),
+            ),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Text(
+                  currencyFormat.format(payroll.netSalary),
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 14,
+                    color: Color(0xFF0A192F),
+                  ),
+                ),
+                Text(
+                  payroll.status,
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: statusColor,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
             ),
           ],
         ),
-        trailing: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.end,
-          children: [
-            Text(
-              currencyFormat.format(payroll.netSalary),
-              style: const TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 14,
-              ),
-            ),
-            Text(
-              payroll.status,
-              style: TextStyle(
-                fontSize: 12,
-                color: statusColor,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ],
-        ),
-        onTap: () => _showPayrollDetailsDialog(context, payroll),
       ),
     );
   }

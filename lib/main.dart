@@ -11,6 +11,7 @@ import 'controllers/membership_controller.dart';
 import 'controllers/financial_controller.dart';
 import 'controllers/payment_controller.dart';
 import 'controllers/payroll_controller.dart';
+import 'controllers/equipment_controller.dart';
 import 'app/route/routes.dart';
 import 'firebase_options.dart';
 
@@ -32,6 +33,7 @@ void main() async {
         ChangeNotifierProvider(create: (_) => FinancialController()),
         ChangeNotifierProvider(create: (_) => PaymentController()),
         ChangeNotifierProvider(create: (_) => PayrollController()),
+        ChangeNotifierProvider(create: (_) => EquipmentController()),
       ],
       child: const MyApp(),
     ),

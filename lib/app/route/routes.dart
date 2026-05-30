@@ -10,6 +10,7 @@ import '../../screens/admins/membership_management_screen.dart';
 import '../../screens/admins/financial_management_screen.dart';
 import '../../screens/admins/payment_management_screen.dart';
 import '../../screens/admins/payroll_management_screen.dart';
+import '../../screens/admins/equipment_management_screen.dart';
 
 class Routes {
   static const String login = '/login';
@@ -23,6 +24,7 @@ class Routes {
   static const String financialManagement = '/financial-management';
   static const String paymentManagement = '/payment-management';
   static const String payrollManagement = '/payroll-management';
+  static const String equipmentManagement = '/equipment-management';
 
   static Map<String, WidgetBuilder> getRoutes() {
     return {
@@ -37,6 +39,7 @@ class Routes {
       financialManagement: (context) => const FinancialManagementScreen(),
       paymentManagement: (context) => const PaymentManagementScreen(),
       payrollManagement: (context) => const PayrollManagementScreen(),
+      equipmentManagement: (context) => const EquipmentManagementScreen(),
     };
   }
 }

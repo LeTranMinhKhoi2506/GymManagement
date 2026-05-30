@@ -166,5 +166,30 @@ class AdminRepository {
 
   Stream<QuerySnapshot> getRecentCheckins() => _db.collection('checkins').orderBy('timestamp', descending: true).limit(10).snapshots();
   Stream<List<Map<String, dynamic>>> getUpcomingClassesStream() => _db.collection('classes').orderBy('time').snapshots().map((s) => s.docs.map((d) => d.data()).toList());
-  Stream<List<Map<String, dynamic>>> getEquipmentStatusStream() => _db.collection('equipment').snapshots().map((s) => s.docs.map((d) => d.data()).toList());
+  Stream<List<Map<String, dynamic>>> getEquipmentStatusStream() =>
+      _db.collection('equipment').snapshots().map((snapshot) {
+        final docs = snapshot.docs.map((d) => d.data()).toList();
+        if (docs.isEmpty) {
+          return <Map<String, dynamic>>[];
+        }
+        final hasAggregate = docs.any((e) => e.containsKey('total'));
+        if (hasAggregate) {
+          return docs;
+        }
+        final Map<String, Map<String, dynamic>> grouped = {};
+        for (final item in docs) {
+          final category = item['category'] ?? 'Khác';
+          final status = item['status'] ?? 'Operational';
+          grouped.putIfAbsent(category, () {
+            return {'name': category, 'total': 0, 'operational': 0};
+          });
+          grouped[category]!['total'] =
+              (grouped[category]!['total'] as int) + 1;
+          if (status == 'Operational') {
+            grouped[category]!['operational'] =
+                (grouped[category]!['operational'] as int) + 1;
+          }
+        }
+        return grouped.values.toList();
+      });
 }

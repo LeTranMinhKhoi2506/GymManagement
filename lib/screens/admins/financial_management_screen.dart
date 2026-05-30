@@ -4,6 +4,10 @@ import 'package:intl/intl.dart';
 import '../../controllers/financial_controller.dart';
 import '../../controllers/payment_controller.dart';
 import '../../controllers/payroll_controller.dart';
+import '../../common/widgets/admin_dashboard_widgets/sidebar_widget.dart';
+import '../../common/widgets/admin_dashboard_widgets/header_widget.dart';
+import '../../common/widgets/transaction_table_widget.dart';
+import '../../app/route/routes.dart';
 
 class FinancialManagementScreen extends StatefulWidget {
   const FinancialManagementScreen({super.key});
@@ -21,6 +25,11 @@ class _FinancialManagementScreenState extends State<FinancialManagementScreen>
   void initState() {
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
+    _tabController.addListener(() {
+      if (!_tabController.indexIsChanging) {
+        setState(() {});
+      }
+    });
     WidgetsBinding.instance.addPostFrameCallback((_) {
       Provider.of<FinancialController>(context, listen: false)
           .fetchAllTransactions();
@@ -38,41 +47,123 @@ class _FinancialManagementScreenState extends State<FinancialManagementScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Quản Lý Tài Chính'),
-        elevation: 0,
-        bottom: TabBar(
-          controller: _tabController,
-          tabs: const [
-            Tab(text: 'Tổng Quan'),
-            Tab(text: 'Giao Dịch'),
-            Tab(text: 'Báo Cáo'),
-          ],
-        ),
-      ),
-      body: TabBarView(
-        controller: _tabController,
+      backgroundColor: const Color(0xFFF8F9FA),
+      body: Row(
         children: [
-          _buildOverviewTab(),
-          _buildTransactionsTab(),
-          _buildReportsTab(),
+          const SidebarWidget(),
+          Expanded(
+            child: Column(
+              children: [
+                const HeaderWidget(),
+                Expanded(
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.all(32.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _buildBreadcrumbs(),
+                        const SizedBox(height: 12),
+                        _buildHeaderSection(),
+                        const SizedBox(height: 24),
+                        _buildTabs(),
+                        const SizedBox(height: 24),
+                        _buildTabContent(),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
         ],
       ),
     );
   }
 
+  Widget _buildBreadcrumbs() {
+    return Row(
+      children: [
+        Text("Admin", style: TextStyle(color: Colors.grey[600], fontSize: 14)),
+        const Icon(Icons.chevron_right, size: 16, color: Colors.grey),
+        const Text(" Quản lý tài chính",
+            style: TextStyle(
+                color: Color(0xFFFF6B35),
+                fontWeight: FontWeight.bold,
+                fontSize: 14)),
+      ],
+    );
+  }
+
+  Widget _buildHeaderSection() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        const Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            SizedBox(height: 4),
+            Text("Quản lý tài chính",
+                style: TextStyle(
+                    fontSize: 32,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF0A192F))),
+          ],
+        ),
+        ElevatedButton.icon(
+          onPressed: () => _showAddTransactionDialog('Revenue'),
+          icon: const Icon(Icons.add_circle_outline, size: 20),
+          label:
+              const Text("Thêm giao dịch", style: TextStyle(fontWeight: FontWeight.bold)),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: const Color(0xFFFF6B35),
+            foregroundColor: Colors.white,
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildTabs() {
+    return TabBar(
+      controller: _tabController,
+      isScrollable: true,
+      indicatorColor: const Color(0xFFFF6B35),
+      labelColor: const Color(0xFF0A192F),
+      unselectedLabelColor: Colors.grey,
+      labelStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+      indicatorSize: TabBarIndicatorSize.label,
+      tabs: const [
+        Tab(text: "TỔNG QUAN"),
+        Tab(text: "GIAO DỊCH"),
+        Tab(text: "BÁO CÁO"),
+      ],
+    );
+  }
+
+  Widget _buildTabContent() {
+    switch (_tabController.index) {
+      case 1:
+        return _buildTransactionsTab();
+      case 2:
+        return _buildReportsTab();
+      case 0:
+      default:
+        return _buildOverviewTab();
+    }
+  }
+
   Widget _buildOverviewTab() {
     return Consumer<FinancialController>(
       builder: (context, controller, _) {
-        return SingleChildScrollView(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            children: [
-              _buildSummaryCards(controller),
-              const SizedBox(height: 24),
-              _buildQuickActions(),
-            ],
-          ),
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _buildSummaryCards(controller),
+            const SizedBox(height: 24),
+            _buildQuickActions(),
+          ],
         );
       },
     );
@@ -140,42 +231,71 @@ class _FinancialManagementScreenState extends State<FinancialManagementScreen>
     required Color color,
     required IconData icon,
   }) {
-    return Card(
-      elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: Container(
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(12),
-          gradient: LinearGradient(
-            colors: [color.withValues(alpha: 0.8), color.withValues(alpha: 0.4)],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 24,
+            offset: const Offset(0, 8),
           ),
-        ),
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Icon(icon, color: Colors.white, size: 24),
-            const SizedBox(height: 8),
-            Text(
-              title,
-              style: const TextStyle(
-                color: Colors.white70,
-                fontSize: 12,
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: color.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(icon, color: color, size: 22),
               ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              value,
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF1F5F9),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Text(
+                  "STABLE",
+                  style: TextStyle(
+                    color: Color(0xFF475569),
+                    fontSize: 10,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
               ),
+            ],
+          ),
+          const SizedBox(height: 20),
+          Text(
+            title.toUpperCase(),
+            style: TextStyle(
+              color: Colors.grey[500],
+              fontSize: 11,
+              fontWeight: FontWeight.w800,
+              letterSpacing: 0.5,
             ),
-          ],
-        ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            value,
+            style: const TextStyle(
+              color: Color(0xFF0A192F),
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -185,11 +305,9 @@ class _FinancialManagementScreenState extends State<FinancialManagementScreen>
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const Text(
-          'Hành Động Nhanh',
-          style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-          ),
+          'Hành động nhanh',
+          style:
+              TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Color(0xFF0A192F)),
         ),
         const SizedBox(height: 16),
         GridView.count(
@@ -231,32 +349,44 @@ class _FinancialManagementScreenState extends State<FinancialManagementScreen>
     required IconData icon,
     required VoidCallback onTap,
   }) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Card(
-        elevation: 2,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+    return Material(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(14),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(14),
+        onTap: onTap,
         child: Container(
+          padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(12),
-            gradient: LinearGradient(
-              colors: [Colors.blue.withValues(alpha: 0.8), Colors.blue.withValues(alpha: 0.4)],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: Colors.grey.withValues(alpha: 0.15)),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.03),
+                blurRadius: 12,
+                offset: const Offset(0, 6),
+              ),
+            ],
           ),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(icon, color: Colors.white, size: 32),
-              const SizedBox(height: 8),
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFF6B35).withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(icon, color: const Color(0xFFFF6B35), size: 22),
+              ),
+              const SizedBox(height: 10),
               Text(
                 title,
                 textAlign: TextAlign.center,
                 style: const TextStyle(
-                  color: Colors.white,
+                  color: Color(0xFF0A192F),
                   fontWeight: FontWeight.bold,
-                  fontSize: 12,
+                  fontSize: 13,
                 ),
               ),
             ],
@@ -273,59 +403,94 @@ class _FinancialManagementScreenState extends State<FinancialManagementScreen>
           return const Center(child: CircularProgressIndicator());
         }
 
-        if (controller.transactions.isEmpty) {
-          return const Center(
-            child: Text('Không có giao dịch nào'),
-          );
-        }
-
-        return ListView.builder(
-          itemCount: controller.transactions.length,
-          padding: const EdgeInsets.all(8),
-          itemBuilder: (context, index) {
-            final transaction = controller.transactions[index];
-            final isRevenue = transaction.type == 'Revenue';
-
-            return Card(
-              margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              child: ListTile(
-                leading: Icon(
-                  isRevenue ? Icons.arrow_upward : Icons.arrow_downward,
-                  color: isRevenue ? Colors.green : Colors.red,
-                ),
-                title: Text(transaction.category),
-                subtitle: Text(transaction.description),
-                trailing: Text(
-                  '${isRevenue ? '+' : '-'} ${NumberFormat.currency(symbol: '₫', locale: 'vi_VN', decimalDigits: 0).format(transaction.amount)}',
-                  style: TextStyle(
-                    color: isRevenue ? Colors.green : Colors.red,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
+        return Container(
+          padding: const EdgeInsets.all(24),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.04),
+                blurRadius: 24,
+                offset: const Offset(0, 8),
               ),
-            );
-          },
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                "Giao dịch gần đây",
+                style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF0A192F)),
+              ),
+              const SizedBox(height: 16),
+              TransactionTableWidget(
+                transactions: controller.transactions,
+                onTap: (_) {},
+              ),
+            ],
+          ),
         );
       },
     );
   }
 
   Widget _buildReportsTab() {
-    return Center(
+    return Container(
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 24,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
       child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Icon(Icons.assessment, size: 64, color: Colors.grey),
+          const Text(
+            "Báo cáo tài chính",
+            style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF0A192F)),
+          ),
           const SizedBox(height: 16),
-          const Text('Báo Cáo tài chính sẽ được cập nhật'),
-          const SizedBox(height: 16),
-          ElevatedButton(
-            onPressed: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Tính năng sẽ sớm ra mắt')),
-              );
-            },
-            child: const Text('Tạo Báo Cáo'),
+          Row(
+            children: [
+              const Icon(Icons.assessment, size: 40, color: Colors.grey),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Text(
+                  'Báo cáo tài chính sẽ được cập nhật trong phiên bản tiếp theo.',
+                  style: TextStyle(color: Colors.grey[600]),
+                ),
+              ),
+              ElevatedButton(
+                onPressed: () {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Tính năng sẽ sớm ra mắt')),
+                  );
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFFFF6B35),
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+                ),
+                child: const Text('Tạo báo cáo'),
+              ),
+            ],
           ),
         ],
       ),
@@ -340,15 +505,11 @@ class _FinancialManagementScreenState extends State<FinancialManagementScreen>
   }
 
   void _navigateToPayments() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Điều hướng tới quản lý thanh toán')),
-    );
+    Navigator.pushReplacementNamed(context, Routes.paymentManagement);
   }
 
   void _navigateToPayroll() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Điều hướng tới quản lý lương')),
-    );
+    Navigator.pushReplacementNamed(context, Routes.payrollManagement);
   }
 }
 
