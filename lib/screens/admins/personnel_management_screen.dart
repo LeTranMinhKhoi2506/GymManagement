@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import '../../controllers/staff_controller.dart';
 import '../../controllers/schedule_controller.dart';
+import '../../controllers/role_controller.dart';
 import '../../data/models/user_model.dart';
 import '../../data/models/schedule_model.dart';
 import '../../common/widgets/admin_dashboard_widgets/sidebar_widget.dart';
@@ -25,6 +26,7 @@ class _PersonnelManagementScreenState extends State<PersonnelManagementScreen> {
   @override
   Widget build(BuildContext context) {
     final staffController = Provider.of<StaffController>(context);
+    final roleController = Provider.of<RoleController>(context);
 
     if (staffController.errorMessage != null) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -64,7 +66,6 @@ class _PersonnelManagementScreenState extends State<PersonnelManagementScreen> {
                     child: Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // Nội dung chính (Trái)
                         Expanded(
                           flex: 3,
                           child: Column(
@@ -74,14 +75,13 @@ class _PersonnelManagementScreenState extends State<PersonnelManagementScreen> {
                               const SizedBox(height: 32),
                               _buildStatsRow(),
                               const SizedBox(height: 32),
-                              _buildFilterSection(),
+                              _buildFilterSection(roleController),
                               const SizedBox(height: 24),
                               _buildStaffList(),
                             ],
                           ),
                         ),
                         const SizedBox(width: 32),
-                        // Nội dung bên cạnh (Phải) - Widget Ca làm việc
                         Column(
                           children: [
                             Consumer<ScheduleController>(
@@ -173,7 +173,7 @@ class _PersonnelManagementScreenState extends State<PersonnelManagementScreen> {
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(16),
-          boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 10)],
+          boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10)],
         ),
         child: Row(
           children: [
@@ -192,7 +192,7 @@ class _PersonnelManagementScreenState extends State<PersonnelManagementScreen> {
     );
   }
 
-  Widget _buildFilterSection() {
+  Widget _buildFilterSection(RoleController roleController) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -217,7 +217,7 @@ class _PersonnelManagementScreenState extends State<PersonnelManagementScreen> {
           DropdownButton<String>(
             value: filterPosition,
             underline: const SizedBox(),
-            items: ["Tất cả", "Quản lý", "PT/Trainer", "Lễ tân"].map((String value) {
+            items: ["Tất cả", ...roleController.roles.map((r) => r.name)].map((String value) {
               return DropdownMenuItem<String>(value: value, child: Text(value));
             }).toList(),
             onChanged: (val) => setState(() => filterPosition = val!),
@@ -246,7 +246,7 @@ class _PersonnelManagementScreenState extends State<PersonnelManagementScreen> {
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(16),
-                boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 10)],
+                boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10)],
               ),
               child: DataTable(
                 columns: const [
@@ -260,7 +260,7 @@ class _PersonnelManagementScreenState extends State<PersonnelManagementScreen> {
                   DataCell(Text(staff.position ?? "-")),
                   DataCell(Container(
                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    decoration: BoxDecoration(color: (staff.status == 'active' ? Colors.green : Colors.red).withValues(alpha: 0.1), borderRadius: BorderRadius.circular(12)),
+                    decoration: BoxDecoration(color: (staff.status == 'active' ? Colors.green : Colors.red).withOpacity(0.1), borderRadius: BorderRadius.circular(12)),
                     child: Text(staff.status == 'active' ? "Đang làm" : "Nghỉ", style: TextStyle(color: staff.status == 'active' ? Colors.green : Colors.red, fontSize: 11)),
                   )),
                   DataCell(Row(
@@ -281,10 +281,11 @@ class _PersonnelManagementScreenState extends State<PersonnelManagementScreen> {
   void _showStaffDialog(BuildContext context, {UserModel? staff}) {
     final formKey = GlobalKey<FormState>();
     final controller = Provider.of<StaffController>(context, listen: false);
+    final roleController = Provider.of<RoleController>(context, listen: false);
 
     String fullName = staff?.fullName ?? "";
     String email = staff?.email ?? "";
-    String position = staff?.position ?? "PT/Trainer";
+    String position = staff?.position ?? (roleController.roles.isNotEmpty ? roleController.roles.first.name : "PT/Trainer");
     String phoneNumber = staff?.phoneNumber ?? "";
     double salary = staff?.salary ?? 0;
     String address = staff?.address ?? "";
@@ -359,8 +360,8 @@ class _PersonnelManagementScreenState extends State<PersonnelManagementScreen> {
                   const SizedBox(height: 12),
                   DropdownButtonFormField<String>(
                     initialValue: position,
-                    decoration: const InputDecoration(labelText: "Chức vụ", prefixIcon: Icon(Icons.badge_outlined)),
-                    items: ["Quản lý", "PT/Trainer", "Lễ tân"].map((e) => DropdownMenuItem(value: e, child: Text(e))).toList(),
+                    decoration: const InputDecoration(labelText: "Chức vụ (Assign Role)", prefixIcon: Icon(Icons.badge_outlined)),
+                    items: roleController.roles.map((e) => DropdownMenuItem(value: e.name, child: Text(e.name))).toList(),
                     onChanged: (val) => position = val!,
                   ),
                 ],
@@ -375,11 +376,10 @@ class _PersonnelManagementScreenState extends State<PersonnelManagementScreen> {
               if (formKey.currentState!.validate()) {
                 formKey.currentState!.save();
                 
-                // Kiểm tra email trùng
                 final isDuplicate = await controller.checkEmailExists(email, excludeUid: staff?.uid);
                 if (isDuplicate) {
                   if (context.mounted) {
-                    _showSnackBar(context, "Email này đã tồn tại trong hệ thống!", Colors.red);
+                    _showSnackBar(context, "Email này đã tồn tại trong hệ hệ thống!", Colors.red);
                   }
                   return;
                 }
@@ -401,7 +401,7 @@ class _PersonnelManagementScreenState extends State<PersonnelManagementScreen> {
                   } else {
                     await controller.updateStaff(staff.copyWith(
                       fullName: fullName,
-                      email: email, // Bây giờ có thể sửa email
+                      email: email,
                       position: position,
                       phoneNumber: phoneNumber,
                       salary: salary,

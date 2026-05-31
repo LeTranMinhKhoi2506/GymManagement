@@ -29,11 +29,9 @@ class CustomerController extends ChangeNotifier {
       _allMembers = members;
       _applyFilters();
       
-      // Select first member by default if none selected
       if (_selectedMember == null && _allMembers.isNotEmpty) {
         selectMember(_allMembers.first);
       } else if (_selectedMember != null) {
-        // Update selected member if it was updated in the list
         try {
           _selectedMember = _allMembers.firstWhere((m) => m.id == _selectedMember!.id);
         } catch (_) {
@@ -106,6 +104,19 @@ class CustomerController extends ChangeNotifier {
     notifyListeners();
     try {
       await _repository.updateMember(member);
+    } catch (e) {
+      _errorMessage = e.toString();
+      notifyListeners();
+      rethrow;
+    }
+  }
+
+  Future<void> toggleUserStatus(String userId, String currentStatus) async {
+    _errorMessage = null;
+    notifyListeners();
+    try {
+      String newStatus = currentStatus == 'Active' ? 'Banned' : 'Active';
+      await _repository.updateMemberStatus(userId, newStatus);
     } catch (e) {
       _errorMessage = e.toString();
       notifyListeners();
