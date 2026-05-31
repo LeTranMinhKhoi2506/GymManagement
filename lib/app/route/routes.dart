@@ -20,6 +20,11 @@ import '../../screens/admins/role_management_screen.dart';
 import '../../screens/admins/report_management_screen.dart';
 import '../../screens/admins/media_management_screen.dart';
 import '../../screens/admins/session_management_screen.dart';
+import '../../screens/PT/pt_dashboard_screen.dart';
+import '../../screens/PT/pt_schedule_screen.dart';
+import '../../screens/PT/pt_student_management_screen.dart';
+import '../../screens/PT/pt_income_screen.dart';
+import '../../screens/PT/pt_class_registration_screen.dart';
 
 class Routes {
   static const String login = '/login';
@@ -44,6 +49,13 @@ class Routes {
   static const String mediaManagement = '/media-management';
   static const String sessionManagement = '/session-management';
 
+  // PT Routes
+  static const String ptDashboard = '/pt-dashboard';
+  static const String ptSchedule = '/pt-schedule';
+  static const String ptStudentManagement = '/pt-student-management';
+  static const String ptIncome = '/pt-income';
+  static const String ptClassRegistration = '/pt-class-registration';
+
   static Map<String, WidgetBuilder> getRoutes() {
     return {
       login: (context) => const LoginScreen(),
@@ -67,6 +79,13 @@ class Routes {
       reportManagement: (context) => const ReportManagementScreen(),
       mediaManagement: (context) => const MediaManagementScreen(),
       sessionManagement: (context) => const SessionManagementScreen(),
+      
+      // PT Routes
+      ptDashboard: (context) => const PtDashboardScreen(),
+      ptSchedule: (context) => const PtScheduleScreen(),
+      ptStudentManagement: (context) => const PtStudentManagementScreen(),
+      ptIncome: (context) => const PtIncomeScreen(),
+      ptClassRegistration: (context) => const PtClassRegistrationScreen(),
     };
   }
 }

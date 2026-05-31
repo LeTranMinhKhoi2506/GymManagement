@@ -47,7 +47,8 @@ class MyApp extends StatelessWidget {
           ),
         ),
       ),
-      initialRoute: Routes.login,
+      //initialRoute: Routes.login,
+      initialRoute: Routes.ptDashboard, // test
       routes: Routes.getRoutes(),
     );
   }
