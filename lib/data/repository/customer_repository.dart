@@ -28,6 +28,10 @@ class CustomerRepository {
     await _db.collection(_collection).doc(member.id).update(member.toMap());
   }
 
+  Future<void> updateMemberStatus(String id, String status) async {
+    await _db.collection(_collection).doc(id).update({'status': status});
+  }
+
   Future<void> deleteMember(String id) async {
     await _db.collection(_collection).doc(id).delete();
   }

@@ -1,17 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:provider/provider.dart';
-import 'controllers/auth_controller.dart';
-import 'controllers/admin_controller.dart';
-import 'controllers/staff_controller.dart';
-import 'controllers/schedule_controller.dart';
-import 'controllers/customer_controller.dart';
-import 'controllers/store_controller.dart';
-import 'controllers/membership_controller.dart';
-import 'controllers/financial_controller.dart';
-import 'controllers/payment_controller.dart';
-import 'controllers/payroll_controller.dart';
-import 'controllers/equipment_controller.dart';
+import 'app/app_providers.dart';
 import 'app/route/routes.dart';
 import 'firebase_options.dart';
 
@@ -22,19 +12,7 @@ void main() async {
   );
   runApp(
     MultiProvider(
-      providers: [
-        ChangeNotifierProvider(create: (_) => AuthController()),
-        ChangeNotifierProvider(create: (_) => AdminController()),
-        ChangeNotifierProvider(create: (_) => StaffController()),
-        ChangeNotifierProvider(create: (_) => ScheduleController()),
-        ChangeNotifierProvider(create: (_) => CustomerController()),
-        ChangeNotifierProvider(create: (_) => StoreController()),
-        ChangeNotifierProvider(create: (_) => MembershipController()),
-        ChangeNotifierProvider(create: (_) => FinancialController()),
-        ChangeNotifierProvider(create: (_) => PaymentController()),
-        ChangeNotifierProvider(create: (_) => PayrollController()),
-        ChangeNotifierProvider(create: (_) => EquipmentController()),
-      ],
+      providers: AppProviders.providers,
       child: const MyApp(),
     ),
   );
@@ -46,12 +24,28 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Gym Management',
+      title: 'Gym Management Admin',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFFFF6B35)),
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: const Color(0xFFFF6B35),
+          primary: const Color(0xFFFF6B35),
+          secondary: const Color(0xFF0A192F),
+        ),
         useMaterial3: true,
         fontFamily: 'Inter',
+        inputDecorationTheme: InputDecorationTheme(
+          filled: true,
+          fillColor: Colors.grey[50],
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide(color: Colors.grey[200]!),
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide(color: Colors.grey[200]!),
+          ),
+        ),
       ),
       initialRoute: Routes.login,
       routes: Routes.getRoutes(),

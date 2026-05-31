@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
+import 'package:csv/csv.dart';
+import 'package:share_plus/share_plus.dart';
+import 'dart:io';
+import 'package:path_provider/path_provider.dart';
 import '../../controllers/membership_controller.dart';
 import '../../controllers/customer_controller.dart';
 import '../../controllers/admin_controller.dart';
@@ -18,14 +22,28 @@ class MembershipManagementScreen extends StatefulWidget {
 
 class _MembershipManagementScreenState extends State<MembershipManagementScreen> with SingleTickerProviderStateMixin {
   late TabController _tabController;
+  final TextEditingController _searchController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
+
+    // Khởi tạo filter theo tab mặc định (ĐANG HOẠT ĐỘNG)
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<MembershipController>().setStatusFilter(true);
+    });
+
     _tabController.addListener(() {
       if (!_tabController.indexIsChanging) {
-        setState(() {});
+        final controller = context.read<MembershipController>();
+        if (_tabController.index == 0) {
+          controller.setStatusFilter(true); // Active
+        } else if (_tabController.index == 1) {
+          controller.setStatusFilter(null); // All
+        } else {
+          controller.setStatusFilter(false); // Inactive
+        }
       }
     });
   }
@@ -33,7 +51,110 @@ class _MembershipManagementScreenState extends State<MembershipManagementScreen>
   @override
   void dispose() {
     _tabController.dispose();
+    _searchController.dispose();
     super.dispose();
+  }
+
+  // Hàm xuất file CSV chuyên nghiệp
+  Future<void> _exportToCSV(List<MembershipPlan> plans) async {
+    if (plans.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Không có dữ liệu để xuất")),
+      );
+      return;
+    }
+
+    List<List<dynamic>> rows = [];
+    // Tiêu đề cột
+    rows.add(["ID", "Tên gói", "Mô tả", "Giá (VNĐ)", "Thời hạn (Tháng)", "Có PT", "Trạng thái"]);
+
+    for (var plan in plans) {
+      rows.add([
+        plan.id,
+        plan.name,
+        plan.description,
+        plan.price,
+        plan.durationMonths,
+        plan.hasPT ? "Có" : "Không",
+        plan.isActive ? "Hoạt động" : "Lưu trữ"
+      ]);
+    }
+
+    String csvContent = const ListToCsvConverter().convert(rows);
+    final directory = await getTemporaryDirectory();
+    final path = "${directory.path}/danh_sach_goi_tap_${DateTime.now().millisecondsSinceEpoch}.csv";
+    final file = File(path);
+    await file.writeAsString(csvContent);
+
+    await Share.shareXFiles([XFile(path)], text: 'Dữ liệu gói tập Gym');
+  }
+
+  void _showFilterDialog(BuildContext context) {
+    final controller = context.read<MembershipController>();
+    final minController = TextEditingController();
+    final maxController = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Text("Bộ lọc nâng cao & Sắp xếp"),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text("Khoảng giá (VNĐ)", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                Expanded(child: CustomTextField(controller: minController, label: "Từ", keyboardType: TextInputType.number)),
+                const SizedBox(width: 12),
+                Expanded(child: CustomTextField(controller: maxController, label: "Đến", keyboardType: TextInputType.number)),
+              ],
+            ),
+            const SizedBox(height: 24),
+            const Text("Sắp xếp theo", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+            const SizedBox(height: 12),
+            Wrap(
+              spacing: 8,
+              children: [
+                _sortChip("Tên", MembershipSortOption.name, controller),
+                _sortChip("Giá", MembershipSortOption.price, controller),
+                _sortChip("Thời hạn", MembershipSortOption.duration, controller),
+              ],
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              controller.clearFilters();
+              _searchController.clear();
+              Navigator.pop(context);
+            },
+            child: const Text("Xóa bộ lọc", style: TextStyle(color: Colors.redAccent)),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              double? min = double.tryParse(minController.text);
+              double? max = double.tryParse(maxController.text);
+              controller.setPriceFilter(min, max);
+              Navigator.pop(context);
+            },
+            style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFFF6B35), foregroundColor: Colors.white),
+            child: const Text("Áp dụng"),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _sortChip(String label, MembershipSortOption option, MembershipController controller) {
+    return ActionChip(
+      label: Text(label),
+      onPressed: () => controller.setSortOption(option),
+      backgroundColor: Colors.grey[100],
+    );
   }
 
   @override
@@ -41,29 +162,6 @@ class _MembershipManagementScreenState extends State<MembershipManagementScreen>
     final controller = Provider.of<MembershipController>(context);
     final customerController = context.watch<CustomerController>();
     final adminController = context.watch<AdminController>();
-
-    if (controller.errorMessage != null) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Row(
-                children: [
-                  const Icon(Icons.error_outline, color: Colors.white),
-                  const SizedBox(width: 12),
-                  Expanded(child: Text("Lỗi gói tập: ${controller.errorMessage!}")),
-                ],
-              ),
-              backgroundColor: Colors.redAccent,
-              behavior: SnackBarBehavior.floating,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-              margin: const EdgeInsets.all(16),
-            ),
-          );
-          controller.clearError();
-        }
-      });
-    }
 
     return Scaffold(
       backgroundColor: const Color(0xFFF8F9FA),
@@ -84,9 +182,9 @@ class _MembershipManagementScreenState extends State<MembershipManagementScreen>
                         const SizedBox(height: 12),
                         _buildHeaderSection(),
                         const SizedBox(height: 24),
-                        _buildTabsAndFilters(),
+                        _buildTabsAndFilters(controller),
                         const SizedBox(height: 24),
-                        _buildMembershipTable(),
+                        _buildMembershipTable(controller),
                         const SizedBox(height: 32),
                         _buildStatsSummary(customerController, adminController),
                       ],
@@ -118,8 +216,9 @@ class _MembershipManagementScreenState extends State<MembershipManagementScreen>
         const Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            SizedBox(height: 4),
             Text("Gói thành viên", style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: Color(0xFF0A192F))),
+            SizedBox(height: 4),
+            Text("Quản lý danh sách và cấu hình các gói dịch vụ tại phòng tập", style: TextStyle(color: Colors.grey)),
           ],
         ),
         ElevatedButton.icon(
@@ -137,7 +236,7 @@ class _MembershipManagementScreenState extends State<MembershipManagementScreen>
     );
   }
 
-  Widget _buildTabsAndFilters() {
+  Widget _buildTabsAndFilters(MembershipController controller) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
@@ -147,89 +246,103 @@ class _MembershipManagementScreenState extends State<MembershipManagementScreen>
           indicatorColor: const Color(0xFFFF6B35),
           labelColor: const Color(0xFF0A192F),
           unselectedLabelColor: Colors.grey,
-          labelStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+          labelStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
           indicatorSize: TabBarIndicatorSize.label,
           tabs: const [
             Tab(text: "ĐANG HOẠT ĐỘNG"),
-            Tab(text: "LỊCH SỬ"),
+            Tab(text: "TẤT CẢ"),
             Tab(text: "LƯU TRỮ"),
           ],
         ),
         Row(
           children: [
-            _buildOutlineButton(Icons.filter_list, "Bộ lọc nâng cao"),
+            if (controller.hasActiveFilters)
+              Padding(
+                padding: const EdgeInsets.only(right: 12),
+                child: TextButton.icon(
+                  onPressed: () {
+                    controller.clearFilters();
+                    _searchController.clear();
+                  },
+                  icon: const Icon(Icons.clear_all, size: 18),
+                  label: const Text("Xóa lọc"),
+                  style: TextButton.styleFrom(foregroundColor: Colors.redAccent),
+                ),
+              ),
+            SizedBox(
+              width: 300,
+              child: TextField(
+                controller: _searchController,
+                onChanged: (val) => controller.setSearchQuery(val),
+                decoration: InputDecoration(
+                  hintText: "Tìm theo tên gói tập...",
+                  prefixIcon: const Icon(Icons.search, size: 20),
+                  filled: true,
+                  fillColor: Colors.white,
+                  contentPadding: const EdgeInsets.symmetric(vertical: 0, horizontal: 16),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: Colors.grey[200]!)),
+                  enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: Colors.grey[200]!)),
+                ),
+              ),
+            ),
             const SizedBox(width: 12),
-            _buildOutlineButton(Icons.download, "Xuất CSV"),
+            _buildActionIcon(Icons.filter_list, () => _showFilterDialog(context), "Lọc & Sắp xếp"),
+            const SizedBox(width: 12),
+            _buildActionIcon(Icons.download, () => _exportToCSV(controller.plans), "Xuất CSV"),
           ],
         ),
       ],
     );
   }
 
-  Widget _buildOutlineButton(IconData icon, String label) {
-    return OutlinedButton.icon(
-      onPressed: () {},
-      icon: Icon(icon, size: 18),
-      label: Text(label, style: const TextStyle(fontWeight: FontWeight.bold)),
-      style: OutlinedButton.styleFrom(
-        foregroundColor: Colors.blueGrey[800],
-        side: BorderSide(color: Colors.grey[300]!),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+  Widget _buildActionIcon(IconData icon, VoidCallback onTap, String tooltip) {
+    return Tooltip(
+      message: tooltip,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(12),
+        child: Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: Colors.grey[200]!),
+          ),
+          child: Icon(icon, size: 20, color: Colors.blueGrey[800]),
+        ),
       ),
     );
   }
 
-  Widget _buildMembershipTable() {
+  Widget _buildMembershipTable(MembershipController controller) {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
-          BoxShadow(color: Colors.black.withValues(alpha: 0.03), blurRadius: 10, offset: const Offset(0, 4)),
+          BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 10, offset: const Offset(0, 4)),
         ],
       ),
-      child: Consumer<MembershipController>(
-        builder: (context, controller, child) {
-          if (controller.isLoading) {
-            return Column(
-              children: [
-                _buildTableHeader(),
-                const Divider(height: 1),
-                const Padding(
-                  padding: EdgeInsets.all(40.0),
-                  child: Center(child: CircularProgressIndicator()),
-                ),
-              ],
-            );
-          }
-
-          final filteredPlans = controller.plans.where((plan) {
-            if (_tabController.index == 0) {
-              return plan.isActive;
-            } else if (_tabController.index == 2) {
-              return !plan.isActive;
-            }
-            return true;
-          }).toList();
-
-          return Column(
-            children: [
-              _buildTableHeader(),
-              const Divider(height: 1),
-              if (filteredPlans.isEmpty)
-                const Padding(
-                  padding: EdgeInsets.all(40.0),
-                  child: Center(child: Text("Không có gói tập nào.")),
-                )
-              else
-                Column(
-                  children: filteredPlans.map((plan) => _buildTableRow(plan)).toList(),
-                ),
-              _buildTableFooter(filteredPlans.length, controller.plans.length),
-            ],
-          );
-        },
+      child: Column(
+        children: [
+          _buildTableHeader(),
+          const Divider(height: 1),
+          if (controller.isLoading)
+            const Padding(padding: EdgeInsets.all(60.0), child: Center(child: CircularProgressIndicator()))
+          else if (controller.plans.isEmpty)
+            const Padding(
+              padding: EdgeInsets.all(60.0),
+              child: Center(child: Text("Không có gói tập nào phù hợp với bộ lọc.", style: TextStyle(color: Colors.grey))),
+            )
+          else
+            ListView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: controller.plans.length,
+              itemBuilder: (context, index) => _buildTableRow(controller.plans[index]),
+            ),
+          _buildTableFooter(controller.plans.length),
+        ],
       ),
     );
   }
@@ -274,34 +387,21 @@ class _MembershipManagementScreenState extends State<MembershipManagementScreen>
     final retentionHealth = subscriberCount > 0 ? (activeCount / subscriberCount) : 1.0;
 
     final f = NumberFormat.decimalPattern('vi_VN');
-    final formattedSubscribers = f.format(subscriberCount);
-    final formattedRetention = "${(retentionHealth * 100).toStringAsFixed(1)}%";
-
-    Color retentionColor = Colors.green;
-    if (retentionHealth < 0.5) {
-      retentionColor = Colors.redAccent;
-    } else if (retentionHealth < 0.8) {
-      retentionColor = Colors.orange;
-    }
+    final formattedRetention = "${(retentionHealth * 100).toStringAsFixed(0)}%";
+    Color retentionColor = retentionHealth < 0.5 ? Colors.redAccent : (retentionHealth < 0.8 ? Colors.orange : Colors.green);
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
-      decoration: BoxDecoration(
-        border: Border(bottom: BorderSide(color: Colors.grey[50]!)),
-      ),
+      decoration: BoxDecoration(border: Border(bottom: BorderSide(color: Colors.grey[50]!))),
       child: Row(
         children: [
-          // Plan Name
           Expanded(
             flex: 3,
             child: Row(
               children: [
                 Container(
                   padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFFF6B35).withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
+                  decoration: BoxDecoration(color: const Color(0xFFFF6B35).withOpacity(0.1), borderRadius: BorderRadius.circular(8)),
                   child: const Icon(Icons.bolt, color: Color(0xFFFF6B35), size: 20),
                 ),
                 const SizedBox(width: 16),
@@ -310,7 +410,6 @@ class _MembershipManagementScreenState extends State<MembershipManagementScreen>
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(plan.name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: Color(0xFF0A192F))),
-                      const SizedBox(height: 2),
                       Text(plan.description, style: TextStyle(color: Colors.grey[500], fontSize: 12), maxLines: 1, overflow: TextOverflow.ellipsis),
                     ],
                   ),
@@ -318,86 +417,33 @@ class _MembershipManagementScreenState extends State<MembershipManagementScreen>
               ],
             ),
           ),
-          // Price
-          Expanded(
-            flex: 2,
-            child: Text(
-              "${f.format(plan.price)} VNĐ",
-              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
-            ),
-          ),
-          // Subscribers
-          Expanded(
-            flex: 1,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(formattedSubscribers, style: const TextStyle(fontWeight: FontWeight.bold)),
-                const SizedBox(height: 4),
-                Row(
-                  children: List.generate(4, (i) {
-                    final colorLevel = subscriberCount > 100 ? 4 : (subscriberCount > 50 ? 3 : (subscriberCount > 10 ? 2 : (subscriberCount > 0 ? 1 : 0)));
-                    return Container(
-                      width: 8, height: 4, 
-                      margin: const EdgeInsets.only(right: 2),
-                      decoration: BoxDecoration(color: i < colorLevel ? Colors.orange : Colors.grey[200], borderRadius: BorderRadius.circular(2)),
-                    );
-                  }),
-                )
-              ],
-            ),
-          ),
-          // Retention Health
+          Expanded(flex: 2, child: Text("${f.format(plan.price)} ₫", style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15))),
+          Expanded(flex: 1, child: Text(subscriberCount.toString(), style: const TextStyle(fontWeight: FontWeight.bold))),
           Expanded(
             flex: 2,
             child: Row(
               children: [
-                Expanded(
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(2),
-                    child: LinearProgressIndicator(
-                      value: retentionHealth, 
-                      color: retentionColor, 
-                      backgroundColor: const Color(0xFFEEEEEE), 
-                      minHeight: 4
-                    ),
-                  ),
-                ),
+                Expanded(child: LinearProgressIndicator(value: retentionHealth, color: retentionColor, backgroundColor: const Color(0xFFEEEEEE), minHeight: 4)),
                 const SizedBox(width: 8),
                 Text(formattedRetention, style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: retentionColor)),
               ],
             ),
           ),
-          // Status
           Expanded(
             flex: 1,
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              decoration: BoxDecoration(
-                color: plan.isActive ? Colors.green[50] : Colors.orange[50],
-                borderRadius: BorderRadius.circular(4),
-              ),
-              child: Text(
-                plan.isActive ? "HOẠT ĐỘNG" : "CHỜ",
-                style: TextStyle(color: plan.isActive ? Colors.green : Colors.orange, fontSize: 10, fontWeight: FontWeight.bold),
-                textAlign: TextAlign.center,
-              ),
+              decoration: BoxDecoration(color: plan.isActive ? Colors.green[50] : Colors.orange[50], borderRadius: BorderRadius.circular(4)),
+              child: Text(plan.isActive ? "HOẠT ĐỘNG" : "LƯU TRỮ", style: TextStyle(color: plan.isActive ? Colors.green : Colors.orange, fontSize: 10, fontWeight: FontWeight.bold), textAlign: TextAlign.center),
             ),
           ),
-          // Actions
           Expanded(
             flex: 1,
             child: Row(
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
-                IconButton(
-                  icon: const Icon(Icons.edit_outlined, size: 20, color: Colors.grey),
-                  onPressed: () => _showPlanDialog(context, plan: plan),
-                ),
-                IconButton(
-                  icon: const Icon(Icons.delete_outline, size: 20, color: Colors.redAccent),
-                  onPressed: () => _showDeleteConfirm(context, plan),
-                ),
+                IconButton(icon: const Icon(Icons.edit_outlined, size: 20, color: Colors.grey), onPressed: () => _showPlanDialog(context, plan: plan)),
+                IconButton(icon: const Icon(Icons.delete_outline, size: 20, color: Colors.redAccent), onPressed: () => _showDeleteConfirm(context, plan)),
               ],
             ),
           ),
@@ -406,101 +452,34 @@ class _MembershipManagementScreenState extends State<MembershipManagementScreen>
     );
   }
 
-  Widget _buildTableFooter(int filteredCount, int totalCount) {
+  Widget _buildTableFooter(int count) {
     return Padding(
       padding: const EdgeInsets.all(24.0),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(
-            "HIỂN THỊ $filteredCount TRONG $totalCount GÓI TẬP",
-            style: TextStyle(color: Colors.grey[500], fontSize: 12, fontWeight: FontWeight.bold),
-          ),
-          Row(
-            children: [
-              IconButton(onPressed: () {}, icon: const Icon(Icons.chevron_left)),
-              const SizedBox(width: 8),
-              IconButton(onPressed: () {}, icon: const Icon(Icons.chevron_right)),
-            ],
-          )
+          Text("TỔNG CỘNG: $count GÓI TẬP", style: TextStyle(color: Colors.grey[500], fontSize: 12, fontWeight: FontWeight.bold)),
         ],
       ),
     );
   }
 
-  Widget _buildStatsSummary(
-    CustomerController customerController,
-    AdminController adminController,
-  ) {
+  Widget _buildStatsSummary(CustomerController customerController, AdminController adminController) {
     final f = NumberFormat.currency(locale: 'vi_VN', symbol: '₫');
-    final fNum = NumberFormat.decimalPattern('vi_VN');
-
-    final allMembers = customerController.allMembers;
-    final activeMembers = allMembers.where((m) => m.status == 'Active').length;
-    final inactiveMembers = allMembers.length - activeMembers;
-
-    // Tổng doanh thu tháng hiện tại từ AdminController
+    final activeMembers = customerController.allMembers.where((m) => m.status == 'Active').length;
     final monthlyRevenue = adminController.monthlyRevenue;
-    final currentMonth = DateTime.now().month - 1;
-    final thisMonthRevenue = currentMonth >= 0 && currentMonth < monthlyRevenue.length
-        ? monthlyRevenue[currentMonth]
-        : 0.0;
-    final lastMonthRevenue = currentMonth > 0 && currentMonth - 1 < monthlyRevenue.length
-        ? monthlyRevenue[currentMonth - 1]
-        : 0.0;
-    double revenueDiff = 0;
-    String revenueTrend = "Ổn định";
-    Color revenueTrendColor = Colors.grey;
-    if (lastMonthRevenue > 0) {
-      revenueDiff = ((thisMonthRevenue - lastMonthRevenue) / lastMonthRevenue) * 100;
-      revenueTrend = "${revenueDiff >= 0 ? '+' : ''}${revenueDiff.toStringAsFixed(0)}%";
-      revenueTrendColor = revenueDiff >= 0 ? Colors.green : Colors.redAccent;
-    }
-
-    // LTV trung bình của hội viên
-    final avgLtv = allMembers.isNotEmpty
-        ? allMembers.fold(0.0, (sum, m) => sum + m.ltv) / allMembers.length
-        : 0.0;
-
-    // Tỷ lệ rời bỏ
-    final churnRate = allMembers.isNotEmpty ? (inactiveMembers / allMembers.length) * 100 : 0.0;
-    Color churnColor = churnRate > 10 ? Colors.redAccent : (churnRate > 5 ? Colors.orange : Colors.blue);
-    String churnTrend = churnRate > 10 ? "Cần chú ý" : (churnRate > 5 ? "Theo dõi" : "Ổn định");
+    final thisMonthRevenue = monthlyRevenue.isNotEmpty ? monthlyRevenue.last : 0.0;
 
     return Row(
       children: [
-        _buildStatCard(
-          "TỔNG DOANH THU THÁNG",
-          f.format(thisMonthRevenue),
-          revenueTrend,
-          revenueTrendColor,
-        ),
+        _buildStatCard("DOANH THU THÁNG", f.format(thisMonthRevenue), "Tăng trưởng ổn định", Colors.green),
         const SizedBox(width: 24),
-        _buildStatCard(
-          "HỘI VIÊN ĐANG HOẠT ĐỘNG",
-          fNum.format(activeMembers),
-          "Tổng ${fNum.format(allMembers.length)} hội viên",
-          Colors.grey,
-        ),
-        const SizedBox(width: 24),
-        _buildStatCard(
-          "GIÁ TRỊ TB TRỌN ĐỜI",
-          f.format(avgLtv),
-          avgLtv > 0 ? "Từ ${fNum.format(allMembers.length)} hội viên" : "Chưa có dữ liệu",
-          Colors.green,
-        ),
-        const SizedBox(width: 24),
-        _buildStatCard(
-          "TỶ LỆ RỜI BỎ",
-          "${churnRate.toStringAsFixed(1)}%",
-          churnTrend,
-          churnColor,
-        ),
+        _buildStatCard("HỘI VIÊN HOẠT ĐỘNG", activeMembers.toString(), "Tham gia thường xuyên", Colors.blue),
       ],
     );
   }
 
-  Widget _buildStatCard(String title, String value, String trend, Color trendColor) {
+  Widget _buildStatCard(String title, String value, String description, Color color) {
     return Expanded(
       child: Container(
         padding: const EdgeInsets.all(24),
@@ -516,7 +495,7 @@ class _MembershipManagementScreenState extends State<MembershipManagementScreen>
               children: [
                 Text(value, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Color(0xFF0A192F))),
                 const SizedBox(width: 8),
-                Text(trend, style: TextStyle(color: trendColor, fontSize: 11, fontWeight: FontWeight.bold)),
+                Text(description, style: TextStyle(color: color, fontSize: 11, fontWeight: FontWeight.bold)),
               ],
             ),
           ],
@@ -548,82 +527,25 @@ class _MembershipManagementScreenState extends State<MembershipManagementScreen>
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    CustomTextField(
-                      controller: nameController,
-                      label: 'Tên gói tập',
-                      hintText: 'VD: Gói VIP 6 tháng',
-                      validator: (val) {
-                        if (val == null || val.trim().isEmpty) {
-                          return 'Vui lòng nhập tên gói tập';
-                        }
-                        return null;
-                      },
-                    ),
+                    CustomTextField(controller: nameController, label: 'Tên gói tập', validator: (val) => val!.isEmpty ? 'Vui lòng nhập tên' : null),
                     const SizedBox(height: 16),
-                    CustomTextField(
-                      controller: descController,
-                      label: 'Mô tả',
-                      hintText: 'Quyền lợi gói tập...',
-                      validator: (val) {
-                        if (val == null || val.trim().isEmpty) {
-                          return 'Vui lòng nhập mô tả gói tập';
-                        }
-                        return null;
-                      },
-                    ),
+                    CustomTextField(controller: descController, label: 'Mô tả'),
                     const SizedBox(height: 16),
-                    CustomTextField(
-                      controller: priceController,
-                      label: 'Giá (VNĐ)',
-                      keyboardType: TextInputType.number,
-                      validator: (val) {
-                        if (val == null || val.trim().isEmpty) {
-                          return 'Vui lòng nhập giá';
-                        }
-                        final price = double.tryParse(val);
-                        if (price == null || price <= 0) {
-                          return 'Giá phải là số dương hợp lệ';
-                        }
-                        return null;
-                      },
-                    ),
+                    CustomTextField(controller: priceController, label: 'Giá (VNĐ)', keyboardType: TextInputType.number),
                     const SizedBox(height: 16),
-                    CustomTextField(
-                      controller: durationController,
-                      label: 'Thời hạn (Tháng)',
-                      keyboardType: TextInputType.number,
-                      validator: (val) {
-                        if (val == null || val.trim().isEmpty) {
-                          return 'Vui lòng nhập thời hạn';
-                        }
-                        final duration = int.tryParse(val);
-                        if (duration == null || duration <= 0) {
-                          return 'Thời hạn phải là số nguyên dương hợp lệ';
-                        }
-                        return null;
-                      },
-                    ),
+                    CustomTextField(controller: durationController, label: 'Thời hạn (Tháng)', keyboardType: TextInputType.number),
                     const SizedBox(height: 16),
                     CheckboxListTile(
-                      title: const Text('Có huấn luyện viên (PT)'),
-                      value: hasPT,
-                      onChanged: (val) => setState(() => hasPT = val ?? false),
-                      contentPadding: EdgeInsets.zero,
-                      checkColor: Colors.white,
-                      fillColor: WidgetStateProperty.resolveWith((states) {
-                        if (states.contains(WidgetState.selected)) {
-                          return const Color(0xFFFF6B35);
-                        }
-                        return Colors.grey.shade300;
-                      }),
+                        title: const Text('Có huấn luyện viên (PT)'),
+                        value: hasPT,
+                        activeColor: const Color(0xFFFF6B35),
+                        onChanged: (val) => setState(() => hasPT = val ?? false)
                     ),
                     SwitchListTile(
-                      title: const Text('Kích hoạt gói tập'),
-                      value: isActive,
-                      onChanged: (val) => setState(() => isActive = val),
-                      contentPadding: EdgeInsets.zero,
-                      activeThumbColor: const Color(0xFFFF6B35),
-                      activeTrackColor: const Color(0xFFFF6B35).withValues(alpha: 0.4),
+                        title: const Text('Kích hoạt gói tập'),
+                        value: isActive,
+                        activeColor: const Color(0xFFFF6B35),
+                        onChanged: (val) => setState(() => isActive = val)
                     ),
                   ],
                 ),
@@ -635,7 +557,6 @@ class _MembershipManagementScreenState extends State<MembershipManagementScreen>
             ElevatedButton(
               onPressed: () async {
                 if (formKey.currentState!.validate()) {
-                  final controller = context.read<MembershipController>();
                   final newPlan = MembershipPlan(
                     id: plan?.id ?? '',
                     name: nameController.text.trim(),
@@ -645,19 +566,9 @@ class _MembershipManagementScreenState extends State<MembershipManagementScreen>
                     hasPT: hasPT,
                     isActive: isActive,
                   );
-                  try {
-                    if (plan == null) {
-                      await controller.addPlan(newPlan);
-                    } else {
-                      await controller.updatePlan(newPlan);
-                    }
-                    if (context.mounted) {
-                      Navigator.pop(context);
-                    }
-                  } catch (_) {
-                    // Error is already handled by controller errorMessage stream,
-                    // but we catch to prevent popping on failure.
-                  }
+                  if (plan == null) await context.read<MembershipController>().addPlan(newPlan);
+                  else await context.read<MembershipController>().updatePlan(newPlan);
+                  if (context.mounted) Navigator.pop(context);
                 }
               },
               style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFFF6B35), foregroundColor: Colors.white),
@@ -674,7 +585,7 @@ class _MembershipManagementScreenState extends State<MembershipManagementScreen>
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Xác nhận xóa'),
-        content: Text('Bạn có chắc chắn muốn xóa gói tập "${plan.name}" không?'),
+        content: Text('Bạn có chắc muốn xóa gói "${plan.name}"?'),
         actions: [
           TextButton(onPressed: () => Navigator.pop(context), child: const Text('Hủy')),
           TextButton(
