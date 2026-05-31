@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import '../../controllers/financial_controller.dart';
@@ -155,17 +156,15 @@ class _FinancialManagementScreenState extends State<FinancialManagementScreen>
   }
 
   Widget _buildOverviewTab() {
-    return Consumer<FinancialController>(
-      builder: (context, controller, _) {
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildSummaryCards(controller),
-            const SizedBox(height: 24),
-            _buildQuickActions(),
-          ],
-        );
-      },
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Consumer<FinancialController>(
+          builder: (context, controller, _) => _buildSummaryCards(controller),
+        ),
+        const SizedBox(height: 24),
+        _buildQuickActions(),
+      ],
     );
   }
 
@@ -238,7 +237,7 @@ class _FinancialManagementScreenState extends State<FinancialManagementScreen>
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
+            color: Colors.black.withOpacity(0.04),
             blurRadius: 24,
             offset: const Offset(0, 8),
           ),
@@ -253,25 +252,17 @@ class _FinancialManagementScreenState extends State<FinancialManagementScreen>
               Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: color.withValues(alpha: 0.12),
+                  color: color.withOpacity(0.12),
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Icon(icon, color: color, size: 22),
               ),
-              Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFF1F5F9),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: const Text(
-                  "STABLE",
-                  style: TextStyle(
-                    color: Color(0xFF475569),
-                    fontSize: 10,
-                    fontWeight: FontWeight.bold,
-                  ),
+              const Text(
+                "STABLE",
+                style: TextStyle(
+                  color: Color(0xFF475569),
+                  fontSize: 10,
+                  fontWeight: FontWeight.bold,
                 ),
               ),
             ],
@@ -331,12 +322,12 @@ class _FinancialManagementScreenState extends State<FinancialManagementScreen>
             _buildActionButton(
               title: 'Quản Lý Thanh Toán',
               icon: Icons.payment,
-              onTap: () => _navigateToPayments(),
+              onTap: () => context.go(Routes.paymentManagement),
             ),
             _buildActionButton(
               title: 'Quản Lý Lương',
               icon: Icons.people,
-              onTap: () => _navigateToPayroll(),
+              onTap: () => context.go(Routes.payrollManagement),
             ),
           ],
         ),
@@ -359,10 +350,10 @@ class _FinancialManagementScreenState extends State<FinancialManagementScreen>
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: Colors.grey.withValues(alpha: 0.15)),
+            border: Border.all(color: Colors.grey.withOpacity(0.15)),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withValues(alpha: 0.03),
+                color: Colors.black.withOpacity(0.03),
                 blurRadius: 12,
                 offset: const Offset(0, 6),
               ),
@@ -374,7 +365,7 @@ class _FinancialManagementScreenState extends State<FinancialManagementScreen>
               Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFFF6B35).withValues(alpha: 0.12),
+                  color: const Color(0xFFFF6B35).withOpacity(0.12),
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Icon(icon, color: const Color(0xFFFF6B35), size: 22),
@@ -410,7 +401,7 @@ class _FinancialManagementScreenState extends State<FinancialManagementScreen>
             borderRadius: BorderRadius.circular(16),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withValues(alpha: 0.04),
+                color: Colors.black.withOpacity(0.04),
                 blurRadius: 24,
                 offset: const Offset(0, 8),
               ),
@@ -446,7 +437,7 @@ class _FinancialManagementScreenState extends State<FinancialManagementScreen>
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
+            color: Colors.black.withOpacity(0.04),
             blurRadius: 24,
             offset: const Offset(0, 8),
           ),
@@ -502,14 +493,6 @@ class _FinancialManagementScreenState extends State<FinancialManagementScreen>
       context: context,
       builder: (context) => _AddTransactionDialog(type: type),
     );
-  }
-
-  void _navigateToPayments() {
-    Navigator.pushReplacementNamed(context, Routes.paymentManagement);
-  }
-
-  void _navigateToPayroll() {
-    Navigator.pushReplacementNamed(context, Routes.payrollManagement);
   }
 }
 
@@ -590,7 +573,7 @@ class _AddTransactionDialogState extends State<_AddTransactionDialog> {
             ),
             const SizedBox(height: 12),
             DropdownButtonFormField<String>(
-              initialValue: _selectedCategory,
+              value: _selectedCategory,
               items: categories
                   .map((cat) => DropdownMenuItem(value: cat, child: Text(cat)))
                   .toList(),
@@ -606,13 +589,13 @@ class _AddTransactionDialogState extends State<_AddTransactionDialog> {
       ),
       actions: [
         TextButton(
-          onPressed: () => Navigator.pop(context),
+          onPressed: () => context.pop(),
           child: const Text('Hủy'),
         ),
         ElevatedButton(
           onPressed: () {
             _addTransaction();
-            Navigator.pop(context);
+            context.pop();
           },
           child: const Text('Thêm'),
         ),

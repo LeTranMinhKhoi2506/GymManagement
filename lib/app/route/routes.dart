@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import '../../screens/login_screen.dart';
 import '../../screens/signup_screen.dart';
 import '../../screens/forgot_password_screen.dart';
@@ -56,36 +57,37 @@ class Routes {
   static const String ptIncome = '/pt-income';
   static const String ptClassRegistration = '/pt-class-registration';
 
-  static Map<String, WidgetBuilder> getRoutes() {
-    return {
-      login: (context) => const LoginScreen(),
-      signup: (context) => const SignUpScreen(),
-      forgotPassword: (context) => const ForgotPasswordScreen(),
-      adminDashboard: (context) => const AdminDashboardScreen(),
-      personnelManagement: (context) => const PersonnelManagementScreen(),
-      scheduleManagement: (context) => const ScheduleManagementScreen(),
-      customerManagement: (context) => const CustomerManagementScreen(),
-      storeManagement: (context) => const StoreManagementScreen(),
-      membershipManagement: (context) => const MembershipManagementScreen(),
-      financialManagement: (context) => const FinancialManagementScreen(),
-      paymentManagement: (context) => const PaymentManagementScreen(),
-      payrollManagement: (context) => const PayrollManagementScreen(),
-      equipmentManagement: (context) => const EquipmentManagementScreen(),
-      notificationManagement: (context) => const NotificationManagementScreen(),
-      feedbackManagement: (context) => const FeedbackManagementScreen(),
-      contentManagement: (context) => const ContentManagementScreen(),
-      categoryManagement: (context) => const CategoryManagementScreen(),
-      roleManagement: (context) => const RoleManagementScreen(),
-      reportManagement: (context) => const ReportManagementScreen(),
-      mediaManagement: (context) => const MediaManagementScreen(),
-      sessionManagement: (context) => const SessionManagementScreen(),
+  static final GoRouter router = GoRouter(
+    initialLocation: ptDashboard,
+    routes: [
+      GoRoute(path: login, builder: (context, state) => const LoginScreen()),
+      GoRoute(path: signup, builder: (context, state) => const SignUpScreen()),
+      GoRoute(path: forgotPassword, builder: (context, state) => const ForgotPasswordScreen()),
+      GoRoute(path: adminDashboard, builder: (context, state) => const AdminDashboardScreen()),
+      GoRoute(path: personnelManagement, builder: (context, state) => const PersonnelManagementScreen()),
+      GoRoute(path: scheduleManagement, builder: (context, state) => const ScheduleManagementScreen()),
+      GoRoute(path: customerManagement, builder: (context, state) => const CustomerManagementScreen()),
+      GoRoute(path: storeManagement, builder: (context, state) => const StoreManagementScreen()),
+      GoRoute(path: membershipManagement, builder: (context, state) => const MembershipManagementScreen()),
+      GoRoute(path: financialManagement, builder: (context, state) => const FinancialManagementScreen()),
+      GoRoute(path: paymentManagement, builder: (context, state) => const PaymentManagementScreen()),
+      GoRoute(path: payrollManagement, builder: (context, state) => const PayrollManagementScreen()),
+      GoRoute(path: equipmentManagement, builder: (context, state) => const EquipmentManagementScreen()),
+      GoRoute(path: notificationManagement, builder: (context, state) => const NotificationManagementScreen()),
+      GoRoute(path: feedbackManagement, builder: (context, state) => const FeedbackManagementScreen()),
+      GoRoute(path: contentManagement, builder: (context, state) => const ContentManagementScreen()),
+      GoRoute(path: categoryManagement, builder: (context, state) => const CategoryManagementScreen()),
+      GoRoute(path: roleManagement, builder: (context, state) => const RoleManagementScreen()),
+      GoRoute(path: reportManagement, builder: (context, state) => const ReportManagementScreen()),
+      GoRoute(path: mediaManagement, builder: (context, state) => const MediaManagementScreen()),
+      GoRoute(path: sessionManagement, builder: (context, state) => const SessionManagementScreen()),
       
       // PT Routes
-      ptDashboard: (context) => const PtDashboardScreen(),
-      ptSchedule: (context) => const PtScheduleScreen(),
-      ptStudentManagement: (context) => const PtStudentManagementScreen(),
-      ptIncome: (context) => const PtIncomeScreen(),
-      ptClassRegistration: (context) => const PtClassRegistrationScreen(),
-    };
-  }
+      GoRoute(path: ptDashboard, builder: (context, state) => const PtDashboardScreen()),
+      GoRoute(path: ptSchedule, builder: (context, state) => const PtScheduleScreen()),
+      GoRoute(path: ptStudentManagement, builder: (context, state) => const PtStudentManagementScreen()),
+      GoRoute(path: ptIncome, builder: (context, state) => const PtIncomeScreen()),
+      GoRoute(path: ptClassRegistration, builder: (context, state) => const PtClassRegistrationScreen()),
+    ],
+  );
 }

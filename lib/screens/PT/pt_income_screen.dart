@@ -1,10 +1,18 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:intl/intl.dart';
+import '../../app/route/routes.dart';
 
 class PtIncomeScreen extends StatelessWidget {
   const PtIncomeScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final String ptId = FirebaseAuth.instance.currentUser?.uid ?? 'anonymous';
+    final currencyFormat = NumberFormat.currency(locale: 'vi_VN', symbol: '₫');
+
     return Scaffold(
       backgroundColor: Colors.black,
       body: SafeArea(
@@ -16,30 +24,104 @@ class PtIncomeScreen extends StatelessWidget {
               _buildHeader(),
               const SizedBox(height: 30),
               const Text(
-                "EARNINGS REPORT",
+                "BÁO CÁO THU NHẬP",
                 style: TextStyle(color: Colors.white, fontSize: 32, fontWeight: FontWeight.bold),
               ),
               const Text(
-                "OCTOBER",
+                "THÁNG HIỆN TẠI",
                 style: TextStyle(color: Color(0xFFD0FD3E), fontSize: 14, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 30),
-              _buildTotalCommissionCard(),
+              
+              // Total Commission Card with Firebase
+              StreamBuilder<QuerySnapshot>(
+                stream: FirebaseFirestore.instance
+                    .collection('pt_payouts')
+                    .where('ptId', isEqualTo: ptId)
+                    .snapshots(),
+                builder: (context, snapshot) {
+                  double totalCommission = 0;
+                  if (snapshot.hasData) {
+                    for (var doc in snapshot.data!.docs) {
+                      totalCommission += (doc.data() as Map<String, dynamic>)['amount'] ?? 0.0;
+                    }
+                  }
+                  return _buildTotalCommissionCard(totalCommission, currencyFormat);
+                },
+              ),
+              
               const SizedBox(height: 15),
-              _buildSecondaryStatsRow(),
+              
+              // Secondary Stats (Sessions & Bonuses)
+              StreamBuilder<QuerySnapshot>(
+                stream: FirebaseFirestore.instance
+                    .collection('pt_sessions')
+                    .where('ptId', isEqualTo: ptId)
+                    .where('status', isEqualTo: 'HOÀN THÀNH')
+                    .snapshots(),
+                builder: (context, snapshot) {
+                  int sessionsCount = snapshot.hasData ? snapshot.data!.docs.length : 0;
+                  return _buildSecondaryStatsRow(sessionsCount.toString());
+                },
+              ),
+              
               const SizedBox(height: 30),
               _buildWeeklyMomentumSection(),
               const SizedBox(height: 30),
-              _buildSectionHeader("RECENT PAYOUTS", () {}),
+              _buildSectionHeader("CÁC KHOẢN THANH TOÁN GẦN ĐÂY", () {}),
               const SizedBox(height: 15),
-              _buildRecentPayoutsList(),
+              
+              // Recent Payouts List with Firebase
+              StreamBuilder<QuerySnapshot>(
+                stream: FirebaseFirestore.instance
+                    .collection('pt_payouts')
+                    .where('ptId', isEqualTo: ptId)
+                    .orderBy('timestamp', descending: true)
+                    .limit(5)
+                    .snapshots(),
+                builder: (context, snapshot) {
+                  if (snapshot.hasError) return const Text("Lỗi tải dữ liệu", style: TextStyle(color: Colors.red));
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const Center(child: CircularProgressIndicator(color: Color(0xFFD0FD3E)));
+                  }
+                  if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+                    return const Center(child: Text("Chưa có thanh toán nào", style: TextStyle(color: Colors.grey)));
+                  }
+
+                  return Column(
+                    children: snapshot.data!.docs.map((doc) {
+                      var data = doc.data() as Map<String, dynamic>;
+                      DateTime date = (data['timestamp'] as Timestamp).toDate();
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: 15),
+                        child: _buildPayoutItem(
+                          icon: _getPayoutIcon(data['type']),
+                          title: data['title'] ?? "Thanh toán",
+                          date: "${DateFormat('dd/MM/yyyy').format(date)} • ${data['method'] ?? 'Chuyển khoản'}",
+                          amount: "+${currencyFormat.format(data['amount'] ?? 0)}",
+                          status: data['status'] ?? "HOÀN THÀNH",
+                          statusColor: data['status'] == 'ĐANG CHỜ' ? Colors.grey : const Color(0xFFD0FD3E),
+                        ),
+                      );
+                    }).toList(),
+                  );
+                },
+              ),
               const SizedBox(height: 30),
             ],
           ),
         ),
       ),
-      bottomNavigationBar: _buildBottomNav(),
+      bottomNavigationBar: _buildBottomNav(context),
     );
+  }
+
+  IconData _getPayoutIcon(String? type) {
+    switch (type) {
+      case 'bonus': return Icons.star;
+      case 'session': return Icons.fitness_center;
+      default: return Icons.account_balance_wallet;
+    }
   }
 
   Widget _buildHeader() {
@@ -48,10 +130,7 @@ class PtIncomeScreen extends StatelessWidget {
       children: [
         Row(
           children: [
-            const CircleAvatar(
-              radius: 18,
-              backgroundImage: NetworkImage('https://i.pravatar.cc/150?u=pt_marcus'),
-            ),
+            _buildSafeAvatar('https://i.pravatar.cc/150?u=pt_marcus', 18),
             const SizedBox(width: 10),
             const Text(
               "KINETIC",
@@ -69,7 +148,23 @@ class PtIncomeScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildTotalCommissionCard() {
+  Widget _buildSafeAvatar(String url, double radius) {
+    return CircleAvatar(
+      radius: radius,
+      backgroundColor: Colors.grey[900],
+      child: ClipOval(
+        child: Image.network(
+          url,
+          fit: BoxFit.cover,
+          width: radius * 2,
+          height: radius * 2,
+          errorBuilder: (context, error, stackTrace) => Icon(Icons.person, color: Colors.white, size: radius),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTotalCommissionCard(double amount, NumberFormat formatter) {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(25),
@@ -81,37 +176,37 @@ class PtIncomeScreen extends StatelessWidget {
         children: [
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
-            children: const [
-              Text(
-                "TOTAL COMMISSION",
+            children: [
+              const Text(
+                "TỔNG HOA HỒNG",
                 style: TextStyle(color: Colors.grey, fontSize: 12, fontWeight: FontWeight.bold),
               ),
-              SizedBox(height: 10),
+              const SizedBox(height: 10),
               Text(
-                "\$8,420",
-                style: TextStyle(color: Color(0xFFD0FD3E), fontSize: 48, fontWeight: FontWeight.bold),
+                formatter.format(amount),
+                style: const TextStyle(color: Color(0xFFD0FD3E), fontSize: 32, fontWeight: FontWeight.bold),
               ),
             ],
           ),
           Positioned(
             right: 0,
             top: 0,
-            child: Icon(Icons.account_balance_wallet_outlined, color: Colors.grey.withOpacity(0.2), size: 60),
+            child: Icon(Icons.account_balance_wallet_outlined, color: Colors.grey.withOpacity(0.1), size: 60),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildSecondaryStatsRow() {
+  Widget _buildSecondaryStatsRow(String sessions) {
     return Row(
       children: [
         Expanded(
-          child: _buildStatBox("SESSIONS", "142", "+12%", const Color(0xFFD0FD3E)),
+          child: _buildStatBox("SỐ CA DẠY", sessions, "+12%", const Color(0xFFD0FD3E)),
         ),
         const SizedBox(width: 15),
         Expanded(
-          child: _buildStatBox("BONUSES", "\$1,200", null, Colors.orangeAccent, showLeftBar: true),
+          child: _buildStatBox("TIỀN THƯỞNG", "0₫", null, Colors.orangeAccent, showLeftBar: true),
         ),
       ],
     );
@@ -133,23 +228,25 @@ class PtIncomeScreen extends StatelessWidget {
               decoration: BoxDecoration(color: color, borderRadius: BorderRadius.circular(2)),
               margin: const EdgeInsets.only(right: 15),
             ),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(label, style: const TextStyle(color: Colors.grey, fontSize: 10, fontWeight: FontWeight.bold)),
-              const SizedBox(height: 8),
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.baseline,
-                textBaseline: TextBaseline.alphabetic,
-                children: [
-                  Text(value, style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold)),
-                  if (percentage != null) ...[
-                    const SizedBox(width: 5),
-                    Text(percentage, style: TextStyle(color: color, fontSize: 10, fontWeight: FontWeight.bold)),
-                  ]
-                ],
-              ),
-            ],
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(label, style: const TextStyle(color: Colors.grey, fontSize: 10, fontWeight: FontWeight.bold), overflow: TextOverflow.ellipsis),
+                const SizedBox(height: 8),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.baseline,
+                  textBaseline: TextBaseline.alphabetic,
+                  children: [
+                    Text(value, style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
+                    if (percentage != null) ...[
+                      const SizedBox(width: 5),
+                      Text(percentage, style: TextStyle(color: color, fontSize: 10, fontWeight: FontWeight.bold)),
+                    ]
+                  ],
+                ),
+              ],
+            ),
           ),
         ],
       ),
@@ -172,12 +269,12 @@ class PtIncomeScreen extends StatelessWidget {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: const [
-                  Text("WEEKLY MOMENTUM", style: TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold)),
-                  Text("Mon 21 - Sun 27", style: TextStyle(color: Colors.grey, fontSize: 10)),
+                  Text("HIỆU SUẤT TUẦN", style: TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold)),
+                  Text("Dữ liệu 7 ngày gần nhất", style: TextStyle(color: Colors.grey, fontSize: 10)),
                 ],
               ),
               const Text(
-                "PEAK PERFORMANCE",
+                "ĐỈNH CAO",
                 style: TextStyle(color: Color(0xFFD0FD3E), fontSize: 10, fontWeight: FontWeight.bold),
               ),
             ],
@@ -190,20 +287,20 @@ class PtIncomeScreen extends StatelessWidget {
   }
 
   Widget _buildMiniChart() {
-    final days = ["M", "T", "W", "T", "F", "S", "S"];
+    final days = ["T2", "T3", "T4", "T5", "T6", "T7", "CN"];
     final heights = [0.4, 0.6, 0.3, 0.8, 0.5, 0.9, 0.7];
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       crossAxisAlignment: CrossAxisAlignment.end,
       children: List.generate(7, (index) {
-        bool isWednesday = index == 2;
+        bool isToday = index == DateTime.now().weekday - 1;
         return Column(
           children: [
             Container(
               width: 8,
               height: 100 * heights[index],
               decoration: BoxDecoration(
-                color: isWednesday ? const Color(0xFFD0FD3E) : Colors.grey.withOpacity(0.2),
+                color: isToday ? const Color(0xFFD0FD3E) : Colors.grey.withOpacity(0.2),
                 borderRadius: BorderRadius.circular(4),
               ),
             ),
@@ -211,7 +308,7 @@ class PtIncomeScreen extends StatelessWidget {
             Text(
               days[index],
               style: TextStyle(
-                color: index >= 5 ? Colors.orangeAccent : (isWednesday ? Colors.white : Colors.grey),
+                color: index >= 5 ? Colors.orangeAccent : (isToday ? Colors.white : Colors.grey),
                 fontSize: 10,
                 fontWeight: FontWeight.bold,
               ),
@@ -233,42 +330,9 @@ class PtIncomeScreen extends StatelessWidget {
         GestureDetector(
           onTap: onTap,
           child: const Text(
-            "VIEW ALL",
+            "XEM TẤT CẢ",
             style: TextStyle(color: Color(0xFFD0FD3E), fontSize: 10, fontWeight: FontWeight.bold),
           ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildRecentPayoutsList() {
-    return Column(
-      children: [
-        _buildPayoutItem(
-          icon: Icons.account_balance_wallet,
-          title: "Monthly Base Payout",
-          date: "Oct 28, 2023 • Bank Transfer",
-          amount: "+\$5,200.00",
-          status: "COMPLETED",
-          statusColor: const Color(0xFFD0FD3E),
-        ),
-        const SizedBox(height: 15),
-        _buildPayoutItem(
-          icon: Icons.fitness_center,
-          title: "Personal Training (12 Sessions)",
-          date: "Oct 26, 2023 • Student Group A",
-          amount: "+\$1,440.00",
-          status: "PENDING",
-          statusColor: Colors.grey,
-        ),
-        const SizedBox(height: 15),
-        _buildPayoutItem(
-          icon: Icons.star,
-          title: "Retention Bonus",
-          date: "Oct 24, 2023 • Milestone 3",
-          amount: "+\$800.00",
-          status: "COMPLETED",
-          statusColor: const Color(0xFFD0FD3E),
         ),
       ],
     );
@@ -296,7 +360,7 @@ class PtIncomeScreen extends StatelessWidget {
               color: Colors.black,
               borderRadius: BorderRadius.circular(12),
             ),
-            child: Icon(icon, color: status == "PENDING" ? const Color(0xFFD0FD3E) : Colors.orangeAccent, size: 20),
+            child: Icon(icon, color: status == "ĐANG CHỜ" ? const Color(0xFFD0FD3E) : Colors.orangeAccent, size: 20),
           ),
           const SizedBox(width: 15),
           Expanded(
@@ -320,7 +384,7 @@ class PtIncomeScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildBottomNav() {
+  Widget _buildBottomNav(BuildContext context) {
     return Container(
       color: Colors.black,
       padding: const EdgeInsets.symmetric(vertical: 10),
@@ -334,11 +398,16 @@ class PtIncomeScreen extends StatelessWidget {
         showUnselectedLabels: true,
         selectedLabelStyle: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold),
         unselectedLabelStyle: const TextStyle(fontSize: 10),
+        onTap: (index) {
+          if (index == 0) context.go(Routes.ptDashboard);
+          if (index == 1) context.go(Routes.ptSchedule);
+          if (index == 2) context.go(Routes.ptStudentManagement);
+        },
         items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.grid_view_rounded), label: "HOME"),
-          BottomNavigationBarItem(icon: Icon(Icons.calendar_today_outlined), label: "SCHEDULE"),
-          BottomNavigationBarItem(icon: Icon(Icons.people_outline), label: "STUDENTS"),
-          BottomNavigationBarItem(icon: Icon(Icons.person_rounded), label: "ACCOUNT"),
+          BottomNavigationBarItem(icon: Icon(Icons.grid_view_rounded), label: "TRANG CHỦ"),
+          BottomNavigationBarItem(icon: Icon(Icons.calendar_today_outlined), label: "LỊCH DẠY"),
+          BottomNavigationBarItem(icon: Icon(Icons.people_outline), label: "HỌC VIÊN"),
+          BottomNavigationBarItem(icon: Icon(Icons.person_rounded), label: "TÀI KHOẢN"),
         ],
       ),
     );

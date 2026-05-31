@@ -1,19 +1,25 @@
-2026/05/31-14:24:11.086 338c Reusing MANIFEST C:\Users\anhla\AppData\Local\Temp\flutter_tools.669f01c\flutter_tools_chrome_device.908efadf\Default\EdgeCoupons/coupons_data.db/MANIFEST-000001
-2026/05/31-14:24:11.088 338c Recovering log #16
-2026/05/31-14:24:11.090 338c Reusing old log C:\Users\anhla\AppData\Local\Temp\flutter_tools.669f01c\flutter_tools_chrome_device.908efadf\Default\EdgeCoupons/coupons_data.db/000016.log 
-2026/05/31-14:24:11.094 338c Delete type=0 #4
-2026/05/31-14:24:11.094 338c Delete type=0 #7
-2026/05/31-14:24:11.095 338c Delete type=0 #10
-2026/05/31-14:24:11.095 338c Delete type=0 #13
-2026/05/31-14:24:27.845 5b28 Level-0 table #20: started
-2026/05/31-14:24:27.849 5b28 Level-0 table #20: 682808 bytes OK
-2026/05/31-14:24:27.851 5b28 Delete type=0 #16
-2026/05/31-14:24:27.851 5b28 Compacting 4@0 + 1@1 files
-2026/05/31-14:24:27.856 5b28 Generated table #21@0: 4 keys, 682715 bytes
-2026/05/31-14:24:27.856 5b28 Compacted 4@0 + 1@1 files => 682715 bytes
-2026/05/31-14:24:27.857 5b28 compacted to: files[ 0 1 1 0 0 0 0 ]
-2026/05/31-14:24:27.858 5b28 Delete type=2 #8
-2026/05/31-14:24:27.858 5b28 Delete type=2 #11
-2026/05/31-14:24:27.858 5b28 Delete type=2 #14
-2026/05/31-14:24:27.858 5b28 Delete type=2 #17
-2026/05/31-14:24:27.858 5b28 Delete type=2 #20
+2026/05/31-15:30:09.206 1c80 Reusing MANIFEST C:\Users\anhla\AppData\Local\Temp\flutter_tools.520ff35\flutter_tools_chrome_device.6e889735\Default\EdgeCoupons/coupons_data.db/MANIFEST-000001
+2026/05/31-15:30:09.208 1c80 Recovering log #39
+2026/05/31-15:30:09.209 1c80 Reusing old log C:\Users\anhla\AppData\Local\Temp\flutter_tools.520ff35\flutter_tools_chrome_device.6e889735\Default\EdgeCoupons/coupons_data.db/000039.log 
+2026/05/31-15:30:09.211 1c80 Delete type=0 #4
+2026/05/31-15:30:09.211 1c80 Delete type=0 #7
+2026/05/31-15:30:09.211 1c80 Delete type=2 #8
+2026/05/31-15:30:09.211 1c80 Delete type=0 #10
+2026/05/31-15:30:09.211 1c80 Delete type=2 #11
+2026/05/31-15:30:09.212 1c80 Delete type=0 #13
+2026/05/31-15:30:09.212 1c80 Delete type=2 #14
+2026/05/31-15:30:09.235 1c80 Delete type=0 #16
+2026/05/31-15:30:09.251 1c80 Delete type=2 #17
+2026/05/31-15:30:09.252 1c80 Delete type=0 #19
+2026/05/31-15:30:09.282 1c80 Delete type=2 #21
+2026/05/31-15:30:09.297 1c80 Delete type=0 #23
+2026/05/31-15:30:09.298 1c80 Delete type=2 #24
+2026/05/31-15:30:09.298 1c80 Delete type=0 #26
+2026/05/31-15:30:09.298 1c80 Delete type=2 #27
+2026/05/31-15:30:09.313 1c80 Delete type=0 #29
+2026/05/31-15:30:09.327 1c80 Delete type=2 #30
+2026/05/31-15:30:09.328 1c80 Delete type=0 #32
+2026/05/31-15:30:09.328 1c80 Delete type=0 #36
+2026/05/31-15:30:11.227 6250 Level-0 table #43: started
+2026/05/31-15:30:11.232 6250 Level-0 table #43: 682808 bytes OK
+2026/05/31-15:30:11.234 6250 Delete type=0 #39

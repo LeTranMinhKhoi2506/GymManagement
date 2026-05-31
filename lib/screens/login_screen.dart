@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import '../controllers/auth_controller.dart';
 import '../common/styles/app_styles.dart';
@@ -31,19 +32,18 @@ class _LoginScreenState extends State<LoginScreen> {
       if (result['status'] == 'success') {
         final user = authController.currentUser;
         if (!mounted) return;
-        if (kIsWeb && user?.role != 'admin') {
-          await authController.signOut();
-          _showSnackBar("Tài khoản không có quyền Admin.", Colors.red);
-        } else if (!kIsWeb && user?.role != 'user') {
-          await authController.signOut();
-          _showSnackBar("Vui lòng dùng App cho Thành viên.", Colors.red);
+        
+        // Logic phân quyền và chuyển trang bằng GoRouter
+        if (user?.role == 'admin') {
+          context.go(Routes.adminDashboard);
+        } else if (user?.role == 'trainer') {
+          context.go(Routes.ptDashboard);
         } else {
-          _showSnackBar("Chào mừng ${user?.fullName}!", Colors.green);
-          
-          if (user?.role == 'admin') {
-            Navigator.pushReplacementNamed(context, Routes.adminDashboard);
-          }
+          // Cho các user thông thường (Member)
+          context.go(Routes.ptDashboard); // Hoặc route của member nếu có
         }
+        
+        _showSnackBar("Chào mừng ${user?.fullName}!", Colors.green);
       } else {
         _showSnackBar(result['message'] ?? "Lỗi đăng nhập", Colors.red);
       }
@@ -78,7 +78,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   const Icon(Icons.fitness_center, size: 70, color: AppStyles.primaryColor),
                   const SizedBox(height: 16),
                   Text(
-                    kIsWeb ? "ADMIN PORTAL" : "GYM MEMBER",
+                    kIsWeb ? "ADMIN PORTAL" : "KINETIC MEMBER",
                     style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, letterSpacing: 1.2),
                   ),
                   const SizedBox(height: 32),
@@ -113,7 +113,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   Align(
                     alignment: Alignment.centerRight,
                     child: TextButton(
-                      onPressed: () {}, 
+                      onPressed: () => context.push(Routes.forgotPassword), 
                       child: const Text("Quên mật khẩu?", style: TextStyle(color: Colors.grey)),
                     ),
                   ),
@@ -130,7 +130,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     children: [
                       const Text("Chưa có tài khoản?"),
                       TextButton(
-                        onPressed: () => Navigator.pushNamed(context, Routes.signup),
+                        onPressed: () => context.push(Routes.signup),
                         child: const Text("Đăng ký", style: TextStyle(fontWeight: FontWeight.bold, color: AppStyles.primaryColor)),
                       ),
                     ],

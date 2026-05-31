@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:provider/provider.dart';
+import 'package:intl/date_symbol_data_local.dart';
 import 'app/app_providers.dart';
 import 'app/route/routes.dart';
 import 'firebase_options.dart';
@@ -10,6 +11,11 @@ void main() async {
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
+  
+  // Khởi tạo dữ liệu ngôn ngữ tiếng Việt cho Intl
+  await initializeDateFormatting('vi', null);
+  await initializeDateFormatting('vi_VN', null);
+
   runApp(
     MultiProvider(
       providers: AppProviders.providers,
@@ -23,7 +29,7 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    return MaterialApp.router(
       title: 'Gym Management Admin',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
@@ -47,9 +53,7 @@ class MyApp extends StatelessWidget {
           ),
         ),
       ),
-      //initialRoute: Routes.login,
-      initialRoute: Routes.ptDashboard, // test
-      routes: Routes.getRoutes(),
+      routerConfig: Routes.router,
     );
   }
 }

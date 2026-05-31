@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import '../../../app/route/routes.dart';
 
 class SidebarWidget extends StatefulWidget {
@@ -19,7 +20,8 @@ class _SidebarWidgetState extends State<SidebarWidget> {
 
   @override
   Widget build(BuildContext context) {
-    final currentRoute = ModalRoute.of(context)?.settings.name;
+    // Lấy route hiện tại để highlight menu
+    final currentRoute = GoRouterState.of(context).matchedLocation;
 
     return Container(
       width: _sidebarWidth,
@@ -133,7 +135,7 @@ class _SidebarWidgetState extends State<SidebarWidget> {
     );
   }
 
-  Widget _buildGroup(BuildContext context, {required String title, required IconData icon, required bool isExpanded, required VoidCallback? onToggle, required String? currentRoute, required List<_NavItem> items}) {
+  Widget _buildGroup(BuildContext context, {required String title, required IconData icon, required bool isExpanded, required VoidCallback? onToggle, required String currentRoute, required List<_NavItem> items}) {
     final isActive = items.any((item) => item.route == currentRoute);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -169,7 +171,7 @@ class _SidebarWidgetState extends State<SidebarWidget> {
         visualDensity: const VisualDensity(vertical: -2),
         leading: Icon(icon, size: 18, color: isActive ? const Color(0xFFFF6B35) : Colors.blueGrey[400]),
         title: Text(title, style: TextStyle(fontSize: 12, color: isActive ? const Color(0xFFFF6B35) : Colors.blueGrey[300], fontWeight: isActive ? FontWeight.w600 : FontWeight.normal)),
-        onTap: () => Navigator.pushReplacementNamed(context, route),
+        onTap: () => context.go(route),
       ),
     );
   }
