@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:go_router/go_router.dart';
 import '../../app/route/routes.dart';
 
 class PtStudentManagementScreen extends StatelessWidget {
@@ -6,6 +9,8 @@ class PtStudentManagementScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final String ptId = FirebaseAuth.instance.currentUser?.uid ?? 'anonymous';
+
     return Scaffold(
       backgroundColor: Colors.black,
       body: SafeArea(
@@ -18,43 +23,59 @@ class PtStudentManagementScreen extends StatelessWidget {
             ),
             _buildCategoryList(),
             Expanded(
-              child: ListView(
-                padding: const EdgeInsets.all(20),
-                children: [
-                  _buildStudentCard(
-                    name: "Marcus Chen",
-                    category: "HYPERTROPHY",
-                    lastSession: "Oct 24, 2023",
-                    imageUrl: "https://i.pravatar.cc/150?u=marcus_chen",
-                    categoryColor: const Color(0xFFD0FD3E),
-                  ),
-                  _buildStudentCard(
-                    name: "Sarah Jenkins",
-                    category: "MOBILITY",
-                    lastSession: "Oct 22, 2023",
-                    imageUrl: "https://i.pravatar.cc/150?u=sarah_jenkins",
-                    categoryColor: Colors.orangeAccent,
-                  ),
-                  _buildStudentCard(
-                    name: "David Miller",
-                    category: "WEIGHT LOSS",
-                    lastSession: "Oct 19, 2023",
-                    imageUrl: "https://i.pravatar.cc/150?u=david_miller",
-                    categoryColor: Colors.deepOrangeAccent,
-                  ),
-                ],
+              child: StreamBuilder<QuerySnapshot>(
+                stream: FirebaseFirestore.instance
+                    .collection('students')
+                    .where('ptId', isEqualTo: ptId)
+                    .snapshots(),
+                builder: (context, snapshot) {
+                  if (snapshot.hasError) return const Center(child: Text("Lỗi tải dữ liệu", style: TextStyle(color: Colors.red)));
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const Center(child: CircularProgressIndicator(color: Color(0xFFD0FD3E)));
+                  }
+
+                  if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+                    return const Center(child: Text("Chưa có học viên nào", style: TextStyle(color: Colors.grey)));
+                  }
+
+                  return ListView.builder(
+                    padding: const EdgeInsets.all(20),
+                    itemCount: snapshot.data!.docs.length,
+                    itemBuilder: (context, index) {
+                      var data = snapshot.data!.docs[index].data() as Map<String, dynamic>;
+                      return _buildStudentCard(
+                        name: data['name'] ?? "Học viên",
+                        category: data['goal'] ?? "CHƯA XÁC ĐỊNH",
+                        lastSession: data['lastSession'] ?? "Chưa có",
+                        imageUrl: data['photoUrl'] ?? 'https://i.pravatar.cc/150?u=${snapshot.data!.docs[index].id}',
+                        categoryColor: _getGoalColor(data['goal']),
+                      );
+                    },
+                  );
+                },
               ),
             ),
           ],
         ),
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () {},
+        onPressed: () {
+          // Navigator to add student or similar
+        },
         backgroundColor: const Color(0xFFD0FD3E),
         child: const Icon(Icons.add, color: Colors.black, size: 30),
       ),
       bottomNavigationBar: _buildBottomNav(context),
     );
+  }
+
+  Color _getGoalColor(String? goal) {
+    switch (goal?.toUpperCase()) {
+      case 'HYPERTROPHY': return const Color(0xFFD0FD3E);
+      case 'MOBILITY': return Colors.orangeAccent;
+      case 'WEIGHT LOSS': return Colors.deepOrangeAccent;
+      default: return Colors.blueAccent;
+    }
   }
 
   Widget _buildHeader() {
@@ -65,10 +86,7 @@ class PtStudentManagementScreen extends StatelessWidget {
         children: [
           Row(
             children: [
-              const CircleAvatar(
-                radius: 18,
-                backgroundImage: NetworkImage('https://i.pravatar.cc/150?u=pt_marcus'),
-              ),
+              _buildSafeAvatar('https://i.pravatar.cc/150?u=pt_marcus', 18),
               const SizedBox(width: 10),
               const Text(
                 "KINETIC",
@@ -87,6 +105,22 @@ class PtStudentManagementScreen extends StatelessWidget {
     );
   }
 
+  Widget _buildSafeAvatar(String url, double radius) {
+    return CircleAvatar(
+      radius: radius,
+      backgroundColor: Colors.grey[900],
+      child: ClipOval(
+        child: Image.network(
+          url,
+          fit: BoxFit.cover,
+          width: radius * 2,
+          height: radius * 2,
+          errorBuilder: (context, error, stackTrace) => Icon(Icons.person, color: Colors.white, size: radius),
+        ),
+      ),
+    );
+  }
+
   Widget _buildSearchBar() {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 15),
@@ -98,7 +132,7 @@ class PtStudentManagementScreen extends StatelessWidget {
         style: TextStyle(color: Colors.white),
         decoration: InputDecoration(
           icon: Icon(Icons.search, color: Colors.grey, size: 20),
-          hintText: "Search students...",
+          hintText: "Tìm kiếm học viên...",
           hintStyle: TextStyle(color: Colors.grey, fontSize: 14),
           border: InputBorder.none,
         ),
@@ -107,7 +141,7 @@ class PtStudentManagementScreen extends StatelessWidget {
   }
 
   Widget _buildCategoryList() {
-    final categories = ["All", "Hypertrophy", "Mobility", "Weight Loss"];
+    final categories = ["Tất cả", "Tăng cơ", "Linh hoạt", "Giảm cân"];
     return SizedBox(
       height: 40,
       child: ListView.separated(
@@ -163,7 +197,7 @@ class PtStudentManagementScreen extends StatelessWidget {
                 ),
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(12),
-                  child: Image.network(imageUrl, width: 60, height: 60, fit: BoxFit.cover),
+                  child: _buildSafeAvatar(imageUrl, 30),
                 ),
               ),
               const SizedBox(width: 15),
@@ -196,7 +230,7 @@ class PtStudentManagementScreen extends StatelessWidget {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
-                  const Text("LAST SESSION", style: TextStyle(color: Colors.grey, fontSize: 8, fontWeight: FontWeight.bold)),
+                  const Text("BUỔI TRƯỚC", style: TextStyle(color: Colors.grey, fontSize: 8, fontWeight: FontWeight.bold)),
                   const SizedBox(height: 4),
                   Text(lastSession, style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold)),
                 ],
@@ -216,7 +250,7 @@ class PtStudentManagementScreen extends StatelessWidget {
                     padding: const EdgeInsets.symmetric(vertical: 12),
                     elevation: 0,
                   ),
-                  child: const Text("View Progress", style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+                  child: const Text("Xem tiến độ", style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
                 ),
               ),
               const SizedBox(width: 10),
@@ -230,7 +264,7 @@ class PtStudentManagementScreen extends StatelessWidget {
                     padding: const EdgeInsets.symmetric(vertical: 12),
                     elevation: 0,
                   ),
-                  child: const Text("Message", style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+                  child: const Text("Nhắn tin", style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
                 ),
               ),
             ],
@@ -255,15 +289,15 @@ class PtStudentManagementScreen extends StatelessWidget {
         selectedLabelStyle: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold),
         unselectedLabelStyle: const TextStyle(fontSize: 10),
         onTap: (index) {
-          if (index == 0) Navigator.pushReplacementNamed(context, Routes.ptDashboard);
-          if (index == 1) Navigator.pushReplacementNamed(context, Routes.ptSchedule);
-          if (index == 3) Navigator.pushReplacementNamed(context, Routes.ptIncome);
+          if (index == 0) context.go(Routes.ptDashboard);
+          if (index == 1) context.go(Routes.ptSchedule);
+          if (index == 3) context.go(Routes.ptIncome);
         },
         items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.grid_view_rounded), label: "HOME"),
-          BottomNavigationBarItem(icon: Icon(Icons.calendar_today_outlined), label: "SCHEDULE"),
-          BottomNavigationBarItem(icon: Icon(Icons.people_rounded), label: "STUDENTS"),
-          BottomNavigationBarItem(icon: Icon(Icons.person_outline), label: "ACCOUNT"),
+          BottomNavigationBarItem(icon: Icon(Icons.grid_view_rounded), label: "TRANG CHỦ"),
+          BottomNavigationBarItem(icon: Icon(Icons.calendar_today_outlined), label: "LỊCH DẠY"),
+          BottomNavigationBarItem(icon: Icon(Icons.people_rounded), label: "HỌC VIÊN"),
+          BottomNavigationBarItem(icon: Icon(Icons.person_outline), label: "TÀI KHOẢN"),
         ],
       ),
     );

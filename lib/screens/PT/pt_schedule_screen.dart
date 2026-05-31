@@ -1,9 +1,20 @@
 import 'package:flutter/material.dart';
-import '../../app/route/routes.dart';
+import 'package:go_router/go_router.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:intl/intl.dart';
+import '../../app/route/routes.dart';
 
-class PtScheduleScreen extends StatelessWidget {
+class PtScheduleScreen extends StatefulWidget {
   const PtScheduleScreen({super.key});
+
+  @override
+  State<PtScheduleScreen> createState() => _PtScheduleScreenState();
+}
+
+class _PtScheduleScreenState extends State<PtScheduleScreen> {
+  DateTime selectedDate = DateTime.now();
+  final String ptId = FirebaseAuth.instance.currentUser?.uid ?? 'anonymous';
 
   @override
   Widget build(BuildContext context) {
@@ -15,76 +26,86 @@ class PtScheduleScreen extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _buildHeader(),
+              _buildHeader(context),
               const SizedBox(height: 30),
               const Text(
-                "SCHEDULE",
+                "LỊCH DẠY",
                 style: TextStyle(color: Colors.white, fontSize: 32, fontWeight: FontWeight.bold),
               ),
-              const Text(
-                "MAY 2024 • TRAINING CYCLE ALPHA",
-                style: TextStyle(color: Colors.grey, fontSize: 12, fontWeight: FontWeight.bold),
+              Text(
+                "${DateFormat('MMMM yyyy', 'vi_VN').format(selectedDate).toUpperCase()} • LỊCH TRÌNH CÁ NHÂN",
+                style: const TextStyle(color: Colors.grey, fontSize: 12, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 30),
               _buildHorizontalCalendar(),
               const SizedBox(height: 30),
               
-              // Firebase connection example: Fetching sessions
               StreamBuilder<QuerySnapshot>(
-                stream: FirebaseFirestore.instance.collection('pt_sessions').orderBy('time').snapshots(),
+                // Bỏ .orderBy('startTime') ở đây để tránh lỗi Index
+                stream: FirebaseFirestore.instance
+                    .collection('schedules')
+                    .where('staffUid', isEqualTo: ptId)
+                    .snapshots(),
                 builder: (context, snapshot) {
-                  if (snapshot.hasError) return const Text("Error loading data", style: TextStyle(color: Colors.red));
+                  if (snapshot.hasError) {
+                    return Center(child: Text("Lỗi: ${snapshot.error}", style: const TextStyle(color: Colors.red)));
+                  }
                   if (snapshot.connectionState == ConnectionState.waiting) {
                     return const Center(child: CircularProgressIndicator(color: Color(0xFFD0FD3E)));
                   }
 
                   if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-                    // Placeholder data if Firebase is empty
-                    return Column(
-                      children: [
-                        _buildTimelineSession(
-                          time: "09:00\nAM",
-                          name: "Sarah Jenkins",
-                          category: "HYPERTROPHY",
-                          status: "COMPLETED",
-                          statusColor: Colors.grey,
-                          actionText: "VIEW SUMMARY",
-                          isCurrent: false,
-                        ),
-                        _buildTimelineSession(
-                          time: "11:30\nAM",
-                          name: "Marcus Thorne",
-                          category: "VO2 MAX",
-                          status: "IN PROGRESS",
-                          statusColor: const Color(0xFFD0FD3E),
-                          actionText: "RESUME SESSION",
-                          isCurrent: true,
-                        ),
-                        _buildTimelineSession(
-                          time: "02:00\nPM",
-                          name: "Elena Rossi",
-                          category: "BODY RECOMP",
-                          status: "UPCOMING",
-                          statusColor: Colors.orangeAccent,
-                          actionText: "CHECK-IN",
-                          isCurrent: false,
-                          hasTrailingIcon: true,
-                        ),
-                      ],
+                    return const Center(
+                      child: Padding(
+                        padding: EdgeInsets.symmetric(vertical: 40),
+                        child: Text("Không có ca dạy nào", style: TextStyle(color: Colors.grey)),
+                      ),
+                    );
+                  }
+
+                  // Lọc theo ngày và Sắp xếp thủ công tại local
+                  final dailySessions = snapshot.data!.docs.where((doc) {
+                    final data = doc.data() as Map<String, dynamic>;
+                    if (data['startTime'] == null) return false;
+                    final startTime = (data['startTime'] as Timestamp).toDate();
+                    return DateUtils.isSameDay(startTime, selectedDate);
+                  }).toList();
+
+                  // Sắp xếp theo thời gian tăng dần
+                  dailySessions.sort((a, b) {
+                    final aTime = (a.data() as Map<String, dynamic>)['startTime'] as Timestamp;
+                    final bTime = (b.data() as Map<String, dynamic>)['startTime'] as Timestamp;
+                    return aTime.compareTo(bTime);
+                  });
+
+                  if (dailySessions.isEmpty) {
+                    return const Center(
+                      child: Padding(
+                        padding: EdgeInsets.symmetric(vertical: 40),
+                        child: Text("Không có ca dạy nào trong ngày này", style: TextStyle(color: Colors.grey)),
+                      ),
                     );
                   }
 
                   return Column(
-                    children: snapshot.data!.docs.map((doc) {
-                      Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
+                    children: dailySessions.map((doc) {
+                      var data = doc.data() as Map<String, dynamic>;
+                      DateTime startTime = (data['startTime'] as Timestamp).toDate();
+                      String status = (data['status'] ?? "pending").toUpperCase();
+                      
+                      String displayStatus = "SẮP TỚI";
+                      if (status == "ONGOING") displayStatus = "ĐANG DẠY";
+                      if (status == "COMPLETED") displayStatus = "HOÀN THÀNH";
+
                       return _buildTimelineSession(
-                        time: data['time'] ?? "--:--",
-                        name: data['studentName'] ?? "Unknown",
-                        category: data['category'] ?? "General",
-                        status: data['status'] ?? "UPCOMING",
-                        statusColor: _getStatusColor(data['status']),
-                        actionText: data['actionText'] ?? "CHECK-IN",
-                        isCurrent: data['status'] == "IN PROGRESS",
+                        time: DateFormat('HH:mm').format(startTime),
+                        name: data['task'] ?? "Công việc",
+                        category: "HUẤN LUYỆN",
+                        status: displayStatus,
+                        statusColor: _getStatusColor(status),
+                        actionText: _getActionText(status),
+                        isCurrent: status == "ONGOING",
+                        sessionId: doc.id,
                       );
                     }).toList(),
                   );
@@ -102,35 +123,33 @@ class PtScheduleScreen extends StatelessWidget {
     );
   }
 
-  Color _getStatusColor(String? status) {
+  Color _getStatusColor(String status) {
     switch (status) {
       case "COMPLETED": return Colors.grey;
-      case "IN PROGRESS": return const Color(0xFFD0FD3E);
-      case "UPCOMING": return Colors.orangeAccent;
+      case "ONGOING": return const Color(0xFFD0FD3E);
+      case "PENDING": return Colors.orangeAccent;
       default: return Colors.blueAccent;
     }
   }
 
-  Widget _buildHeader() {
+  String _getActionText(String status) {
+    switch (status) {
+      case "COMPLETED": return "XEM TÓM TẮT";
+      case "ONGOING": return "TIẾP TỤC";
+      default: return "BẮT ĐẦU";
+    }
+  }
+
+  Widget _buildHeader(BuildContext context) {
+    final user = FirebaseAuth.instance.currentUser;
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Row(
           children: [
-            const CircleAvatar(
-              radius: 18,
-              backgroundImage: NetworkImage('https://i.pravatar.cc/150?u=pt_marcus'),
-            ),
+            _buildSafeAvatar(user?.photoURL ?? 'https://i.pravatar.cc/150?u=pt_marcus', 18),
             const SizedBox(width: 10),
-            const Text(
-              "KINETIC",
-              style: TextStyle(
-                color: Color(0xFFD0FD3E),
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                letterSpacing: 1.2,
-              ),
-            ),
+            const Text("KINETIC", style: TextStyle(color: Color(0xFFD0FD3E), fontSize: 18, fontWeight: FontWeight.bold)),
           ],
         ),
         const Icon(Icons.notifications_none, color: Colors.white, size: 28),
@@ -138,17 +157,39 @@ class PtScheduleScreen extends StatelessWidget {
     );
   }
 
+  Widget _buildSafeAvatar(String url, double radius) {
+    return CircleAvatar(
+      radius: radius,
+      backgroundColor: Colors.grey[900],
+      child: ClipOval(
+        child: Image.network(
+          url,
+          fit: BoxFit.cover,
+          width: radius * 2,
+          height: radius * 2,
+          errorBuilder: (context, error, stackTrace) => Icon(Icons.person, color: Colors.white, size: radius),
+        ),
+      ),
+    );
+  }
+
   Widget _buildHorizontalCalendar() {
-    final days = ["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"];
-    final dates = ["13", "14", "15", "16", "17", "18", "19"];
+    DateTime now = DateTime.now();
+    DateTime startOfWeek = now.subtract(Duration(days: now.weekday - 1));
     
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
       child: Row(
         children: List.generate(7, (index) {
-          return Padding(
-            padding: const EdgeInsets.only(right: 12),
-            child: _buildDateItem(days[index], dates[index], index == 2), // Wed 15 is selected
+          DateTime date = startOfWeek.add(Duration(days: index));
+          bool isSelected = DateUtils.isSameDay(date, selectedDate);
+          
+          return GestureDetector(
+            onTap: () => setState(() => selectedDate = date),
+            child: Padding(
+              padding: const EdgeInsets.only(right: 12),
+              child: _buildDateItem(DateFormat('E', 'vi_VN').format(date).toUpperCase(), date.day.toString(), isSelected),
+            ),
           );
         }),
       ),
@@ -165,23 +206,9 @@ class PtScheduleScreen extends StatelessWidget {
       ),
       child: Column(
         children: [
-          Text(
-            day,
-            style: TextStyle(
-              color: isSelected ? Colors.black : Colors.grey,
-              fontSize: 10,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
+          Text(day, style: TextStyle(color: isSelected ? Colors.black : Colors.grey, fontSize: 10, fontWeight: FontWeight.bold)),
           const SizedBox(height: 8),
-          Text(
-            date,
-            style: TextStyle(
-              color: isSelected ? Colors.black : Colors.white,
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
+          Text(date, style: TextStyle(color: isSelected ? Colors.black : Colors.white, fontSize: 20, fontWeight: FontWeight.bold)),
           if (isSelected) ...[
             const SizedBox(height: 4),
             Container(width: 4, height: 4, decoration: const BoxDecoration(color: Colors.black, shape: BoxShape.circle)),
@@ -199,7 +226,7 @@ class PtScheduleScreen extends StatelessWidget {
     required Color statusColor,
     required String actionText,
     required bool isCurrent,
-    bool hasTrailingIcon = false,
+    required String sessionId,
   }) {
     return IntrinsicHeight(
       child: Row(
@@ -209,22 +236,8 @@ class PtScheduleScreen extends StatelessWidget {
             width: 55,
             child: Column(
               children: [
-                Text(
-                  time,
-                  style: TextStyle(
-                    color: isCurrent ? const Color(0xFFD0FD3E) : Colors.white,
-                    fontSize: 10,
-                    fontWeight: FontWeight.bold,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-                Expanded(
-                  child: Container(
-                    width: 1,
-                    color: Colors.grey.withOpacity(0.3),
-                    margin: const EdgeInsets.symmetric(vertical: 5),
-                  ),
-                ),
+                Text(time, style: TextStyle(color: isCurrent ? const Color(0xFFD0FD3E) : Colors.white, fontSize: 10, fontWeight: FontWeight.bold)),
+                Expanded(child: Container(width: 1, color: Colors.grey.withOpacity(0.3), margin: const EdgeInsets.symmetric(vertical: 5))),
               ],
             ),
           ),
@@ -253,11 +266,7 @@ class PtScheduleScreen extends StatelessWidget {
                       ),
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: Colors.black,
-                          borderRadius: BorderRadius.circular(10),
-                          border: Border.all(color: statusColor.withOpacity(0.3)),
-                        ),
+                        decoration: BoxDecoration(color: Colors.black, borderRadius: BorderRadius.circular(10), border: Border.all(color: statusColor.withOpacity(0.3))),
                         child: Row(
                           children: [
                             Container(width: 6, height: 6, decoration: BoxDecoration(color: statusColor, shape: BoxShape.circle)),
@@ -279,22 +288,16 @@ class PtScheduleScreen extends StatelessWidget {
                             foregroundColor: isCurrent ? Colors.black : Colors.white,
                             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                             padding: const EdgeInsets.symmetric(vertical: 12),
-                            elevation: 0,
                           ),
                           child: Text(actionText, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
                         ),
                       ),
-                      if (hasTrailingIcon) ...[
-                        const SizedBox(width: 10),
-                        Container(
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFF2C2C2E),
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          child: const Icon(Icons.visibility_outlined, color: Colors.white, size: 20),
-                        ),
-                      ]
+                      const SizedBox(width: 10),
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(color: const Color(0xFF2C2C2E), borderRadius: BorderRadius.circular(10)),
+                        child: const Icon(Icons.visibility_outlined, color: Colors.white, size: 20),
+                      ),
                     ],
                   ),
                 ],
@@ -310,29 +313,20 @@ class PtScheduleScreen extends StatelessWidget {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(30),
-      decoration: BoxDecoration(
-        color: const Color(0xFF1C1C1E),
-        borderRadius: BorderRadius.circular(30),
-      ),
+      decoration: BoxDecoration(color: const Color(0xFF1C1C1E), borderRadius: BorderRadius.circular(30)),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Icon(Icons.format_quote, color: Colors.orangeAccent, size: 40),
           const SizedBox(height: 10),
           const Text(
-            "\"The human body is the only machine that breaks down if it isn't used.\"",
+            "\"Cơ thể con người là cỗ máy duy nhất hỏng hóc nếu không được sử dụng.\"",
             style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold, fontStyle: FontStyle.italic),
           ),
           const SizedBox(height: 20),
-          const Text(
-            "— COACH NOTES ALPHA",
-            style: TextStyle(color: Colors.grey, fontSize: 10, fontWeight: FontWeight.bold, letterSpacing: 1),
-          ),
+          const Text("— GHI CHÚ HUẤN LUYỆN VIÊN", style: TextStyle(color: Colors.grey, fontSize: 10, fontWeight: FontWeight.bold)),
           const SizedBox(height: 20),
-          Align(
-            alignment: Alignment.bottomRight,
-            child: Icon(Icons.fitness_center, color: Colors.grey.withOpacity(0.2), size: 60),
-          ),
+          Align(alignment: Alignment.bottomRight, child: Icon(Icons.fitness_center, color: Colors.grey.withOpacity(0.2), size: 60)),
         ],
       ),
     );
@@ -347,21 +341,17 @@ class PtScheduleScreen extends StatelessWidget {
         type: BottomNavigationBarType.fixed,
         selectedItemColor: const Color(0xFFD0FD3E),
         unselectedItemColor: Colors.grey,
-        currentIndex: 1, // Schedule index
-        showSelectedLabels: true,
-        showUnselectedLabels: true,
-        selectedLabelStyle: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold),
-        unselectedLabelStyle: const TextStyle(fontSize: 10),
+        currentIndex: 1,
         onTap: (index) {
-          if (index == 0) Navigator.pushReplacementNamed(context, Routes.ptDashboard);
-          if (index == 2) Navigator.pushReplacementNamed(context, Routes.ptStudentManagement);
-          if (index == 3) Navigator.pushReplacementNamed(context, Routes.ptIncome);
+          if (index == 0) context.go(Routes.ptDashboard);
+          if (index == 2) context.go(Routes.ptStudentManagement);
+          if (index == 3) context.go(Routes.ptIncome);
         },
         items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.grid_view_rounded), label: "HOME"),
-          BottomNavigationBarItem(icon: Icon(Icons.calendar_today_rounded), label: "SCHEDULE"),
-          BottomNavigationBarItem(icon: Icon(Icons.people_outline), label: "STUDENTS"),
-          BottomNavigationBarItem(icon: Icon(Icons.person_outline), label: "ACCOUNT"),
+          BottomNavigationBarItem(icon: Icon(Icons.grid_view_rounded), label: "TRANG CHỦ"),
+          BottomNavigationBarItem(icon: Icon(Icons.calendar_today_rounded), label: "LỊCH DẠY"),
+          BottomNavigationBarItem(icon: Icon(Icons.people_outline), label: "HỌC VIÊN"),
+          BottomNavigationBarItem(icon: Icon(Icons.person_outline), label: "TÀI KHOẢN"),
         ],
       ),
     );
