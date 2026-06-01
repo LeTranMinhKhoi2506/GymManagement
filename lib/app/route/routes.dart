@@ -26,6 +26,13 @@ import '../../screens/PT/pt_student_management_screen.dart';
 import '../../screens/PT/pt_income_screen.dart';
 import '../../screens/PT/pt_class_registration_screen.dart';
 
+// Receptionist Screens
+import '../../screens/receptionist/receptionist_dashboard_screen.dart';
+import '../../screens/receptionist/receptionist_checkin_screen.dart';
+import '../../screens/receptionist/receptionist_pos_screen.dart';
+import '../../screens/receptionist/receptionist_support_screen.dart';
+import '../../screens/receptionist/receptionist_facility_screen.dart';
+
 class Routes {
   static const String login = '/login';
   static const String signup = '/signup';
@@ -56,8 +63,15 @@ class Routes {
   static const String ptIncome = '/pt-income';
   static const String ptClassRegistration = '/pt-class-registration';
 
+  // Receptionist Routes
+  static const String receptionistDashboard = '/receptionist-dashboard';
+  static const String receptionistCheckIn = '/receptionist-checkin';
+  static const String receptionistPOS = '/receptionist-pos';
+  static const String receptionistSupport = '/receptionist-support';
+  static const String receptionistFacility = '/receptionist-facility';
+
   static final GoRouter router = GoRouter(
-    initialLocation: ptDashboard,
+    initialLocation: receptionistDashboard,
     routes: [
       GoRoute(path: login, builder: (context, state) => const LoginScreen()),
       GoRoute(path: signup, builder: (context, state) => const SignUpScreen()),
@@ -87,6 +101,13 @@ class Routes {
       GoRoute(path: ptStudentManagement, builder: (context, state) => const PtStudentManagementScreen()),
       GoRoute(path: ptIncome, builder: (context, state) => const PtIncomeScreen()),
       GoRoute(path: ptClassRegistration, builder: (context, state) => const PtClassRegistrationScreen()),
+
+      // Receptionist Routes
+      GoRoute(path: receptionistDashboard, builder: (context, state) => const ReceptionistDashboardScreen()),
+      GoRoute(path: receptionistCheckIn, builder: (context, state) => const ReceptionistCheckInScreen()),
+      GoRoute(path: receptionistPOS, builder: (context, state) => const ReceptionistPOSScreen()),
+      GoRoute(path: receptionistSupport, builder: (context, state) => const ReceptionistSupportScreen()),
+      GoRoute(path: receptionistFacility, builder: (context, state) => const ReceptionistFacilityScreen()),
     ],
   );
 }
