@@ -36,11 +36,13 @@ class _LoginScreenState extends State<LoginScreen> {
         // Logic phân quyền và chuyển trang bằng GoRouter
         if (user?.role == 'admin') {
           context.go(Routes.adminDashboard);
-        } else if (user?.role == 'trainer') {
+        } else if (user?.role == 'trainer' || user?.position == 'Trainer') {
           context.go(Routes.ptDashboard);
+        } else if (user?.role == 'receptionist' || user?.role == 'staff' || user?.position == 'Receptionist') {
+          context.go(Routes.receptionistDashboard);
         } else {
-          // Cho các user thông thường (Member)
-          context.go(Routes.ptDashboard); // Hoặc route của member nếu có
+          // Cho các user thông thường (Member) hoặc mặc định
+          context.go(Routes.receptionistDashboard); 
         }
         
         _showSnackBar("Chào mừng ${user?.fullName}!", Colors.green);

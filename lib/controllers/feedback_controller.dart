@@ -42,4 +42,31 @@ class FeedbackController extends ChangeNotifier {
   Future<void> deleteFeedback(String id) async {
     await _repository.deleteFeedback(id);
   }
+
+  Future<void> createFeedback({
+    required String userId,
+    required String userName,
+    required String subject,
+    required String message,
+  }) async {
+    _isLoading = true;
+    notifyListeners();
+    try {
+      final feedback = FeedbackModel(
+        id: '',
+        userId: userId,
+        userName: userName,
+        subject: subject,
+        message: message,
+        createdAt: DateTime.now(),
+        status: 'pending',
+      );
+      await _repository.addFeedback(feedback);
+    } catch (e) {
+      rethrow;
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
 }

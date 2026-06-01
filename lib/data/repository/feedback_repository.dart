@@ -31,4 +31,8 @@ class FeedbackRepository {
   Future<void> deleteFeedback(String id) async {
     await _db.collection(_collection).doc(id).delete();
   }
+
+  Future<void> addFeedback(FeedbackModel feedback) async {
+    await _db.collection(_collection).add(feedback.toMap());
+  }
 }
