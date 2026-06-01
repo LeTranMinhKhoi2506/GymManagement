@@ -150,7 +150,7 @@ class _SidebarWidgetState extends State<SidebarWidget> {
   Widget _sectionHeader({required String title, required IconData icon, required bool isExpanded, required bool isActive, required VoidCallback? onTap}) {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-      decoration: BoxDecoration(color: isActive ? const Color(0xFFFF6B35).withOpacity(0.1) : Colors.transparent, borderRadius: BorderRadius.circular(12)),
+      decoration: BoxDecoration(color: isActive ? const Color(0xFFFF6B35).withValues(alpha: 0.1) : Colors.transparent, borderRadius: BorderRadius.circular(12)),
       child: ListTile(
         dense: true,
         leading: Icon(icon, color: isActive ? const Color(0xFFFF6B35) : Colors.blueGrey[300], size: 22),
@@ -165,7 +165,7 @@ class _SidebarWidgetState extends State<SidebarWidget> {
   Widget _subMenuItem(BuildContext context, IconData icon, String title, String route, bool isActive) {
     return Container(
       margin: const EdgeInsets.only(left: 32, right: 16, top: 2, bottom: 2),
-      decoration: BoxDecoration(color: isActive ? const Color(0xFFFF6B35).withOpacity(0.15) : Colors.transparent, borderRadius: BorderRadius.circular(8)),
+      decoration: BoxDecoration(color: isActive ? const Color(0xFFFF6B35).withValues(alpha: 0.15) : Colors.transparent, borderRadius: BorderRadius.circular(8)),
       child: ListTile(
         dense: true,
         visualDensity: const VisualDensity(vertical: -2),

@@ -89,7 +89,7 @@ class _NotificationManagementScreenState extends State<NotificationManagementScr
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10)],
+        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 10)],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -111,7 +111,7 @@ class _NotificationManagementScreenState extends State<NotificationManagementScr
                 final notif = controller.notifications[index];
                 return ListTile(
                   leading: CircleAvatar(
-                    backgroundColor: _getTypeColor(notif.type).withOpacity(0.1),
+                    backgroundColor: _getTypeColor(notif.type).withValues(alpha: 0.1),
                     child: Icon(_getTypeIcon(notif.type), color: _getTypeColor(notif.type), size: 20),
                   ),
                   title: Text(notif.title, style: const TextStyle(fontWeight: FontWeight.bold)),
@@ -144,7 +144,7 @@ class _NotificationManagementScreenState extends State<NotificationManagementScr
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10)],
+        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 10)],
       ),
       child: Form(
         key: _formKey,

@@ -3,7 +3,6 @@ import '../data/repository/auth_repository.dart';
 import '../data/models/user_model.dart';
 import '../data/models/session_model.dart';
 import '../data/repository/session_repository.dart';
-import 'dart:developer' as dev;
 import 'package:flutter/foundation.dart';
 
 class AuthController extends ChangeNotifier {

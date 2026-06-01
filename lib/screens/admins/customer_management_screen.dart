@@ -190,10 +190,10 @@ class _MemberCard extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
-          color: isSelected ? const Color(0xFF0A192F) : (isBanned ? Colors.red.withOpacity(0.05) : Colors.white),
+          color: isSelected ? const Color(0xFF0A192F) : (isBanned ? Colors.red.withValues(alpha: 0.05) : Colors.white),
           borderRadius: BorderRadius.circular(16),
-          boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10)],
-          border: Border.all(color: isSelected ? const Color(0xFFFF6B35) : (isBanned ? Colors.red.withOpacity(0.3) : Colors.transparent), width: 2),
+          boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 10)],
+          border: Border.all(color: isSelected ? const Color(0xFFFF6B35) : (isBanned ? Colors.red.withValues(alpha: 0.3) : Colors.transparent), width: 2),
         ),
         child: Column(
           children: [
@@ -246,7 +246,7 @@ class _MemberCard extends StatelessWidget {
   Widget _buildInfoTag(String text, Color color) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(color: color.withOpacity(0.1), borderRadius: BorderRadius.circular(6)),
+      decoration: BoxDecoration(color: color.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(6)),
       child: Text(text.toUpperCase(), style: TextStyle(color: color, fontSize: 10, fontWeight: FontWeight.bold)),
     );
   }
@@ -262,7 +262,7 @@ class _ActivityLogsPanel extends StatelessWidget {
 
     return Container(
       padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20), boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10)]),
+      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20), boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 10)]),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
