@@ -8,7 +8,7 @@ class SessionController extends ChangeNotifier {
   List<SessionModel> _sessions = [];
   List<SessionModel> get sessions => _sessions;
 
-  bool _isLoading = false;
+  final bool _isLoading = false;
   bool get isLoading => _isLoading;
 
   SessionController() {

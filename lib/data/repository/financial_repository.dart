@@ -136,7 +136,7 @@ class FinancialRepository {
       final transactions = await getTransactionsByDateRange(startDate, endDate);
       final revenue = transactions
           .where((t) => t.type == 'Revenue' && t.status == 'Completed')
-          .fold<double>(0, (sum, t) => sum + t.amount);
+          .fold<double>(0, (total, t) => total + t.amount);
       return revenue;
     } catch (e) {
       throw Exception('Error calculating total revenue: $e');
@@ -149,7 +149,7 @@ class FinancialRepository {
       final transactions = await getTransactionsByDateRange(startDate, endDate);
       final expense = transactions
           .where((t) => t.type == 'Expense' && t.status == 'Completed')
-          .fold<double>(0, (sum, t) => sum + t.amount);
+          .fold<double>(0, (total, t) => total + t.amount);
       return expense;
     } catch (e) {
       throw Exception('Error calculating total expense: $e');

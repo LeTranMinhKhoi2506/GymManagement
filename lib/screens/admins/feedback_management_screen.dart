@@ -92,7 +92,7 @@ class _FeedbackManagementScreenState extends State<FeedbackManagementScreen> {
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: _getStatusColor(fb.status).withOpacity(0.2)),
+            border: Border.all(color: _getStatusColor(fb.status).withValues(alpha: 0.2)),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -199,7 +199,7 @@ class _FeedbackManagementScreenState extends State<FeedbackManagementScreen> {
     String text = status == 'pending' ? 'ĐANG CHỜ' : (status == 'replied' ? 'ĐÃ TRẢ LỜI' : 'ĐÃ GIẢI QUYẾT');
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-      decoration: BoxDecoration(color: color.withOpacity(0.1), borderRadius: BorderRadius.circular(20)),
+      decoration: BoxDecoration(color: color.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(20)),
       child: Text(text, style: TextStyle(color: color, fontSize: 10, fontWeight: FontWeight.bold)),
     );
   }

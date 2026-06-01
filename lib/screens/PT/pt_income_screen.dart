@@ -52,21 +52,37 @@ class PtIncomeScreen extends StatelessWidget {
               
               const SizedBox(height: 15),
               
-              // Secondary Stats (Sessions & Bonuses)
+              // Secondary Stats (Sessions & Bonuses) - Hoàn toàn động
               StreamBuilder<QuerySnapshot>(
                 stream: FirebaseFirestore.instance
                     .collection('pt_sessions')
                     .where('ptId', isEqualTo: ptId)
                     .where('status', isEqualTo: 'HOÀN THÀNH')
                     .snapshots(),
-                builder: (context, snapshot) {
-                  int sessionsCount = snapshot.hasData ? snapshot.data!.docs.length : 0;
-                  return _buildSecondaryStatsRow(sessionsCount.toString());
+                builder: (context, sessionSnapshot) {
+                  int sessionsCount = sessionSnapshot.hasData ? sessionSnapshot.data!.docs.length : 0;
+                  
+                  return StreamBuilder<QuerySnapshot>(
+                    stream: FirebaseFirestore.instance
+                        .collection('pt_payouts')
+                        .where('ptId', isEqualTo: ptId)
+                        .where('type', isEqualTo: 'bonus')
+                        .snapshots(),
+                    builder: (context, bonusSnapshot) {
+                      double bonusSum = 0;
+                      if (bonusSnapshot.hasData) {
+                        for (var doc in bonusSnapshot.data!.docs) {
+                          bonusSum += (doc.data() as Map<String, dynamic>)['amount'] ?? 0.0;
+                        }
+                      }
+                      return _buildSecondaryStatsRow(sessionsCount.toString(), currencyFormat.format(bonusSum));
+                    }
+                  );
                 },
               ),
               
               const SizedBox(height: 30),
-              _buildWeeklyMomentumSection(),
+              _buildWeeklyMomentumSection(ptId),
               const SizedBox(height: 30),
               _buildSectionHeader("CÁC KHOẢN THANH TOÁN GẦN ĐÂY", () {}),
               const SizedBox(height: 15),
@@ -91,7 +107,9 @@ class PtIncomeScreen extends StatelessWidget {
                   return Column(
                     children: snapshot.data!.docs.map((doc) {
                       var data = doc.data() as Map<String, dynamic>;
-                      DateTime date = (data['timestamp'] as Timestamp).toDate();
+                      DateTime date = data['timestamp'] != null 
+                          ? (data['timestamp'] as Timestamp).toDate() 
+                          : DateTime.now();
                       return Padding(
                         padding: const EdgeInsets.only(bottom: 15),
                         child: _buildPayoutItem(
@@ -191,14 +209,14 @@ class PtIncomeScreen extends StatelessWidget {
           Positioned(
             right: 0,
             top: 0,
-            child: Icon(Icons.account_balance_wallet_outlined, color: Colors.grey.withOpacity(0.1), size: 60),
+            child: Icon(Icons.account_balance_wallet_outlined, color: Colors.grey.withValues(alpha: 0.1), size: 60),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildSecondaryStatsRow(String sessions) {
+  Widget _buildSecondaryStatsRow(String sessions, String bonus) {
     return Row(
       children: [
         Expanded(
@@ -206,7 +224,7 @@ class PtIncomeScreen extends StatelessWidget {
         ),
         const SizedBox(width: 15),
         Expanded(
-          child: _buildStatBox("TIỀN THƯỞNG", "0₫", null, Colors.orangeAccent, showLeftBar: true),
+          child: _buildStatBox("TIỀN THƯỞNG", bonus, null, Colors.orangeAccent, showLeftBar: true),
         ),
       ],
     );
@@ -253,54 +271,110 @@ class PtIncomeScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildWeeklyMomentumSection() {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: const Color(0xFF1C1C1E),
-        borderRadius: BorderRadius.circular(25),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+  // Tải dữ liệu thu nhập thực tế trong tuần để vẽ biểu đồ
+  Widget _buildWeeklyMomentumSection(String ptId) {
+    final now = DateTime.now();
+    final startOfWeek = now.subtract(Duration(days: now.weekday - 1));
+    final startOfWeekDate = DateTime(startOfWeek.year, startOfWeek.month, startOfWeek.day);
+
+    return StreamBuilder<QuerySnapshot>(
+      stream: FirebaseFirestore.instance
+          .collection('pt_payouts')
+          .where('ptId', isEqualTo: ptId)
+          .where('timestamp', isGreaterThanOrEqualTo: Timestamp.fromDate(startOfWeekDate))
+          .snapshots(),
+      builder: (context, snapshot) {
+        List<double> weeklyEarnings = List.filled(7, 0.0);
+
+        if (snapshot.hasData) {
+          for (var doc in snapshot.data!.docs) {
+            var data = doc.data() as Map<String, dynamic>;
+            if (data['timestamp'] != null && data['amount'] != null) {
+              DateTime time = (data['timestamp'] as Timestamp).toDate();
+              int dayIndex = time.weekday - 1; // 0 (Mon) -> 6 (Sun)
+              if (dayIndex >= 0 && dayIndex < 7) {
+                weeklyEarnings[dayIndex] += (data['amount'] as num).toDouble();
+              }
+            }
+          }
+        }
+
+        double maxEarning = 0;
+        for (var amount in weeklyEarnings) {
+          if (amount > maxEarning) maxEarning = amount;
+        }
+
+        List<double> heights = List.filled(7, 0.0);
+        for (int i = 0; i < 7; i++) {
+          if (maxEarning > 0) {
+            heights[i] = 0.1 + (weeklyEarnings[i] / maxEarning) * 0.8;
+          } else {
+            heights[i] = 0.15; // Mức mặc định cực nhỏ khi chưa có ca dạy
+          }
+        }
+
+        return Container(
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: const Color(0xFF1C1C1E),
+            borderRadius: BorderRadius.circular(25),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: const [
-                  Text("HIỆU SUẤT TUẦN", style: TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold)),
-                  Text("Dữ liệu 7 ngày gần nhất", style: TextStyle(color: Colors.grey, fontSize: 10)),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: const [
+                      Text("HIỆU SUẤT TUẦN", style: TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold)),
+                      Text("Doanh thu tích lũy tuần này", style: TextStyle(color: Colors.grey, fontSize: 10)),
+                    ],
+                  ),
+                  Text(
+                    maxEarning > 0 
+                      ? "ĐỈNH: ${NumberFormat.compact(locale: 'vi_VN').format(maxEarning)}" 
+                      : "KHÔNG CÓ DỮ LIỆU",
+                    style: const TextStyle(color: Color(0xFFD0FD3E), fontSize: 10, fontWeight: FontWeight.bold),
+                  ),
                 ],
               ),
-              const Text(
-                "ĐỈNH CAO",
-                style: TextStyle(color: Color(0xFFD0FD3E), fontSize: 10, fontWeight: FontWeight.bold),
-              ),
+              const SizedBox(height: 30),
+              _buildMiniChart(weeklyEarnings, heights),
             ],
           ),
-          const SizedBox(height: 30),
-          _buildMiniChart(),
-        ],
-      ),
+        );
+      }
     );
   }
 
-  Widget _buildMiniChart() {
+  Widget _buildMiniChart(List<double> earnings, List<double> heights) {
     final days = ["T2", "T3", "T4", "T5", "T6", "T7", "CN"];
-    final heights = [0.4, 0.6, 0.3, 0.8, 0.5, 0.9, 0.7];
+    final formatter = NumberFormat.compact(locale: 'vi_VN');
+
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       crossAxisAlignment: CrossAxisAlignment.end,
       children: List.generate(7, (index) {
         bool isToday = index == DateTime.now().weekday - 1;
+        double amount = earnings[index];
+
         return Column(
           children: [
+            if (amount > 0)
+              Text(
+                formatter.format(amount),
+                style: const TextStyle(color: Colors.greenAccent, fontSize: 8, fontWeight: FontWeight.bold),
+              )
+            else
+              const Text("", style: TextStyle(fontSize: 8)),
+            const SizedBox(height: 5),
             Container(
               width: 8,
               height: 100 * heights[index],
               decoration: BoxDecoration(
-                color: isToday ? const Color(0xFFD0FD3E) : Colors.grey.withOpacity(0.2),
+                color: isToday ? const Color(0xFFD0FD3E) : (amount > 0 ? Colors.greenAccent : Colors.grey.withValues(alpha: 0.2)),
                 borderRadius: BorderRadius.circular(4),
               ),
             ),

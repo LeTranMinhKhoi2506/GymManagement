@@ -41,7 +41,6 @@ class _PtScheduleScreenState extends State<PtScheduleScreen> {
               const SizedBox(height: 30),
               
               StreamBuilder<QuerySnapshot>(
-                // Bỏ .orderBy('startTime') ở đây để tránh lỗi Index
                 stream: FirebaseFirestore.instance
                     .collection('schedules')
                     .where('staffUid', isEqualTo: ptId)
@@ -106,6 +105,7 @@ class _PtScheduleScreenState extends State<PtScheduleScreen> {
                         actionText: _getActionText(status),
                         isCurrent: status == "ONGOING",
                         sessionId: doc.id,
+                        fullData: data,
                       );
                     }).toList(),
                   );
@@ -227,6 +227,7 @@ class _PtScheduleScreenState extends State<PtScheduleScreen> {
     required String actionText,
     required bool isCurrent,
     required String sessionId,
+    required Map<String, dynamic> fullData,
   }) {
     return IntrinsicHeight(
       child: Row(
@@ -237,7 +238,7 @@ class _PtScheduleScreenState extends State<PtScheduleScreen> {
             child: Column(
               children: [
                 Text(time, style: TextStyle(color: isCurrent ? const Color(0xFFD0FD3E) : Colors.white, fontSize: 10, fontWeight: FontWeight.bold)),
-                Expanded(child: Container(width: 1, color: Colors.grey.withOpacity(0.3), margin: const EdgeInsets.symmetric(vertical: 5))),
+                Expanded(child: Container(width: 1, color: Colors.grey.withValues(alpha: 0.3), margin: const EdgeInsets.symmetric(vertical: 5))),
               ],
             ),
           ),
@@ -249,7 +250,7 @@ class _PtScheduleScreenState extends State<PtScheduleScreen> {
               decoration: BoxDecoration(
                 color: const Color(0xFF1C1C1E),
                 borderRadius: BorderRadius.circular(20),
-                border: isCurrent ? Border.all(color: const Color(0xFFD0FD3E).withOpacity(0.3), width: 1) : null,
+                border: isCurrent ? Border.all(color: const Color(0xFFD0FD3E).withValues(alpha: 0.3), width: 1) : null,
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -257,17 +258,25 @@ class _PtScheduleScreenState extends State<PtScheduleScreen> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(name, style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
-                          Text(category, style: const TextStyle(color: Colors.grey, fontSize: 10, fontWeight: FontWeight.bold, letterSpacing: 1)),
-                        ],
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              name, 
+                              style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            Text(category, style: const TextStyle(color: Colors.grey, fontSize: 10, fontWeight: FontWeight.bold, letterSpacing: 1)),
+                          ],
+                        ),
                       ),
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                        decoration: BoxDecoration(color: Colors.black, borderRadius: BorderRadius.circular(10), border: Border.all(color: statusColor.withOpacity(0.3))),
+                        decoration: BoxDecoration(color: Colors.black, borderRadius: BorderRadius.circular(10), border: Border.all(color: statusColor.withValues(alpha: 0.3))),
                         child: Row(
+                          mainAxisSize: MainAxisSize.min,
                           children: [
                             Container(width: 6, height: 6, decoration: BoxDecoration(color: statusColor, shape: BoxShape.circle)),
                             const SizedBox(width: 5),
@@ -282,7 +291,7 @@ class _PtScheduleScreenState extends State<PtScheduleScreen> {
                     children: [
                       Expanded(
                         child: ElevatedButton(
-                          onPressed: () {},
+                          onPressed: () => _handleSessionAction(sessionId, status, name, fullData),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: isCurrent ? const Color(0xFFD0FD3E) : const Color(0xFF2C2C2E),
                             foregroundColor: isCurrent ? Colors.black : Colors.white,
@@ -293,10 +302,13 @@ class _PtScheduleScreenState extends State<PtScheduleScreen> {
                         ),
                       ),
                       const SizedBox(width: 10),
-                      Container(
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(color: const Color(0xFF2C2C2E), borderRadius: BorderRadius.circular(10)),
-                        child: const Icon(Icons.visibility_outlined, color: Colors.white, size: 20),
+                      GestureDetector(
+                        onTap: () => _showSessionSummary(name, fullData),
+                        child: Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(color: const Color(0xFF2C2C2E), borderRadius: BorderRadius.circular(10)),
+                          child: const Icon(Icons.visibility_outlined, color: Colors.white, size: 20),
+                        ),
                       ),
                     ],
                   ),
@@ -305,6 +317,269 @@ class _PtScheduleScreenState extends State<PtScheduleScreen> {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  // Xử lý các nút bấm Bắt đầu / Tiếp tục / Xem tóm tắt
+  void _handleSessionAction(String sessionId, String status, String studentName, Map<String, dynamic> data) async {
+    if (status == "PENDING") {
+      // Đổi sang ongoing
+      await FirebaseFirestore.instance.collection('schedules').doc(sessionId).update({
+        'status': 'ongoing',
+      });
+      // Tạo hoạt động bắt đầu ca dạy
+      await FirebaseFirestore.instance.collection('pt_activities').add({
+        'ptId': ptId,
+        'type': 'session',
+        'title': 'Bắt đầu ca dạy',
+        'subtitle': 'Đang huấn luyện học viên $studentName',
+        'timestamp': FieldValue.serverTimestamp(),
+      });
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Đã bắt đầu ca dạy học viên $studentName!")),
+        );
+      }
+    } else if (status == "ONGOING") {
+      // Mở Bottom Sheet ghi nhật ký tập và Hoàn thành ca dạy
+      _showTrainingJournalBottomSheet(sessionId, studentName);
+    } else if (status == "COMPLETED") {
+      // Xem tóm tắt ca dạy
+      _showSessionSummary(studentName, data);
+    }
+  }
+
+  // Bottom Sheet ghi nhật ký tập luyện & Hoàn thành ca dạy
+  void _showTrainingJournalBottomSheet(String sessionId, String studentName) {
+    final TextEditingController focusController = TextEditingController();
+    final TextEditingController notesController = TextEditingController();
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: const Color(0xFF1C1C1E),
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(25)),
+      ),
+      builder: (context) {
+        return Padding(
+          padding: EdgeInsets.only(
+            bottom: MediaQuery.of(context).viewInsets.bottom,
+            left: 25,
+            right: 25,
+            top: 20
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(
+                child: Container(
+                  width: 40,
+                  height: 5,
+                  decoration: BoxDecoration(color: Colors.grey[700], borderRadius: BorderRadius.circular(10)),
+                ),
+              ),
+              const SizedBox(height: 20),
+              Text(
+                "NHẬT KÝ HUẤN LUYỆN: $studentName",
+                style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 20),
+              
+              // Trọng tâm buổi tập
+              const Text("TRỌNG TÂM BUỔI TẬP", style: TextStyle(color: Colors.grey, fontSize: 10, fontWeight: FontWeight.bold)),
+              const SizedBox(height: 8),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 5),
+                decoration: BoxDecoration(color: Colors.black, borderRadius: BorderRadius.circular(12)),
+                child: TextField(
+                  controller: focusController,
+                  style: const TextStyle(color: Colors.white, fontSize: 14),
+                  decoration: const InputDecoration(
+                    hintText: "VD: Squat & Đùi sau, Cardio nhẹ...",
+                    hintStyle: TextStyle(color: Colors.grey, fontSize: 13),
+                    border: InputBorder.none,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 15),
+
+              // Ghi chú buổi tập của PT
+              const Text("GHI CHÚ CHI TIẾT CỦA PT", style: TextStyle(color: Colors.grey, fontSize: 10, fontWeight: FontWeight.bold)),
+              const SizedBox(height: 8),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 5),
+                decoration: BoxDecoration(color: Colors.black, borderRadius: BorderRadius.circular(12)),
+                child: TextField(
+                  controller: notesController,
+                  maxLines: 4,
+                  style: const TextStyle(color: Colors.white, fontSize: 14),
+                  decoration: const InputDecoration(
+                    hintText: "Thể trạng học viên tốt, nâng tạ Squat 80kg hoàn thành 4 hiệp, chú ý sửa tư thế gối...",
+                    hintStyle: TextStyle(color: Colors.grey, fontSize: 13),
+                    border: InputBorder.none,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 25),
+
+              // Nút hoàn thành ca dạy nhận 30k hoa hồng
+              SizedBox(
+                width: double.infinity,
+                height: 55,
+                child: ElevatedButton(
+                  onPressed: () async {
+                    String focus = focusController.text.trim();
+                    String notes = notesController.text.trim();
+                    if (focus.isEmpty || notes.isEmpty) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text("Vui lòng nhập đầy đủ trọng tâm và ghi chú ca dạy")),
+                      );
+                      return;
+                    }
+
+                    // 1. Cập nhật schedules sang completed kèm ghi chú
+                    await FirebaseFirestore.instance.collection('schedules').doc(sessionId).update({
+                      'status': 'completed',
+                      'focus': focus,
+                      'notes': notes,
+                      'commission': 30000.0,
+                    });
+
+                    // 2. Tạo bản ghi doanh thu pt_sessions
+                    await FirebaseFirestore.instance.collection('pt_sessions').add({
+                      'ptId': ptId,
+                      'studentName': studentName,
+                      'timestamp': FieldValue.serverTimestamp(),
+                      'status': 'HOÀN THÀNH',
+                      'amount': 30000.0, // Hoa hồng 30,000₫
+                    });
+
+                    // 3. Tạo bản ghi thù lao pt_payouts
+                    await FirebaseFirestore.instance.collection('pt_payouts').add({
+                      'ptId': ptId,
+                      'amount': 30000.0,
+                      'timestamp': FieldValue.serverTimestamp(),
+                      'title': 'Hoa hồng ca dạy: $studentName',
+                      'type': 'session',
+                      'method': 'Chuyển khoản',
+                      'status': 'HOÀN THÀNH',
+                    });
+
+                    // 4. Tạo hoạt động pt_activities
+                    await FirebaseFirestore.instance.collection('pt_activities').add({
+                      'ptId': ptId,
+                      'type': 'session',
+                      'title': 'Đã dạy xong ca',
+                      'subtitle': 'Hoàn thành ca dạy của học viên $studentName. Nhận hoa hồng +30,000₫.',
+                      'timestamp': FieldValue.serverTimestamp(),
+                    });
+
+                    // 5. Lưu thêm vào pt_journals lịch sử buổi tập của học viên
+                    await FirebaseFirestore.instance.collection('pt_journals').add({
+                      'scheduleId': sessionId,
+                      'ptId': ptId,
+                      'studentName': studentName,
+                      'focus': focus,
+                      'notes': notes,
+                      'timestamp': FieldValue.serverTimestamp(),
+                    });
+
+                    if (context.mounted) {
+                      Navigator.pop(context);
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          backgroundColor: const Color(0xFFD0FD3E),
+                          content: Text(
+                            "Chúc mừng! Ca dạy hoàn thành. Nhận thù lao +30,000₫ hoa hồng.",
+                            style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
+                          ),
+                        ),
+                      );
+                    }
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFFD0FD3E),
+                    foregroundColor: Colors.black,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+                  ),
+                  child: const Text(
+                    "HOÀN THÀNH CA DẠY (+30,000₫)", 
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)
+                  ),
+                ),
+              ),
+              const SizedBox(height: 25),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  // Xem tóm tắt ca dạy đã hoàn thành
+  void _showSessionSummary(String studentName, Map<String, dynamic> data) {
+    String focus = data['focus'] ?? "Chưa ghi chép";
+    String notes = data['notes'] ?? "Chưa ghi chép";
+    double commission = (data['commission'] as num?)?.toDouble() ?? 30000.0;
+    final formatter = NumberFormat.currency(locale: 'vi_VN', symbol: '₫');
+
+    showDialog(
+      context: context,
+      builder: (context) => Dialog(
+        backgroundColor: Colors.transparent,
+        child: Container(
+          padding: const EdgeInsets.all(25),
+          decoration: BoxDecoration(
+            color: const Color(0xFF1C1C1E),
+            borderRadius: BorderRadius.circular(25),
+            border: Border.all(color: Colors.white12),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text("TÓM TẮT CA DẠY", style: TextStyle(color: Color(0xFFD0FD3E), fontSize: 12, fontWeight: FontWeight.bold)),
+                  IconButton(
+                    onPressed: () => Navigator.pop(context),
+                    icon: const Icon(Icons.close, color: Colors.grey, size: 20),
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(),
+                  )
+                ],
+              ),
+              const SizedBox(height: 10),
+              Text(studentName, style: const TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold)),
+              const SizedBox(height: 20),
+              
+              const Text("TRỌNG TÂM TẬP LUYỆN", style: TextStyle(color: Colors.grey, fontSize: 10, fontWeight: FontWeight.bold)),
+              const SizedBox(height: 6),
+              Text(focus, style: const TextStyle(color: Colors.white, fontSize: 14)),
+              const SizedBox(height: 15),
+
+              const Text("NHẬT KÝ PT GHI CHÚ", style: TextStyle(color: Colors.grey, fontSize: 10, fontWeight: FontWeight.bold)),
+              const SizedBox(height: 6),
+              Text(notes, style: const TextStyle(color: Colors.white, fontSize: 14)),
+              const SizedBox(height: 15),
+
+              const Divider(color: Colors.white10),
+              const SizedBox(height: 5),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text("THÙ LAO HOA HỒNG", style: TextStyle(color: Colors.grey, fontSize: 12)),
+                  Text(formatter.format(commission), style: const TextStyle(color: Colors.greenAccent, fontSize: 16, fontWeight: FontWeight.bold)),
+                ],
+              ),
+              const SizedBox(height: 10),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -326,7 +601,7 @@ class _PtScheduleScreenState extends State<PtScheduleScreen> {
           const SizedBox(height: 20),
           const Text("— GHI CHÚ HUẤN LUYỆN VIÊN", style: TextStyle(color: Colors.grey, fontSize: 10, fontWeight: FontWeight.bold)),
           const SizedBox(height: 20),
-          Align(alignment: Alignment.bottomRight, child: Icon(Icons.fitness_center, color: Colors.grey.withOpacity(0.2), size: 60)),
+          Align(alignment: Alignment.bottomRight, child: Icon(Icons.fitness_center, color: Colors.grey.withValues(alpha: 0.2), size: 60)),
         ],
       ),
     );

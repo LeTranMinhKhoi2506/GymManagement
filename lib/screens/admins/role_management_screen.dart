@@ -105,7 +105,7 @@ class _RoleManagementScreenState extends State<RoleManagementScreen> {
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(16),
-            boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10)],
+            boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 10)],
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -129,7 +129,7 @@ class _RoleManagementScreenState extends State<RoleManagementScreen> {
                     runSpacing: 4,
                     children: role.permissions.map((p) => Chip(
                       label: Text(p, style: const TextStyle(fontSize: 10)),
-                      backgroundColor: const Color(0xFFFF6B35).withOpacity(0.1),
+                      backgroundColor: const Color(0xFFFF6B35).withValues(alpha: 0.1),
                       side: BorderSide.none,
                       visualDensity: VisualDensity.compact,
                     )).toList(),
