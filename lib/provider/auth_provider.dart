@@ -45,14 +45,14 @@ class AuthProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> signIn(BuildContext context) async {
+  Future<bool> signIn(BuildContext context) async {
     final email = loginEmailController.text.trim();
     final password = loginPasswordController.text;
 
     final validationError = _validateLogin(email: email, password: password);
     if (validationError != null) {
       _showSnackBar(context, validationError);
-      return;
+      return false;
     }
 
     _setLoading(true);
@@ -61,17 +61,18 @@ class AuthProvider extends ChangeNotifier {
         email: email,
         password: password,
       );
-      if (!context.mounted) return;
-      _showSnackBar(context, 'Dang nhap thanh cong.');
+      if (!context.mounted) return false;
+      return true;
     } on FirebaseAuthException catch (e) {
-      if (!context.mounted) return;
+      if (!context.mounted) return false;
       _showSnackBar(context, _mapFirebaseAuthError(e));
     } catch (_) {
-      if (!context.mounted) return;
+      if (!context.mounted) return false;
       _showSnackBar(context, 'Dang nhap that bai. Vui long thu lai.');
     } finally {
       _setLoading(false);
     }
+    return false;
   }
 
   Future<void> continueSignUp(BuildContext context) async {
@@ -232,5 +233,24 @@ class AuthProvider extends ChangeNotifier {
     signUpPhoneController.dispose();
     signUpPasswordController.dispose();
     super.dispose();
+  }
+
+  Future<bool> signOut() async {
+    _setLoading(true);
+    try {
+      await _authService.signOut();
+      loginEmailController.clear();
+      loginPasswordController.clear();
+      signUpNameController.clear();
+      signUpEmailController.clear();
+      signUpPhoneController.clear();
+      signUpPasswordController.clear();
+      _agreeTerms = false;
+      return true;
+    } catch (_) {
+      return false;
+    } finally {
+      _setLoading(false);
+    }
   }
 }

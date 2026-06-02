@@ -19,9 +19,13 @@ import '../controllers/report_controller.dart';
 import '../controllers/media_controller.dart';
 import '../controllers/session_controller.dart';
 import '../controllers/category_controller.dart';
+import '../provider/auth_provider.dart';
+import '../provider/home_provider.dart';
 
 class AppProviders {
   static List<SingleChildWidget> get providers => [
+        ChangeNotifierProvider(create: (_) => AuthProvider()),
+        ChangeNotifierProvider(create: (_) => HomeProvider()),
         ChangeNotifierProvider(create: (_) => AuthController()),
         ChangeNotifierProvider(create: (_) => AdminController()),
         ChangeNotifierProvider(create: (_) => StaffController()),

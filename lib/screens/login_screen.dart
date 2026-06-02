@@ -42,7 +42,7 @@ class _LoginScreenState extends State<LoginScreen> {
           context.go(Routes.receptionistDashboard);
         } else {
           // Cho các user thông thường (Member) hoặc mặc định
-          context.go(Routes.receptionistDashboard); 
+          context.go(Routes.customerHome); 
         }
         
         _showSnackBar("Chào mừng ${user?.fullName}!", Colors.green);

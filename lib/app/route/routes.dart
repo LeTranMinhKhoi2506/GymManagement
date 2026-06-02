@@ -32,10 +32,16 @@ import '../../screens/receptionist/receptionist_checkin_screen.dart';
 import '../../screens/receptionist/receptionist_pos_screen.dart';
 import '../../screens/receptionist/receptionist_support_screen.dart';
 import '../../screens/receptionist/receptionist_facility_screen.dart';
+import '../../screens/customer_home/customer_home_screen.dart';
+import '../../screens/customer_login/login_screen.dart' as customer_login;
+import '../../screens/customer_login/signup_screen.dart' as customer_signup;
 
 class Routes {
   static const String login = '/login';
   static const String signup = '/signup';
+  static const String customerLogin = '/customer-login';
+  static const String customerSignup = '/customer-signup';
+  static const String customerHome = '/customer-home';
   static const String forgotPassword = '/forgot-password';
   static const String adminDashboard = '/admin-dashboard';
   static const String personnelManagement = '/personnel-management';
@@ -75,6 +81,9 @@ class Routes {
     routes: [
       GoRoute(path: login, builder: (context, state) => const LoginScreen()),
       GoRoute(path: signup, builder: (context, state) => const SignUpScreen()),
+      GoRoute(path: customerLogin, builder: (context, state) => const customer_login.LoginScreen()),
+      GoRoute(path: customerSignup, builder: (context, state) => const customer_signup.SignUpScreen()),
+      GoRoute(path: customerHome, builder: (context, state) => const CustomerHomeScreen()),
       GoRoute(path: forgotPassword, builder: (context, state) => const ForgotPasswordScreen()),
       GoRoute(path: adminDashboard, builder: (context, state) => const AdminDashboardScreen()),
       GoRoute(path: personnelManagement, builder: (context, state) => const PersonnelManagementScreen()),

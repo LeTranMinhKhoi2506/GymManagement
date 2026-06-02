@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:go_router/go_router.dart';
 import '../../app/theme/app_theme.dart';
+import '../../app/route/routes.dart';
 import '../../provider/auth_provider.dart';
 import '../../widget/loginAndSignInWidget/auth_background.dart';
 import '../../widget/loginAndSignInWidget/auth_text_field.dart';
