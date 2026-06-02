@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 
 import 'firebase_options.dart';
 import 'provider/auth_provider.dart';
+import 'controllers/auth_controller.dart';
 import 'screens/customer_home/customer_home_screen.dart';
 import 'screens/customer_login/login_screen.dart';
 import 'screens/customer_login/signup_screen.dart';
@@ -22,8 +23,11 @@ class MyApp extends StatelessWidget {
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider(
-      create: (_) => AuthProvider(),
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => AuthProvider()),
+        ChangeNotifierProvider(create: (_) => AuthController()),
+      ],
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
         title: 'Gym Management',

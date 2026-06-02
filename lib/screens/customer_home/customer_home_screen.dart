@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../provider/auth_provider.dart';
+import '../../provider/home_provider.dart';
 import '../main_Screen_Customer/home_screen.dart';
 import '../customer_login/login_screen.dart';
 
@@ -19,7 +20,10 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
 
   static const List<_BottomNavItemData> _items = [
     _BottomNavItemData(label: 'HOME', icon: Icons.home_rounded),
-    _BottomNavItemData(label: 'TRAINERS', icon: Icons.sports_gymnastics_rounded),
+    _BottomNavItemData(
+      label: 'TRAINERS',
+      icon: Icons.sports_gymnastics_rounded,
+    ),
     _BottomNavItemData(label: 'WORKOUTS', icon: Icons.bolt_rounded),
     _BottomNavItemData(label: 'PROFILE', icon: Icons.person_rounded),
   ];
@@ -32,7 +36,9 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
       ScaffoldMessenger.of(context)
         ..hideCurrentSnackBar()
         ..showSnackBar(
-          const SnackBar(content: Text('Dang xuat that bai. Vui long thu lai.')),
+          const SnackBar(
+            content: Text('Dang xuat that bai. Vui long thu lai.'),
+          ),
         );
       return;
     }
@@ -48,7 +54,10 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
   Widget build(BuildContext context) {
     final loading = context.select<AuthProvider, bool>((p) => p.loading);
     final pages = <Widget>[
-      const HomeScreenCustomerContent(),
+      ChangeNotifierProvider(
+        create: (_) => HomeProvider(),
+        child: const HomeScreenCustomerContent(showCreateFab: true),
+      ),
       const _TabPlaceholder(title: 'TRAINERS'),
       const _TabPlaceholder(title: 'WORKOUTS'),
       _ProfileTab(onLogout: _handleLogout, loading: loading),
@@ -185,4 +194,3 @@ class _BottomNavItemData {
   final String label;
   final IconData icon;
 }
-

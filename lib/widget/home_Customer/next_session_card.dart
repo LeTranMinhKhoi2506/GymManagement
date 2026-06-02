@@ -6,14 +6,13 @@ class NextSessionCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      constraints: const BoxConstraints(minHeight: 306),
-      padding: const EdgeInsets.all(28),
+      height: 306,
+      padding: const EdgeInsets.all(40),
       decoration: BoxDecoration(
         color: const Color(0xFF262626),
         borderRadius: BorderRadius.circular(48),
       ),
       child: Column(
-        mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
@@ -68,10 +67,10 @@ class NextSessionCard extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 20),
+          const Spacer(),
           Container(
-            constraints: const BoxConstraints(minHeight: 118),
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            height: 118,
+            padding: const EdgeInsets.symmetric(horizontal: 20),
             decoration: BoxDecoration(
               color: const Color(0xFF111111),
               borderRadius: BorderRadius.circular(22),
@@ -90,7 +89,6 @@ class NextSessionCard extends StatelessWidget {
                 const SizedBox(width: 20),
                 const Expanded(
                   child: Column(
-                    mainAxisSize: MainAxisSize.min,
                     mainAxisAlignment: MainAxisAlignment.center,
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -103,11 +101,9 @@ class NextSessionCard extends StatelessWidget {
                           letterSpacing: 3,
                         ),
                       ),
-                      SizedBox(height: 4),
+                      SizedBox(height: 6),
                       Text(
-                        'MARCUS STEVENS',
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
+                        'MARCUS\nSTEVENS',
                         style: TextStyle(
                           color: Colors.white,
                           fontSize: 20,
@@ -120,7 +116,7 @@ class NextSessionCard extends StatelessWidget {
                 ),
                 Container(
                   width: 102,
-                  height: 44,
+                  height: 50,
                   decoration: BoxDecoration(
                     color: const Color(0xFFD8FF00),
                     borderRadius: BorderRadius.circular(16),

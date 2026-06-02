@@ -93,18 +93,17 @@ class StatCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      constraints: const BoxConstraints(minHeight: 210),
-      padding: const EdgeInsets.all(24),
+      height: 210,
+      padding: const EdgeInsets.all(30),
       decoration: BoxDecoration(
         color: const Color(0xFF111111),
         borderRadius: BorderRadius.circular(34),
       ),
       child: Column(
-        mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Icon(icon, color: iconColor, size: 26),
-          const SizedBox(height: 14),
+          const Spacer(),
           Text(
             title,
             style: const TextStyle(
