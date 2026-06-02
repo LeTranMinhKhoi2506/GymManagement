@@ -70,7 +70,7 @@ class ActiveShiftsWidget extends StatelessWidget {
             child: OutlinedButton(
               onPressed: onViewDetails,
               style: OutlinedButton.styleFrom(
-                side: BorderSide(color: Colors.white.withOpacity(0.1)),
+                side: BorderSide(color: Colors.white.withValues(alpha: 0.1)),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
               ),
               child: const Text(
@@ -108,7 +108,7 @@ class ActiveShiftsWidget extends StatelessWidget {
                   color: statusColor,
                   shape: BoxShape.circle,
                   boxShadow: schedule.status == 'ongoing' 
-                    ? [BoxShadow(color: Colors.orange.withOpacity(0.5), blurRadius: 8)] 
+                    ? [BoxShadow(color: Colors.orange.withValues(alpha: 0.5), blurRadius: 8)] 
                     : [],
                 ),
               ),
@@ -116,7 +116,7 @@ class ActiveShiftsWidget extends StatelessWidget {
                 Expanded(
                   child: Container(
                     width: 2,
-                    color: Colors.white.withOpacity(0.1),
+                    color: Colors.white.withValues(alpha: 0.1),
                   ),
                 ),
             ],
@@ -140,13 +140,13 @@ class ActiveShiftsWidget extends StatelessWidget {
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.05),
+                        color: Colors.white.withValues(alpha: 0.05),
                         borderRadius: BorderRadius.circular(6),
                       ),
                       child: Text(
                         "${DateFormat('HH:mm').format(schedule.startTime)} - ${DateFormat('HH:mm').format(schedule.endTime)}",
                         style: TextStyle(
-                          color: Colors.white.withOpacity(0.6),
+                          color: Colors.white.withValues(alpha: 0.6),
                           fontSize: 12,
                         ),
                       ),
@@ -156,14 +156,14 @@ class ActiveShiftsWidget extends StatelessWidget {
                 const SizedBox(height: 4),
                 Text(
                   statusText,
-                  style: TextStyle(color: statusColor.withOpacity(0.8), fontSize: 11),
+                  style: TextStyle(color: statusColor.withValues(alpha: 0.8), fontSize: 11),
                 ),
                 const SizedBox(height: 8),
                 Row(
                   children: [
                     CircleAvatar(
                       radius: 14,
-                      backgroundColor: Colors.blue.withOpacity(0.2),
+                      backgroundColor: Colors.blue.withValues(alpha: 0.2),
                       child: Text(
                         schedule.staffName[0],
                         style: const TextStyle(fontSize: 10, color: Colors.blue),
@@ -172,7 +172,7 @@ class ActiveShiftsWidget extends StatelessWidget {
                     const SizedBox(width: 8),
                     Text(
                       schedule.staffName,
-                      style: TextStyle(color: Colors.white.withOpacity(0.4), fontSize: 13),
+                      style: TextStyle(color: Colors.white.withValues(alpha: 0.4), fontSize: 13),
                     ),
                   ],
                 ),

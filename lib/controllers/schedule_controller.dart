@@ -7,6 +7,14 @@ class ScheduleController extends ChangeNotifier {
 
   Stream<List<ScheduleModel>> get todaySchedulesStream => _repository.getTodaySchedules();
 
+  String? _errorMessage;
+  String? get errorMessage => _errorMessage;
+
+  void clearError() {
+    _errorMessage = null;
+    notifyListeners();
+  }
+
   Future<void> addSchedule({
     required String staffUid,
     required String staffName,
@@ -14,22 +22,46 @@ class ScheduleController extends ChangeNotifier {
     required DateTime startTime,
     required DateTime endTime,
   }) async {
-    final schedule = ScheduleModel(
-      id: '',
-      staffUid: staffUid,
-      staffName: staffName,
-      task: task,
-      startTime: startTime,
-      endTime: endTime,
-    );
-    await _repository.addSchedule(schedule);
+    _errorMessage = null;
+    notifyListeners();
+    try {
+      final schedule = ScheduleModel(
+        id: '',
+        staffUid: staffUid,
+        staffName: staffName,
+        task: task,
+        startTime: startTime,
+        endTime: endTime,
+      );
+      await _repository.addSchedule(schedule);
+    } catch (e) {
+      _errorMessage = e.toString();
+      notifyListeners();
+      rethrow;
+    }
   }
 
   Future<void> updateStatus(String id, String status) async {
-    await _repository.updateScheduleStatus(id, status);
+    _errorMessage = null;
+    notifyListeners();
+    try {
+      await _repository.updateScheduleStatus(id, status);
+    } catch (e) {
+      _errorMessage = e.toString();
+      notifyListeners();
+      rethrow;
+    }
   }
 
   Future<void> deleteSchedule(String id) async {
-    await _repository.deleteSchedule(id);
+    _errorMessage = null;
+    notifyListeners();
+    try {
+      await _repository.deleteSchedule(id);
+    } catch (e) {
+      _errorMessage = e.toString();
+      notifyListeners();
+      rethrow;
+    }
   }
 }
