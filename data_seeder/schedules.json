@@ -1,0 +1,20 @@
+[
+  {
+    "id": "sch_01",
+    "staffUid": "receptionist_uid_01",
+    "staffName": "Phạm Thanh Mai",
+    "task": "Trực quầy lễ tân ca sáng",
+    "startTime": "2026-06-03T06:00:00Z",
+    "endTime": "2026-06-03T14:00:00Z",
+    "status": "pending"
+  },
+  {
+    "id": "sch_02",
+    "staffUid": "pt_uid_01",
+    "staffName": "Nguyễn Văn Hùng",
+    "task": "Huấn luyện học viên gói Pro Elite ca tối",
+    "startTime": "2026-06-03T18:00:00Z",
+    "endTime": "2026-06-03T20:00:00Z",
+    "status": "pending"
+  }
+]

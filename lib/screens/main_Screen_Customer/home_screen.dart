@@ -10,6 +10,7 @@ import '../../widget/home_Customer/qr_check_in_card.dart';
 import '../../widget/home_Customer/quick_actions_section.dart';
 import '../../widget/home_Customer/search_box.dart';
 import '../../widget/home_Customer/session_carousel.dart';
+import '../../widget/home_Customer/news_section.dart';
 
 class HomeScreenCustomer extends StatelessWidget {
   const HomeScreenCustomer({super.key});
@@ -74,6 +75,8 @@ class HomeScreenCustomerContent extends StatelessWidget {
                 QuickActionsHeader(),
                 SizedBox(height: 20),
                 QuickActionsRow(),
+                SizedBox(height: 34),
+                CustomerNewsSection(),
               ],
             ),
           ),

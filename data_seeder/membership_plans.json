@@ -1,0 +1,29 @@
+[
+  {
+    "id": "plan_standard_1m",
+    "name": "Standard 1 Month",
+    "description": "Gói tập cơ bản không giới hạn thời gian tập trong 1 tháng",
+    "price": 500000.0,
+    "durationMonths": 1,
+    "hasPT": false,
+    "isActive": true
+  },
+  {
+    "id": "plan_pro_elite_3m",
+    "name": "Pro Elite 3 Months",
+    "description": "Gói tập nâng cao kèm 12 buổi PT trong 3 tháng",
+    "price": 4500000.0,
+    "durationMonths": 3,
+    "hasPT": true,
+    "isActive": true
+  },
+  {
+    "id": "plan_trial_7d",
+    "name": "Trial 7 Days",
+    "description": "Trải nghiệm tập thử 7 ngày miễn phí",
+    "price": 0.0,
+    "durationMonths": 0,
+    "hasPT": false,
+    "isActive": true
+  }
+]
