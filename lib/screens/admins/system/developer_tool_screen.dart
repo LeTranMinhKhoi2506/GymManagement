@@ -33,6 +33,9 @@ class _DeveloperToolScreenState extends State<DeveloperToolScreen> {
     {'name': 'schedules', 'title': 'Lịch tập (schedules)', 'desc': 'Lịch trực lễ tân & dạy học'},
     {'name': 'feedbacks', 'title': 'Phản hồi (feedbacks)', 'desc': 'Ý kiến phản hồi từ hội viên'},
     {'name': 'checkins', 'title': 'Lượt ra vào (checkins)', 'desc': 'Lịch sử quét QR check-in/out của hội viên'},
+    {'name': 'categories', 'title': 'Danh mục (categories)', 'desc': 'Các nhóm danh mục cho nội dung, trang thiết bị...'},
+    {'name': 'media_library', 'title': 'Thư viện Media (media_library)', 'desc': 'Tệp hình ảnh phòng tập & sản phẩm'},
+    {'name': 'contents', 'title': 'Bài viết & Tin tức (contents)', 'desc': 'Các bài viết tin tức, khuyến mãi trên app'},
   ];
 
   @override
@@ -367,7 +370,7 @@ class _DeveloperToolScreenState extends State<DeveloperToolScreen> {
               ),
               const SizedBox(height: 12),
               // Custom generator input
-              if (name == 'members' || name == 'transactions' || name == 'products' || name == 'equipment' || name == 'feedbacks' || name == 'users' || name == 'schedules' || name == 'checkins')
+              if (name == 'members' || name == 'transactions' || name == 'products' || name == 'equipment' || name == 'feedbacks' || name == 'users' || name == 'schedules' || name == 'checkins' || name == 'categories' || name == 'media_library' || name == 'contents')
                 Row(
                   children: [
                     Expanded(
@@ -411,6 +414,12 @@ class _DeveloperToolScreenState extends State<DeveloperToolScreen> {
                                   await _seeder.generateRandomSchedules(count);
                                 } else if (name == 'checkins') {
                                   await _seeder.generateRandomCheckins(count);
+                                } else if (name == 'categories') {
+                                  await _seeder.generateRandomCategories();
+                                } else if (name == 'media_library') {
+                                  await _seeder.generateRandomMedia(count);
+                                } else if (name == 'contents') {
+                                  await _seeder.generateRandomContents(count);
                                 }
                               });
                             },

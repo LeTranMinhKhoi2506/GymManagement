@@ -61,7 +61,10 @@ class DatabaseSeeder {
       'payroll',
       'schedules',
       'feedbacks',
-      'checkins'
+      'checkins',
+      'categories',
+      'contents',
+      'media_library'
     ];
     for (var col in collections) {
       await clearCollection(col);
@@ -118,6 +121,18 @@ class DatabaseSeeder {
           sourceData = DeveloperSeedData.feedbacks;
           idField = 'id';
           break;
+        case 'categories':
+          sourceData = DeveloperSeedData.categories;
+          idField = 'id';
+          break;
+        case 'contents':
+          sourceData = DeveloperSeedData.contents;
+          idField = 'id';
+          break;
+        case 'media_library':
+          sourceData = DeveloperSeedData.media;
+          idField = 'id';
+          break;
         default:
           onLog("⚠️ Collection '$collectionName' không được hỗ trợ.");
           return;
@@ -159,7 +174,8 @@ class DatabaseSeeder {
       'startTime',
       'endTime',
       'nextRenewal',
-      'memberSince'
+      'memberSince',
+      'uploadedAt'
     ];
     for (var key in map.keys) {
       if (dateFields.contains(key) && map[key] is String) {
@@ -181,7 +197,10 @@ class DatabaseSeeder {
       'payments',
       'payroll',
       'schedules',
-      'feedbacks'
+      'feedbacks',
+      'categories',
+      'contents',
+      'media_library'
     ];
     for (var col in collections) {
       await seedDefault(col);
@@ -723,10 +742,137 @@ class DatabaseSeeder {
         batch.set(docRef, checkinMap);
       }
 
-      await batch.commit();
       onLog("✔️ Đã sinh thành công $count lượt ra vào.");
     } catch (e) {
       onLog("❌ Lỗi khi sinh lượt ra vào ngẫu nhiên: $e");
+    }
+  }
+
+  // 9. Generate Random Categories
+  Future<void> generateRandomCategories() async {
+    onLog("⚡ Bắt đầu nạp danh mục mặc định...");
+    try {
+      await seedDefault('categories');
+    } catch (e) {
+      onLog("❌ Lỗi khi sinh danh mục: $e");
+    }
+  }
+
+  // 10. Generate Random Media
+  Future<void> generateRandomMedia(int count) async {
+    onLog("⚡ Bắt đầu sinh ngẫu nhiên $count tệp ảnh Thư viện Media...");
+    try {
+      final batch = _db.batch();
+      final gymImages = [
+        "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=800",
+        "https://images.unsplash.com/photo-1517838277536-f5f99be501cd?w=800",
+        "https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?w=800",
+        "https://images.unsplash.com/photo-1579758629938-03607ccdbaba?w=800",
+        "https://images.unsplash.com/photo-1541534741688-6078c6bfb5c5?w=800",
+        "https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?w=800",
+        "https://images.unsplash.com/photo-1518310383802-640c2de311b2?w=800"
+      ];
+      final names = [
+        "gym_zone.jpg", "deadlift_area.jpg", "yoga_meditation.jpg", "whey_supplement.jpg",
+        "pt_training_session.jpg", "cardio_bikes.jpg", "dumbbell_rack.jpg"
+      ];
+
+      for (int i = 0; i < count; i++) {
+        final id = "gen_media_${DateTime.now().microsecondsSinceEpoch}_$i";
+        final idx = _random.nextInt(gymImages.length);
+        final url = gymImages[idx];
+        final name = "gen_${_random.nextInt(100)}_${names[idx]}";
+        final date = DateTime.now().subtract(Duration(days: _random.nextInt(30)));
+        final size = _random.nextInt(400000) + 100000;
+
+        final mediaMap = {
+          'url': url,
+          'fileName': name,
+          'type': 'image',
+          'uploadedAt': Timestamp.fromDate(date),
+          'size': size,
+        };
+
+        final ref = _db.collection('media_library').doc(id);
+        batch.set(ref, mediaMap);
+      }
+
+      await batch.commit();
+      onLog("✔️ Đã sinh thành công $count tệp ảnh vào Thư viện Media.");
+    } catch (e) {
+      onLog("❌ Lỗi khi sinh media ngẫu nhiên: $e");
+    }
+  }
+
+  // 11. Generate Random Contents
+  Future<void> generateRandomContents(int count) async {
+    onLog("⚡ Bắt đầu sinh ngẫu nhiên $count Bài viết/Nội dung...");
+    try {
+      // Fetch media library items to use as post images if available
+      final mediaSnapshot = await _db.collection('media_library').get();
+      final List<String> imageUrls = mediaSnapshot.docs.map((doc) => doc.data()['url']?.toString() ?? '').where((u) => u.isNotEmpty).toList();
+
+      final defaultImages = [
+        "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=800",
+        "https://images.unsplash.com/photo-1517838277536-f5f99be501cd?w=800",
+        "https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?w=800"
+      ];
+
+      final batch = _db.batch();
+      final titles = [
+        "Bật mí 5 bài tập Cardio đốt mỡ thừa siêu tốc",
+        "Lịch nghỉ lễ Quốc Khánh mùng 2 tháng 9 của hệ thống Kinetic",
+        "Đăng ký tập nhóm PT Group - Nhân đôi hiệu quả, chia đôi chi phí",
+        "Uống Whey Protein lúc nào trong ngày là tốt nhất?",
+        "Tập squat thế nào để bảo vệ khớp gối tối đa?",
+        "Khám phá lớp học Zumba cực sôi động cùng huấn luyện viên"
+      ];
+      final bodies = [
+        "Cardio là phương pháp tập luyện tim mạch tuyệt vời giúp bạn tiêu hao năng lượng tối đa. Các bài tập như Jumping Jacks, chạy nâng cao đùi, hay nhảy dây trong 20 phút sẽ giúp nhịp tim của bạn tăng cao, thúc đẩy trao đổi chất và duy trì trạng thái đốt mỡ tự nhiên suốt cả ngày dài. Hãy tập luyện 3-4 buổi mỗi tuần nhé!",
+        "Kính gửi toàn thể quý hội viên, hệ thống Kinetic Gym xin thông báo lịch hoạt động dịp lễ Quốc Khánh 2/9 sắp tới: Phòng tập sẽ mở cửa hoạt động bình thường từ 8:00 đến 17:00 trong hai ngày 2/9 và 3/9 để hỗ trợ nhu cầu tập luyện của mọi người. Chúc các bạn có một kỳ nghỉ lễ thật vui vẻ và khỏe mạnh!",
+        "Tập luyện cùng nhóm bạn không chỉ mang lại niềm vui mà còn thúc đẩy động lực thi đấu tuyệt vời. Gói tập PT Group của Kinetic cho phép nhóm từ 3-5 người tập chung với 1 huấn luyện viên cá nhân chuyên nghiệp, giáo án thiết kế riêng từng người nhưng mức học phí giảm tới 50% so với kèm 1-1. Đăng ký ngay tuần này!",
+        "Whey Protein là công cụ đắc lực hỗ trợ phục hồi và phát triển cơ bắp sau các buổi tập tạ căng thẳng. Theo nghiên cứu khoa học, thời điểm vàng để uống Whey là trong vòng 30 phút ngay sau khi tập xong. Ngoài ra, bạn cũng có thể bổ sung 1 muỗng vào sáng sớm ngay khi thức dậy để ngăn chặn quá trình dị hóa cơ.",
+        "Squat là vua của các bài tập thân dưới, tuy nhiên nếu squat sai tư thế sẽ dễ dẫn đến chấn thương gối. Hãy lưu ý giữ đầu gối không vượt quá mũi chân, dồn trọng lực vào gót chân thay vì mũi bàn chân và giữ lưng luôn thẳng tự nhiên. Bắt đầu với mức tạ nhẹ để làm quen với form tập chuẩn trước.",
+        "Zumba là sự kết hợp hoàn hảo giữa vũ đạo Latin nóng bỏng và các bài tập Cardio cường độ cao. Một buổi tập Zumba kéo dài 1 giờ có thể giúp bạn đốt cháy từ 500 đến 800 calo trong tiếng nhạc sôi động đầy phấn khích. Lớp học mở cửa định kỳ vào tối thứ 3 và thứ 5 hàng tuần."
+      ];
+      final categoriesList = ["Tin tức", "Khuyến mãi", "Kiến thức", "Sự kiện"];
+      final authors = ["Lê Trần Minh Khôi", "Nguyễn Văn Hùng", "Trần Thị Linh", "Phạm Thanh Mai"];
+
+      for (int i = 0; i < count; i++) {
+        final id = "gen_post_${DateTime.now().microsecondsSinceEpoch}_$i";
+        final idx = _random.nextInt(titles.length);
+        final title = titles[idx];
+        final body = bodies[idx];
+        final category = categoriesList[_random.nextInt(categoriesList.length)];
+        final author = authors[_random.nextInt(authors.length)];
+        final date = DateTime.now().subtract(Duration(
+          days: _random.nextInt(30),
+          hours: _random.nextInt(24),
+          minutes: _random.nextInt(60),
+        ));
+        
+        final imageUrl = imageUrls.isNotEmpty 
+            ? imageUrls[_random.nextInt(imageUrls.length)] 
+            : defaultImages[_random.nextInt(defaultImages.length)];
+
+        final postMap = {
+          'title': "$title (Bản tin ${_random.nextInt(100)})",
+          'body': body,
+          'imageUrl': imageUrl,
+          'category': category,
+          'author': author,
+          'createdAt': Timestamp.fromDate(date),
+          'isPublished': _random.nextDouble() > 0.15, // 85% published
+        };
+
+        final ref = _db.collection('contents').doc(id);
+        batch.set(ref, postMap);
+      }
+
+      await batch.commit();
+      onLog("✔️ Đã sinh thành công $count bài viết mẫu.");
+    } catch (e) {
+      onLog("❌ Lỗi khi sinh bài viết ngẫu nhiên: $e");
     }
   }
 }

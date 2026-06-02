@@ -350,4 +350,83 @@ class DeveloperSeedData {
       "createdAt": "2026-05-28T10:00:00Z"
     }
   ];
+
+  static const List<Map<String, dynamic>> categories = [
+    {"id": "cat_news", "name": "Tin tức", "type": "Content", "itemCount": 2},
+    {"id": "cat_promo", "name": "Khuyến mãi", "type": "Content", "itemCount": 1},
+    {"id": "cat_tips", "name": "Kiến thức", "type": "Content", "itemCount": 2},
+    {"id": "cat_event", "name": "Sự kiện", "type": "Content", "itemCount": 1},
+    {"id": "cat_supp", "name": "Supplements", "type": "Product", "itemCount": 2},
+    {"id": "cat_equip_prod", "name": "Equipment", "type": "Product", "itemCount": 1},
+    {"id": "cat_cardio", "name": "Cardio", "type": "Equipment", "itemCount": 2},
+    {"id": "cat_strength", "name": "Strength", "type": "Equipment", "itemCount": 1}
+  ];
+
+  static const List<Map<String, dynamic>> media = [
+    {
+      "id": "media_gym_1",
+      "url": "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=800",
+      "fileName": "kinetic_gym_main.jpg",
+      "type": "image",
+      "uploadedAt": "2026-05-01T08:00:00Z",
+      "size": 245600
+    },
+    {
+      "id": "media_yoga_1",
+      "url": "https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?w=800",
+      "fileName": "yoga_class.jpg",
+      "type": "image",
+      "uploadedAt": "2026-05-02T09:30:00Z",
+      "size": 185400
+    },
+    {
+      "id": "media_whey_1",
+      "url": "https://images.unsplash.com/photo-1579758629938-03607ccdbaba?w=800",
+      "fileName": "whey_protein.jpg",
+      "type": "image",
+      "uploadedAt": "2026-05-03T10:00:00Z",
+      "size": 312000
+    },
+    {
+      "id": "media_workout_1",
+      "url": "https://images.unsplash.com/photo-1517838277536-f5f99be501cd?w=800",
+      "fileName": "workout_hardcore.jpg",
+      "type": "image",
+      "uploadedAt": "2026-05-04T11:00:00Z",
+      "size": 420300
+    }
+  ];
+
+  static const List<Map<String, dynamic>> contents = [
+    {
+      "id": "post_gym_opening",
+      "title": "Khai trương phòng tập Kinetic Elite Quận 7",
+      "body": "Chúng tôi hân hạnh thông báo chi nhánh mới Kinetic Elite sẽ chính thức khai trương tại Quận 7 vào ngày 15/06/2026. Phòng tập mới sở hữu không gian rộng hơn 1000m2, trang bị máy Matrix hiện đại nhất cùng đội ngũ PT chuyên nghiệp. Đặc biệt, giảm giá 30% cho 100 hội viên đăng ký đầu tiên. Hãy đến trải nghiệm ngay!",
+      "imageUrl": "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=800",
+      "category": "Tin tức",
+      "author": "Lê Trần Minh Khôi",
+      "createdAt": "2026-05-20T08:00:00Z",
+      "isPublished": true
+    },
+    {
+      "id": "post_summer_promo",
+      "title": "Chương trình ưu đãi cực cháy chào hè 2026",
+      "body": "Đón hè rực rỡ với ưu đãi giảm giá lên đến 20% cho tất cả các gói tập từ 3 tháng trở lên khi đăng ký trong tháng 6 này. Nhận ngay quà tặng là 1 bình nước giữ nhiệt Kinetic và 1 áo thun tập gym cao cấp. Đăng ký ngay hôm nay để có vóc dáng săn chắc tự tin đón hè nhé các bạn!",
+      "imageUrl": "https://images.unsplash.com/photo-1517838277536-f5f99be501cd?w=800",
+      "category": "Khuyến mãi",
+      "author": "Lê Trần Minh Khôi",
+      "createdAt": "2026-05-25T09:00:00Z",
+      "isPublished": true
+    },
+    {
+      "id": "post_nutrition_tips",
+      "title": "Chế độ dinh dưỡng hoàn hảo cho người mới bắt đầu",
+      "body": "Khi mới bắt đầu tập gym, chế độ dinh dưỡng đóng vai trò quyết định đến 70% sự thành công của bạn. Hãy đảm bảo bạn cung cấp đủ lượng Protein cần thiết (khoảng 1.5g - 2g trên mỗi kg thể trọng), bổ sung tinh bột hấp thụ chậm như yến mạch, khoai lang và không quên uống ít nhất 2-3 lít nước mỗi ngày. Tránh xa các thực phẩm nhiều dầu mỡ và đồ ngọt để đạt kết quả tốt nhất.",
+      "imageUrl": "https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?w=800",
+      "category": "Kiến thức",
+      "author": "Nguyễn Văn Hùng",
+      "createdAt": "2026-05-28T14:30:00Z",
+      "isPublished": true
+    }
+  ];
 }

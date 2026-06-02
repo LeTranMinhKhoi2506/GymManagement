@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:file_picker/file_picker.dart';
 import '../../../controllers/media_controller.dart';
 import '../../../data/models/media_model.dart';
 import '../../../common/widgets/admin_dashboard_widgets/sidebar_widget.dart';
@@ -162,21 +161,124 @@ class _MediaManagementScreenState extends State<MediaManagementScreen> {
   }
 
   Future<void> _pickAndUploadFile(MediaController controller) async {
-    FilePickerResult? result = await FilePicker.platform.pickFiles(
-      type: FileType.image,
-      allowMultiple: false,
-    );
+    final urlController = TextEditingController();
+    final nameController = TextEditingController();
+    
+    final stockImages = [
+      {
+        "name": "kinetic_gym_main.jpg",
+        "url": "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=800"
+      },
+      {
+        "name": "workout_motivation.jpg",
+        "url": "https://images.unsplash.com/photo-1517838277536-f5f99be501cd?w=800"
+      },
+      {
+        "name": "yoga_meditation.jpg",
+        "url": "https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?w=800"
+      },
+      {
+        "name": "whey_supplement.jpg",
+        "url": "https://images.unsplash.com/photo-1579758629938-03607ccdbaba?w=800"
+      },
+      {
+        "name": "cardio_bikes.jpg",
+        "url": "https://images.unsplash.com/photo-1541534741688-6078c6bfb5c5?w=800"
+      },
+      {
+        "name": "trainer_portrait.jpg",
+        "url": "https://images.unsplash.com/photo-1518310383802-640c2de311b2?w=800"
+      }
+    ];
 
-    if (result != null) {
-      PlatformFile file = result.files.first;
-      // In a real app, you would upload to Firebase Storage here and get the URL
-      // For this demo, we'll use a placeholder URL
-      await controller.uploadMedia(
-        url: "https://via.placeholder.com/300", 
-        fileName: file.name,
-        type: 'image',
-        size: file.size,
-      );
-    }
+    showDialog(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          title: const Text("Tải lên tài sản Media mới"),
+          content: SizedBox(
+            width: 500,
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text("Cách 1: Chọn từ ảnh Gym mẫu chất lượng cao", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Color(0xFF0A192F))),
+                  const SizedBox(height: 8),
+                  SizedBox(
+                    height: 90,
+                    child: ListView.builder(
+                      scrollDirection: Axis.horizontal,
+                      itemCount: stockImages.length,
+                      itemBuilder: (context, index) {
+                        final item = stockImages[index];
+                        return GestureDetector(
+                          onTap: () {
+                            setDialogState(() {
+                              urlController.text = item["url"]!;
+                              nameController.text = item["name"]!;
+                            });
+                          },
+                          child: Container(
+                            width: 100,
+                            margin: const EdgeInsets.only(right: 8),
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(color: urlController.text == item["url"] ? const Color(0xFFFF6B35) : Colors.grey.shade300, width: 2),
+                            ),
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(6),
+                              child: Image.network(item["url"]!, fit: BoxFit.cover),
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  const Text("Cách 2: Nhập liên kết ảnh & tên tệp tùy chỉnh", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Color(0xFF0A192F))),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: urlController,
+                    decoration: const InputDecoration(
+                      labelText: "Đường dẫn ảnh (URL)",
+                      border: OutlineInputBorder(),
+                      hintText: "https://images.unsplash.com/...",
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: nameController,
+                    decoration: const InputDecoration(
+                      labelText: "Tên tệp tin (fileName)",
+                      border: OutlineInputBorder(),
+                      hintText: "vi_du_anh.jpg",
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(context), child: const Text("Hủy")),
+            ElevatedButton(
+              onPressed: () async {
+                if (urlController.text.isNotEmpty && nameController.text.isNotEmpty) {
+                  await controller.uploadMedia(
+                    url: urlController.text.trim(),
+                    fileName: nameController.text.trim(),
+                    type: 'image',
+                    size: 100000 + (urlController.text.length * 123), // Giả lập kích thước file
+                  );
+                  if (context.mounted) Navigator.pop(context);
+                }
+              },
+              style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFFF6B35), foregroundColor: Colors.white),
+              child: const Text("Tải lên ngay"),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }

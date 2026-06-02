@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../controllers/category_controller.dart';
+import '../../../data/models/category_model.dart';
 import '../../../common/widgets/admin_dashboard_widgets/sidebar_widget.dart';
 import '../../../common/widgets/admin_dashboard_widgets/header_widget.dart';
 
@@ -100,7 +101,14 @@ class _CategoryManagementScreenState extends State<CategoryManagementScreen> {
           DataCell(Text("${cat.itemCount} mục")),
           DataCell(Row(
             children: [
-              IconButton(icon: const Icon(Icons.delete_outline, color: Colors.redAccent, size: 20), onPressed: () => controller.deleteCategory(cat.id)),
+              IconButton(
+                icon: const Icon(Icons.edit_outlined, color: Colors.blueAccent, size: 20),
+                onPressed: () => _showAddCategoryDialog(controller, category: cat),
+              ),
+              IconButton(
+                icon: const Icon(Icons.delete_outline, color: Colors.redAccent, size: 20),
+                onPressed: () => _showDeleteConfirmDialog(controller, cat),
+              ),
             ],
           )),
         ])).toList(),
@@ -108,40 +116,87 @@ class _CategoryManagementScreenState extends State<CategoryManagementScreen> {
     );
   }
 
-  void _showAddCategoryDialog(CategoryController controller) {
-    _nameController.clear();
+  void _showAddCategoryDialog(CategoryController controller, {CategoryModel? category}) {
+    _nameController.text = category?.name ?? '';
+    String currentType = category?.type ?? _selectedType;
+
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text("Thêm danh mục mới"),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(controller: _nameController, decoration: const InputDecoration(labelText: "Tên danh mục (VD: Máy Cardio)")),
-            const SizedBox(height: 16),
-            DropdownButtonFormField<String>(
-              initialValue: _selectedType,
-              items: const [
-                DropdownMenuItem(value: 'Content', child: Text("Nội dung/Bài viết")),
-                DropdownMenuItem(value: 'Equipment', child: Text("Trang thiết bị")),
-                DropdownMenuItem(value: 'Product', child: Text("Sản phẩm cửa hàng")),
-              ],
-              onChanged: (val) => _selectedType = val!,
-              decoration: const InputDecoration(labelText: "Phân loại"),
+      builder: (context) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          title: Text(category == null ? "Thêm danh mục mới" : "Chỉnh sửa danh mục"),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: _nameController,
+                decoration: const InputDecoration(labelText: "Tên danh mục (VD: Máy Cardio)"),
+              ),
+              const SizedBox(height: 16),
+              DropdownButtonFormField<String>(
+                initialValue: currentType,
+                items: const [
+                  DropdownMenuItem(value: 'Content', child: Text("Nội dung/Bài viết")),
+                  DropdownMenuItem(value: 'Equipment', child: Text("Trang thiết bị")),
+                  DropdownMenuItem(value: 'Product', child: Text("Sản phẩm cửa hàng")),
+                ],
+                onChanged: (val) {
+                  if (val != null) {
+                    setDialogState(() {
+                      currentType = val;
+                      _selectedType = val;
+                    });
+                  }
+                },
+                decoration: const InputDecoration(labelText: "Phân loại"),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(context), child: const Text("Hủy")),
+            ElevatedButton(
+              onPressed: () {
+                if (_nameController.text.isNotEmpty) {
+                  if (category == null) {
+                    controller.addCategory(_nameController.text, currentType);
+                  } else {
+                    controller.updateCategory(CategoryModel(
+                      id: category.id,
+                      name: _nameController.text,
+                      type: currentType,
+                      itemCount: category.itemCount,
+                    ));
+                  }
+                  Navigator.pop(context);
+                }
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFFFF6B35),
+                foregroundColor: Colors.white,
+              ),
+              child: Text(category == null ? "Thêm ngay" : "Cập nhật"),
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  void _showDeleteConfirmDialog(CategoryController controller, CategoryModel cat) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text("Xác nhận xóa danh mục"),
+        content: Text("Bạn có chắc chắn muốn xóa danh mục '${cat.name}'?"),
         actions: [
           TextButton(onPressed: () => Navigator.pop(context), child: const Text("Hủy")),
           ElevatedButton(
             onPressed: () {
-              if (_nameController.text.isNotEmpty) {
-                controller.addCategory(_nameController.text, _selectedType);
-                Navigator.pop(context);
-              }
+              controller.deleteCategory(cat.id);
+              Navigator.pop(context);
             },
-            style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFFF6B35), foregroundColor: Colors.white),
-            child: const Text("Thêm ngay"),
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.redAccent, foregroundColor: Colors.white),
+            child: const Text("Xóa"),
           ),
         ],
       ),
