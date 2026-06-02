@@ -1,0 +1,42 @@
+[
+  {
+    "id": "tx_rev_01",
+    "type": "Revenue",
+    "category": "Membership",
+    "description": "Đóng phí Standard 1 Month - Nguyễn Hoàng Minh",
+    "amount": 500000.0,
+    "transactionDate": "2026-06-01T09:30:00Z",
+    "paymentMethod": "Transfer",
+    "status": "Completed",
+    "relatedMemberId": "user_uid_01",
+    "createdAt": "2026-06-01T09:30:00Z",
+    "updatedAt": "2026-06-01T09:30:00Z",
+    "createdBy": "receptionist_uid_01"
+  },
+  {
+    "id": "tx_rev_02",
+    "type": "Revenue",
+    "category": "Product",
+    "description": "Bán 1 hũ Whey Protein Isolate - Khách lẻ",
+    "amount": 1450000.0,
+    "transactionDate": "2026-06-01T10:15:00Z",
+    "paymentMethod": "Cash",
+    "status": "Completed",
+    "createdAt": "2026-06-01T10:15:00Z",
+    "updatedAt": "2026-06-01T10:15:00Z",
+    "createdBy": "receptionist_uid_01"
+  },
+  {
+    "id": "tx_exp_01",
+    "type": "Expense",
+    "category": "Utilities",
+    "description": "Thanh toán tiền điện tháng 5/2026",
+    "amount": 5200000.0,
+    "transactionDate": "2026-06-02T15:00:00Z",
+    "paymentMethod": "Transfer",
+    "status": "Completed",
+    "createdAt": "2026-06-02T15:00:00Z",
+    "updatedAt": "2026-06-02T15:00:00Z",
+    "createdBy": "admin_uid_01"
+  }
+]

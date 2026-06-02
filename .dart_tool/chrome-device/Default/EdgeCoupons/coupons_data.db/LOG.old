@@ -1,33 +1,41 @@
-2026/06/01-10:54:38.535 4880 Reusing MANIFEST C:\Users\anhla\AppData\Local\Temp\flutter_tools.6312abeb\flutter_tools_chrome_device.dc86b439\Default\EdgeCoupons/coupons_data.db/MANIFEST-000001
-2026/06/01-10:54:38.542 4880 Recovering log #52
-2026/06/01-10:54:38.567 4880 Reusing old log C:\Users\anhla\AppData\Local\Temp\flutter_tools.6312abeb\flutter_tools_chrome_device.dc86b439\Default\EdgeCoupons/coupons_data.db/000052.log 
-2026/06/01-10:54:38.571 4880 Delete type=0 #4
-2026/06/01-10:54:38.572 4880 Delete type=0 #7
-2026/06/01-10:54:38.572 4880 Delete type=2 #8
-2026/06/01-10:54:38.572 4880 Delete type=0 #10
-2026/06/01-10:54:38.572 4880 Delete type=2 #11
-2026/06/01-10:54:38.572 4880 Delete type=0 #13
-2026/06/01-10:54:38.572 4880 Delete type=2 #14
-2026/06/01-10:54:38.639 4880 Delete type=0 #16
-2026/06/01-10:54:38.640 4880 Delete type=2 #17
-2026/06/01-10:54:38.640 4880 Delete type=0 #19
-2026/06/01-10:54:38.641 4880 Delete type=2 #21
-2026/06/01-10:54:38.642 4880 Delete type=0 #23
-2026/06/01-10:54:38.642 4880 Delete type=2 #24
-2026/06/01-10:54:38.642 4880 Delete type=0 #26
-2026/06/01-10:54:38.643 4880 Delete type=2 #27
-2026/06/01-10:54:38.643 4880 Delete type=0 #29
-2026/06/01-10:54:38.643 4880 Delete type=2 #30
-2026/06/01-10:54:38.644 4880 Delete type=0 #32
-2026/06/01-10:54:38.644 4880 Delete type=2 #34
-2026/06/01-10:54:38.645 4880 Delete type=0 #36
-2026/06/01-10:54:38.645 4880 Delete type=2 #37
-2026/06/01-10:54:38.646 4880 Delete type=0 #39
-2026/06/01-10:54:38.669 4880 Delete type=2 #40
-2026/06/01-10:54:38.670 4880 Delete type=0 #42
-2026/06/01-10:54:38.670 4880 Delete type=2 #43
-2026/06/01-10:54:38.684 4880 Delete type=0 #45
-2026/06/01-10:54:38.700 4880 Delete type=0 #49
-2026/06/01-10:54:41.996 4bf4 Level-0 table #56: started
-2026/06/01-10:54:42.005 4bf4 Level-0 table #56: 682808 bytes OK
-2026/06/01-10:54:42.007 4bf4 Delete type=0 #52
+2026/06/02-19:05:13.193 3714 Reusing MANIFEST C:\Users\anhla\AppData\Local\Temp\flutter_tools.3e11c10f\flutter_tools_chrome_device.62a67a98\Default\EdgeCoupons/coupons_data.db/MANIFEST-000001
+2026/06/02-19:05:13.201 3714 Recovering log #65
+2026/06/02-19:05:13.210 3714 Reusing old log C:\Users\anhla\AppData\Local\Temp\flutter_tools.3e11c10f\flutter_tools_chrome_device.62a67a98\Default\EdgeCoupons/coupons_data.db/000065.log 
+2026/06/02-19:05:13.216 3714 Delete type=0 #4
+2026/06/02-19:05:13.217 3714 Delete type=0 #7
+2026/06/02-19:05:13.217 3714 Delete type=2 #8
+2026/06/02-19:05:13.217 3714 Delete type=0 #10
+2026/06/02-19:05:13.217 3714 Delete type=2 #11
+2026/06/02-19:05:13.217 3714 Delete type=0 #13
+2026/06/02-19:05:13.218 3714 Delete type=2 #14
+2026/06/02-19:05:13.292 3714 Delete type=0 #16
+2026/06/02-19:05:13.296 3714 Delete type=2 #17
+2026/06/02-19:05:13.296 3714 Delete type=0 #19
+2026/06/02-19:05:13.297 3714 Delete type=2 #21
+2026/06/02-19:05:13.326 3714 Delete type=0 #23
+2026/06/02-19:05:13.328 3714 Delete type=2 #24
+2026/06/02-19:05:13.332 3714 Delete type=0 #26
+2026/06/02-19:05:13.335 3714 Delete type=2 #27
+2026/06/02-19:05:13.335 3714 Delete type=0 #29
+2026/06/02-19:05:13.335 3714 Delete type=2 #30
+2026/06/02-19:05:13.335 3714 Delete type=0 #32
+2026/06/02-19:05:13.361 3714 Delete type=2 #34
+2026/06/02-19:05:13.362 3714 Delete type=0 #36
+2026/06/02-19:05:13.362 3714 Delete type=2 #37
+2026/06/02-19:05:13.363 3714 Delete type=0 #39
+2026/06/02-19:05:13.364 3714 Delete type=2 #40
+2026/06/02-19:05:13.364 3714 Delete type=0 #42
+2026/06/02-19:05:13.387 3714 Delete type=2 #43
+2026/06/02-19:05:13.415 3714 Delete type=0 #45
+2026/06/02-19:05:13.421 3714 Delete type=2 #47
+2026/06/02-19:05:13.421 3714 Delete type=0 #49
+2026/06/02-19:05:13.421 3714 Delete type=2 #50
+2026/06/02-19:05:13.422 3714 Delete type=0 #52
+2026/06/02-19:05:13.422 3714 Delete type=2 #53
+2026/06/02-19:05:13.423 3714 Delete type=0 #55
+2026/06/02-19:05:13.424 3714 Delete type=2 #56
+2026/06/02-19:05:13.425 3714 Delete type=0 #58
+2026/06/02-19:05:13.445 3714 Delete type=0 #62
+2026/06/02-19:05:35.104 65b8 Level-0 table #69: started
+2026/06/02-19:05:35.109 65b8 Level-0 table #69: 682820 bytes OK
+2026/06/02-19:05:35.111 65b8 Delete type=0 #65

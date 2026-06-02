@@ -2,24 +2,25 @@ import 'package:go_router/go_router.dart';
 import '../../screens/login_screen.dart';
 import '../../screens/signup_screen.dart';
 import '../../screens/forgot_password_screen.dart';
-import '../../screens/admins/admin_dashboard_screen.dart';
-import '../../screens/admins/personnel_management_screen.dart';
-import '../../screens/admins/schedule_management_screen.dart';
-import '../../screens/admins/customer_management_screen.dart';
-import '../../screens/admins/store_management_screen.dart';
-import '../../screens/admins/membership_management_screen.dart';
-import '../../screens/admins/financial_management_screen.dart';
-import '../../screens/admins/payment_management_screen.dart';
-import '../../screens/admins/payroll_management_screen.dart';
-import '../../screens/admins/equipment_management_screen.dart';
-import '../../screens/admins/notification_management_screen.dart';
-import '../../screens/admins/feedback_management_screen.dart';
-import '../../screens/admins/content_management_screen.dart';
-import '../../screens/admins/category_management_screen.dart';
-import '../../screens/admins/role_management_screen.dart';
-import '../../screens/admins/report_management_screen.dart';
-import '../../screens/admins/media_management_screen.dart';
-import '../../screens/admins/session_management_screen.dart';
+import '../../screens/admins/dashboard/admin_dashboard_screen.dart';
+import '../../screens/admins/operations/personnel_management_screen.dart';
+import '../../screens/admins/operations/schedule_management_screen.dart';
+import '../../screens/admins/members/customer_management_screen.dart';
+import '../../screens/admins/operations/store_management_screen.dart';
+import '../../screens/admins/members/membership_management_screen.dart';
+import '../../screens/admins/financials/financial_management_screen.dart';
+import '../../screens/admins/financials/payment_management_screen.dart';
+import '../../screens/admins/financials/payroll_management_screen.dart';
+import '../../screens/admins/operations/equipment_management_screen.dart';
+import '../../screens/admins/communications/notification_management_screen.dart';
+import '../../screens/admins/communications/feedback_management_screen.dart';
+import '../../screens/admins/content/content_management_screen.dart';
+import '../../screens/admins/content/category_management_screen.dart';
+import '../../screens/admins/system/role_management_screen.dart';
+import '../../screens/admins/communications/report_management_screen.dart';
+import '../../screens/admins/content/media_management_screen.dart';
+import '../../screens/admins/system/session_management_screen.dart';
+import '../../screens/admins/system/developer_tool_screen.dart';
 import '../../screens/PT/pt_dashboard_screen.dart';
 import '../../screens/PT/pt_schedule_screen.dart';
 import '../../screens/PT/pt_student_management_screen.dart';
@@ -61,6 +62,7 @@ class Routes {
   static const String reportManagement = '/report-management';
   static const String mediaManagement = '/media-management';
   static const String sessionManagement = '/session-management';
+  static const String developerTool = '/developer-tool';
 
   // PT Routes
   static const String ptDashboard = '/pt-dashboard';
@@ -77,7 +79,7 @@ class Routes {
   static const String receptionistFacility = '/receptionist-facility';
 
   static final GoRouter router = GoRouter(
-    initialLocation: receptionistDashboard,
+    initialLocation: login,
     routes: [
       GoRoute(path: login, builder: (context, state) => const LoginScreen()),
       GoRoute(path: signup, builder: (context, state) => const SignUpScreen()),
@@ -103,6 +105,7 @@ class Routes {
       GoRoute(path: reportManagement, builder: (context, state) => const ReportManagementScreen()),
       GoRoute(path: mediaManagement, builder: (context, state) => const MediaManagementScreen()),
       GoRoute(path: sessionManagement, builder: (context, state) => const SessionManagementScreen()),
+      GoRoute(path: developerTool, builder: (context, state) => const DeveloperToolScreen()),
       
       // PT Routes
       GoRoute(path: ptDashboard, builder: (context, state) => const PtDashboardScreen()),

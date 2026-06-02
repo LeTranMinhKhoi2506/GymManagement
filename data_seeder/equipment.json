@@ -1,0 +1,50 @@
+[
+  {
+    "id": "equip_treadmill_01",
+    "name": "Máy chạy bộ Matrix T50",
+    "category": "Cardio",
+    "status": "Operational",
+    "serialNumber": "MXT50-2025-001",
+    "location": "Khu Cardio",
+    "purchaseDate": "2025-01-10T00:00:00Z",
+    "lastMaintenanceDate": "2026-05-10T00:00:00Z",
+    "nextMaintenanceDate": "2026-06-10T00:00:00Z",
+    "maintenanceIntervalDays": 30,
+    "notes": "Chạy êm, màn hình cảm ứng hoạt động tốt",
+    "createdAt": "2025-01-10T08:00:00Z",
+    "updatedAt": "2026-05-10T10:00:00Z",
+    "createdBy": "admin_uid_01"
+  },
+  {
+    "id": "equip_treadmill_02",
+    "name": "Máy chạy bộ Matrix T50",
+    "category": "Cardio",
+    "status": "Under Maintenance",
+    "serialNumber": "MXT50-2025-002",
+    "location": "Khu Cardio",
+    "purchaseDate": "2025-01-10T00:00:00Z",
+    "lastMaintenanceDate": "2026-05-20T00:00:00Z",
+    "nextMaintenanceDate": "2026-06-20T00:00:00Z",
+    "maintenanceIntervalDays": 30,
+    "notes": "Hỏng bàn chạy, đang đợi linh kiện thay thế",
+    "createdAt": "2025-01-10T08:00:00Z",
+    "updatedAt": "2026-05-20T09:00:00Z",
+    "createdBy": "admin_uid_01"
+  },
+  {
+    "id": "equip_smith_01",
+    "name": "Khung gánh tạ Smith Machine",
+    "category": "Strength",
+    "status": "Operational",
+    "serialNumber": "SM-2025-010",
+    "location": "Khu Tạ nặng",
+    "purchaseDate": "2025-03-15T00:00:00Z",
+    "lastMaintenanceDate": "2026-05-15T00:00:00Z",
+    "nextMaintenanceDate": "2026-08-15T00:00:00Z",
+    "maintenanceIntervalDays": 90,
+    "notes": "Bôi trơn đường ray định kỳ tốt",
+    "createdAt": "2025-03-15T08:00:00Z",
+    "updatedAt": "2026-05-15T11:00:00Z",
+    "createdBy": "admin_uid_01"
+  }
+]
