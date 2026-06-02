@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart';
 import '../models/user_model.dart';
 
 class AuthService {
@@ -66,11 +67,11 @@ class AuthService {
   Future<String?> sendPasswordResetEmail(String email) async {
     try {
       await _auth.sendPasswordResetEmail(email: email);
-      print("Firebase: Đã gửi yêu cầu reset tới $email");
+      debugPrint("Firebase: Đã gửi yêu cầu reset tới $email");
       return "success";
     } on FirebaseAuthException catch (e) {
-      print("Firebase Error Code: ${e.code}"); // Xem mã lỗi tại đây
-      print("Firebase Error Message: ${e.message}");
+      debugPrint("Firebase Error Code: ${e.code}"); // Xem mã lỗi tại đây
+      debugPrint("Firebase Error Message: ${e.message}");
       if (e.code == 'user-not-found') return "Email này chưa được đăng ký.";
       return e.message;
     } catch (e) {
