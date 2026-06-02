@@ -29,7 +29,7 @@ class AuthBackground extends StatelessWidget {
             right: -40,
             child: _GlowOrb(
               size: 180,
-              color: AppColors.primary.withValues(alpha: 0.06),
+              color: AppColors.primary.withOpacity(0.06),
             ),
           ),
           Positioned(
@@ -37,7 +37,7 @@ class AuthBackground extends StatelessWidget {
             left: -30,
             child: _GlowOrb(
               size: 160,
-              color: Colors.orange.withValues(alpha: 0.05),
+              color: Colors.orange.withOpacity(0.05),
             ),
           ),
           SafeArea(child: child),

@@ -47,7 +47,7 @@ class HeaderWidget extends StatelessWidget {
             children: [
               Text(user?.fullName ?? "Quản trị viên",
                   style: const TextStyle(fontWeight: FontWeight.bold)),
-              Text(user?.role.toUpperCase() ?? "ADMIN",
+              Text(user?.role?.toUpperCase() ?? "ADMIN",
                   style: const TextStyle(fontSize: 10, color: Colors.grey, fontWeight: FontWeight.bold)),
             ],
           ),

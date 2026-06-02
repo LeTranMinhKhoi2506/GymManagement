@@ -1,59 +1,48 @@
-import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:intl/date_symbol_data_local.dart';
-import 'app/app_providers.dart';
-import 'app/route/routes.dart';
-import 'firebase_options.dart';
 
-void main() async {
+import 'firebase_options.dart';
+import 'provider/auth_provider.dart';
+import 'controllers/auth_controller.dart';
+import 'screens/customer_home/customer_home_screen.dart';
+import 'screens/customer_login/login_screen.dart';
+import 'screens/customer_login/signup_screen.dart';
+
+Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
-  
-  // Khởi tạo dữ liệu ngôn ngữ tiếng Việt cho Intl
-  await initializeDateFormatting('vi', null);
-  await initializeDateFormatting('vi_VN', null);
-
-  runApp(
-    MultiProvider(
-      providers: AppProviders.providers,
-      child: const MyApp(),
-    ),
-  );
+  runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
+  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
-    return MaterialApp.router(
-      title: 'Gym Management Admin',
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFFFF6B35),
-          primary: const Color(0xFFFF6B35),
-          secondary: const Color(0xFF0A192F),
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => AuthProvider()),
+        ChangeNotifierProvider(create: (_) => AuthController()),
+      ],
+      child: MaterialApp(
+        debugShowCheckedModeBanner: false,
+        title: 'Gym Management',
+        theme: ThemeData(
+          colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+          useMaterial3: true,
         ),
-        useMaterial3: true,
-        fontFamily: 'Inter',
-        inputDecorationTheme: InputDecorationTheme(
-          filled: true,
-          fillColor: Colors.grey[50],
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: BorderSide(color: Colors.grey[200]!),
-          ),
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: BorderSide(color: Colors.grey[200]!),
-          ),
-        ),
+        home: const LoginScreen(),
+        routes: {
+          SignUpScreen.routeName: (_) => const SignUpScreen(),
+          CustomerHomeScreen.routeName: (_) => const CustomerHomeScreen(),
+        },
       ),
-      routerConfig: Routes.router,
     );
   }
 }
+
+

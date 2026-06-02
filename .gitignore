@@ -1,6 +1,3 @@
-# SQL files
-*.sql
-
 # Gradle files
 .gradle/
 build/

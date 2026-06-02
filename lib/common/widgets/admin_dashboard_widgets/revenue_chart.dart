@@ -70,10 +70,11 @@ class RevenueChart extends StatelessWidget {
                           }
                         } else {
                           const days = ['Th 2', 'Th 3', 'Th 4', 'Th 5', 'Th 6', 'Th 7', 'CN'];
-                          if (value.toInt() >= 0 && value.toInt() < days.length) {
+                          // Map index to labels - assuming data is for the last 7 days
+                          if (value.toInt() >= 0 && value.toInt() < 7) {
                             return Padding(
                                 padding: const EdgeInsets.only(top: 8.0),
-                                child: Text(days[value.toInt()],
+                                child: Text("D${value.toInt() + 1}", // Simplified label or could use actual day names
                                     style: const TextStyle(color: Colors.grey, fontSize: 10)));
                           }
                         }

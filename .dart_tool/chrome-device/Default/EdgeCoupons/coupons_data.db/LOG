@@ -1,43 +1,25 @@
-2026/06/01-16:08:49.006 57c4 Reusing MANIFEST C:\Users\anhla\AppData\Local\Temp\flutter_tools.7b1ed6be\flutter_tools_chrome_device.c0c66611\Default\EdgeCoupons/coupons_data.db/MANIFEST-000001
-2026/06/01-16:08:49.011 57c4 Recovering log #55
-2026/06/01-16:08:49.013 57c4 Reusing old log C:\Users\anhla\AppData\Local\Temp\flutter_tools.7b1ed6be\flutter_tools_chrome_device.c0c66611\Default\EdgeCoupons/coupons_data.db/000055.log 
-2026/06/01-16:08:49.018 57c4 Delete type=0 #4
-2026/06/01-16:08:49.019 57c4 Delete type=0 #7
-2026/06/01-16:08:49.019 57c4 Delete type=2 #8
-2026/06/01-16:08:49.019 57c4 Delete type=0 #10
-2026/06/01-16:08:49.019 57c4 Delete type=2 #11
-2026/06/01-16:08:49.019 57c4 Delete type=0 #13
-2026/06/01-16:08:49.020 57c4 Delete type=2 #14
-2026/06/01-16:08:49.030 57c4 Delete type=0 #16
-2026/06/01-16:08:49.031 57c4 Delete type=2 #17
-2026/06/01-16:08:49.031 57c4 Delete type=0 #19
-2026/06/01-16:08:49.032 57c4 Delete type=2 #21
-2026/06/01-16:08:49.032 57c4 Delete type=0 #23
-2026/06/01-16:08:49.033 57c4 Delete type=2 #24
-2026/06/01-16:08:49.058 57c4 Delete type=0 #26
-2026/06/01-16:08:49.081 57c4 Delete type=2 #27
-2026/06/01-16:08:49.150 57c4 Delete type=0 #29
-2026/06/01-16:08:49.164 57c4 Delete type=2 #30
-2026/06/01-16:08:49.165 57c4 Delete type=0 #32
-2026/06/01-16:08:49.165 57c4 Delete type=2 #34
-2026/06/01-16:08:49.165 57c4 Delete type=0 #36
-2026/06/01-16:08:49.166 57c4 Delete type=2 #37
-2026/06/01-16:08:49.183 57c4 Delete type=0 #39
-2026/06/01-16:08:49.242 57c4 Delete type=2 #40
-2026/06/01-16:08:49.273 57c4 Delete type=0 #42
-2026/06/01-16:08:49.289 57c4 Delete type=2 #43
-2026/06/01-16:08:49.320 57c4 Delete type=0 #45
-2026/06/01-16:08:49.323 57c4 Delete type=0 #49
-2026/06/01-16:08:49.324 57c4 Delete type=0 #52
-2026/06/01-16:09:21.249 68dc Level-0 table #59: started
-2026/06/01-16:09:21.255 68dc Level-0 table #59: 682808 bytes OK
-2026/06/01-16:09:21.257 68dc Delete type=0 #55
-2026/06/01-16:09:21.259 68dc Compacting 4@0 + 1@1 files
-2026/06/01-16:09:21.266 68dc Generated table #60@0: 4 keys, 682715 bytes
-2026/06/01-16:09:21.266 68dc Compacted 4@0 + 1@1 files => 682715 bytes
-2026/06/01-16:09:21.267 68dc compacted to: files[ 0 1 1 0 0 0 0 ]
-2026/06/01-16:09:21.268 68dc Delete type=2 #47
-2026/06/01-16:09:21.268 68dc Delete type=2 #50
-2026/06/01-16:09:21.268 68dc Delete type=2 #53
-2026/06/01-16:09:21.268 68dc Delete type=2 #56
-2026/06/01-16:09:21.269 68dc Delete type=2 #59
+2026/04/17-21:12:34.263 49c8 Reusing MANIFEST C:\Users\anhla\AppData\Local\Temp\flutter_tools.87809e5c\flutter_tools_chrome_device.195def8c\Default\EdgeCoupons/coupons_data.db/MANIFEST-000001
+2026/04/17-21:12:34.267 49c8 Recovering log #39
+2026/04/17-21:12:34.268 49c8 Reusing old log C:\Users\anhla\AppData\Local\Temp\flutter_tools.87809e5c\flutter_tools_chrome_device.195def8c\Default\EdgeCoupons/coupons_data.db/000039.log 
+2026/04/17-21:12:34.271 49c8 Delete type=0 #4
+2026/04/17-21:12:34.272 49c8 Delete type=0 #7
+2026/04/17-21:12:34.272 49c8 Delete type=2 #8
+2026/04/17-21:12:34.272 49c8 Delete type=0 #10
+2026/04/17-21:12:34.272 49c8 Delete type=2 #11
+2026/04/17-21:12:34.272 49c8 Delete type=0 #13
+2026/04/17-21:12:34.272 49c8 Delete type=2 #14
+2026/04/17-21:12:34.273 49c8 Delete type=0 #16
+2026/04/17-21:12:34.273 49c8 Delete type=2 #17
+2026/04/17-21:12:34.297 49c8 Delete type=0 #19
+2026/04/17-21:12:34.298 49c8 Delete type=2 #21
+2026/04/17-21:12:34.298 49c8 Delete type=0 #23
+2026/04/17-21:12:34.298 49c8 Delete type=2 #24
+2026/04/17-21:12:34.299 49c8 Delete type=0 #26
+2026/04/17-21:12:34.299 49c8 Delete type=2 #27
+2026/04/17-21:12:34.299 49c8 Delete type=0 #29
+2026/04/17-21:12:34.299 49c8 Delete type=2 #30
+2026/04/17-21:12:34.300 49c8 Delete type=0 #32
+2026/04/17-21:12:34.300 49c8 Delete type=0 #36
+2026/04/17-21:12:35.661 293c Level-0 table #43: started
+2026/04/17-21:12:35.666 293c Level-0 table #43: 682280 bytes OK
+2026/04/17-21:12:35.670 293c Delete type=0 #39

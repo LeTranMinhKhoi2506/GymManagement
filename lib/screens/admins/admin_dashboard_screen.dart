@@ -21,39 +21,13 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
   @override
   void initState() {
     super.initState();
-    Future.microtask(() {
-      if (mounted) {
-        Provider.of<AdminController>(context, listen: false).fetchDashboardStats();
-      }
-    });
+    Future.microtask(() =>
+        Provider.of<AdminController>(context, listen: false).fetchDashboardStats());
   }
 
   @override
   Widget build(BuildContext context) {
     final adminController = Provider.of<AdminController>(context);
-
-    if (adminController.errorMessage != null) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Row(
-                children: [
-                  const Icon(Icons.error_outline, color: Colors.white),
-                  const SizedBox(width: 12),
-                  Expanded(child: Text("Lỗi hệ thống: ${adminController.errorMessage!}")),
-                ],
-              ),
-              backgroundColor: Colors.redAccent,
-              behavior: SnackBarBehavior.floating,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-              margin: const EdgeInsets.all(16),
-            ),
-          );
-          adminController.clearError();
-        }
-      });
-    }
 
     return Scaffold(
       backgroundColor: const Color(0xFFF8F9FA),

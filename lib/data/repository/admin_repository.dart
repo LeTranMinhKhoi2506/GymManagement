@@ -33,11 +33,8 @@ class AdminRepository {
           
           if (lastMonthCount > 0) {
             growth = ((current - lastMonthCount) / lastMonthCount) * 100;
-            if (growth > 10) {
-              status = "PEAK";
-            } else if (growth < -10) {
-              status = "DROPPING";
-            }
+            if (growth > 10) status = "PEAK";
+            else if (growth < -10) status = "DROPPING";
           } else {
             growth = current > 0 ? 100 : 0;
             status = current > 0 ? "PEAK" : "STABLE";
@@ -96,8 +93,8 @@ class AdminRepository {
           .where('timestamp', isGreaterThanOrEqualTo: startOfYesterday)
           .where('timestamp', isLessThan: startOfToday).get();
 
-      double todaySum = todayDocs.docs.fold(0.0, (acc, doc) => acc + (doc.data()['amount'] ?? 0).toDouble());
-      double yesterdaySum = yesterdayDocs.docs.fold(0.0, (acc, doc) => acc + (doc.data()['amount'] ?? 0).toDouble());
+      double todaySum = todayDocs.docs.fold(0.0, (sum, doc) => sum + (doc.data()['amount'] ?? 0).toDouble());
+      double yesterdaySum = yesterdayDocs.docs.fold(0.0, (sum, doc) => sum + (doc.data()['amount'] ?? 0).toDouble());
 
       double diff = 0;
       String status = "STABLE";
@@ -105,11 +102,8 @@ class AdminRepository {
 
       if (yesterdaySum > 0) {
         diff = ((todaySum - yesterdaySum) / yesterdaySum) * 100;
-        if (diff > 10) {
-          status = "PEAK";
-        } else if (diff < -10) {
-          status = "DROPPING";
-        }
+        if (diff > 10) status = "PEAK";
+        else if (diff < -10) status = "DROPPING";
         message = "${diff.abs().toStringAsFixed(0)}% ${diff >= 0 ? 'higher' : 'lower'} than yesterday";
       } else {
         status = todaySum > 0 ? "PEAK" : "STABLE";
@@ -166,30 +160,5 @@ class AdminRepository {
 
   Stream<QuerySnapshot> getRecentCheckins() => _db.collection('checkins').orderBy('timestamp', descending: true).limit(10).snapshots();
   Stream<List<Map<String, dynamic>>> getUpcomingClassesStream() => _db.collection('classes').orderBy('time').snapshots().map((s) => s.docs.map((d) => d.data()).toList());
-  Stream<List<Map<String, dynamic>>> getEquipmentStatusStream() =>
-      _db.collection('equipment').snapshots().map((snapshot) {
-        final docs = snapshot.docs.map((d) => d.data()).toList();
-        if (docs.isEmpty) {
-          return <Map<String, dynamic>>[];
-        }
-        final hasAggregate = docs.any((e) => e.containsKey('total'));
-        if (hasAggregate) {
-          return docs;
-        }
-        final Map<String, Map<String, dynamic>> grouped = {};
-        for (final item in docs) {
-          final category = item['category'] ?? 'Khác';
-          final status = item['status'] ?? 'Operational';
-          grouped.putIfAbsent(category, () {
-            return {'name': category, 'total': 0, 'operational': 0};
-          });
-          grouped[category]!['total'] =
-              (grouped[category]!['total'] as int) + 1;
-          if (status == 'Operational') {
-            grouped[category]!['operational'] =
-                (grouped[category]!['operational'] as int) + 1;
-          }
-        }
-        return grouped.values.toList();
-      });
+  Stream<List<Map<String, dynamic>>> getEquipmentStatusStream() => _db.collection('equipment').snapshots().map((s) => s.docs.map((d) => d.data()).toList());
 }
