@@ -69,7 +69,7 @@ class LiveActivityPanel extends StatelessWidget {
                     time = (data['timestamp'] as Timestamp).toDate();
                   }
                   final String timeStr = time != null 
-                      ? "${DateFormat('HH:mm').format(time)} • ${_getRelativeTime(time)}"
+                      ? "${DateFormat('HH:mm dd/MM/yyyy').format(time)} • ${_getRelativeTime(time)}"
                       : "Vừa xong";
 
                   final isCheckIn = zone.contains('Check-in') || zone.contains('vào');

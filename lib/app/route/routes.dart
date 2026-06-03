@@ -21,6 +21,7 @@ import '../../screens/admins/communications/report_management_screen.dart';
 import '../../screens/admins/content/media_management_screen.dart';
 import '../../screens/admins/system/session_management_screen.dart';
 import '../../screens/admins/system/developer_tool_screen.dart';
+import '../../screens/admins/system/account_management_screen.dart';
 import '../../screens/PT/pt_dashboard_screen.dart';
 import '../../screens/PT/pt_schedule_screen.dart';
 import '../../screens/PT/pt_student_management_screen.dart';
@@ -63,6 +64,7 @@ class Routes {
   static const String mediaManagement = '/media-management';
   static const String sessionManagement = '/session-management';
   static const String developerTool = '/developer-tool';
+  static const String accountManagement = '/account-management';
 
   // PT Routes
   static const String ptDashboard = '/pt-dashboard';
@@ -106,6 +108,7 @@ class Routes {
       GoRoute(path: mediaManagement, builder: (context, state) => const MediaManagementScreen()),
       GoRoute(path: sessionManagement, builder: (context, state) => const SessionManagementScreen()),
       GoRoute(path: developerTool, builder: (context, state) => const DeveloperToolScreen()),
+      GoRoute(path: accountManagement, builder: (context, state) => const AccountManagementScreen()),
       
       // PT Routes
       GoRoute(path: ptDashboard, builder: (context, state) => const PtDashboardScreen()),

@@ -31,7 +31,31 @@ class UpcomingClassesStream extends StatelessWidget {
               }
               final classes = snapshot.data!;
               if (classes.isEmpty) {
-                return const Text("Không có lớp học nào sắp tới");
+                return Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(vertical: 32, horizontal: 16),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF8F9FA),
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: const Color(0xFFEDEEEF)),
+                  ),
+                  child: Column(
+                    children: [
+                      const Icon(Icons.school_outlined, size: 48, color: Colors.grey),
+                      const SizedBox(height: 16),
+                      const Text(
+                        "Không có lớp học nào sắp tới",
+                        style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF0A192F), fontSize: 14),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        "Dữ liệu lớp học hiện tại đang trống. Bạn có thể vào mục Công cụ Dev để sinh/nạp dữ liệu mẫu lớp học (classes) nhằm chạy thử nghiệm giao diện.",
+                        style: TextStyle(color: Colors.grey[600], fontSize: 12),
+                        textAlign: TextAlign.center,
+                      ),
+                    ],
+                  ),
+                );
               }
               return SingleChildScrollView(
                 scrollDirection: Axis.horizontal,
