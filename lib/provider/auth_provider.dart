@@ -57,10 +57,17 @@ class AuthProvider extends ChangeNotifier {
 
     _setLoading(true);
     try {
-      await _authService.signInWithEmailAndPassword(
+      final credential = await _authService.signInWithEmailAndPassword(
         email: email,
         password: password,
       );
+
+      await _firestoreService.ensureUserRoot(
+        email: email,
+        fullName: credential.user?.displayName,
+        role: 'member',
+      );
+
       if (!context.mounted) return false;
       return true;
     } on FirebaseAuthException catch (e) {

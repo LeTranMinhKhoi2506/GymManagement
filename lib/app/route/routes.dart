@@ -39,7 +39,7 @@ import '../../screens/customer_login/signup_screen.dart' as customer_signup;
 class Routes {
   static const String login = '/login';
   static const String signup = '/signup';
-  static const String customerLogin = '/customer-login';
+  static const String customerLogin = '/customer_login';
   static const String customerSignup = '/customer-signup';
   static const String customerHome = '/customer-home';
   static const String forgotPassword = '/forgot-password';
@@ -77,7 +77,7 @@ class Routes {
   static const String receptionistFacility = '/receptionist-facility';
 
   static final GoRouter router = GoRouter(
-    initialLocation: receptionistDashboard,
+    initialLocation: customerLogin,
     routes: [
       GoRoute(path: login, builder: (context, state) => const LoginScreen()),
       GoRoute(path: signup, builder: (context, state) => const SignUpScreen()),
