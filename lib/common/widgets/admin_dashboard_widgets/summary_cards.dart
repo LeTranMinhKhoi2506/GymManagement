@@ -9,7 +9,7 @@ class SummaryCards extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final currencyFormat = NumberFormat.currency(symbol: '\$', decimalDigits: 2);
+    final currencyFormat = NumberFormat.currency(locale: 'vi_VN', symbol: '₫', decimalDigits: 0);
     final numberFormat = NumberFormat('#,###');
 
     return Row(
@@ -39,13 +39,22 @@ class SummaryCards extends StatelessWidget {
                     badgeTextColor = Colors.red;
                   }
 
+                  String displayStatus = "ỔN ĐỊNH";
+                  if (status == "PEAK") {
+                    displayStatus = "TĂNG TRƯỞNG";
+                  } else if (status == "DROPPING") {
+                    displayStatus = "GIẢM SÚT";
+                  } else if (status == "STABLE") {
+                    displayStatus = growthValue;
+                  }
+
                   return _statCard(
-                    title: "TOTAL MEMBERS",
+                    title: "TỔNG HỘI VIÊN",
                     value: numberFormat.format(count),
                     icon: Icons.people_alt_outlined,
                     iconColor: const Color(0xFF1A237E),
                     iconBgColor: const Color(0xFFF0F2FA),
-                    badgeText: status == "STABLE" ? growthValue : status,
+                    badgeText: displayStatus,
                     badgeColor: badgeColor,
                     badgeTextColor: badgeTextColor,
                     progress: (count / 5000).clamp(0.0, 1.0),
@@ -70,12 +79,12 @@ class SummaryCards extends StatelessWidget {
                   final totalStaff = totalSnapshot.data ?? 0;
 
                   return _statCard(
-                    title: "ACTIVE STAFF",
+                    title: "NHÂN VIÊN HOẠT ĐỘNG",
                     value: "$activeCount/$totalStaff",
                     icon: Icons.badge_outlined,
                     iconColor: const Color(0xFFE65100),
                     iconBgColor: const Color(0xFFFFF3E0),
-                    badgeText: "STABLE",
+                    badgeText: "ỔN ĐỊNH",
                     badgeColor: const Color(0xFFF1F5F9),
                     badgeTextColor: const Color(0xFF475569),
                     isStaffCard: true,
@@ -101,7 +110,25 @@ class SummaryCards extends StatelessWidget {
                 builder: (context, statusSnapshot) {
                   final statusData = statusSnapshot.data;
                   final status = statusData?['status'] ?? "STABLE";
-                  final subtitle = statusData?['message'] ?? "Updating...";
+                  final subtitle = statusData?['message'] ?? "Đang cập nhật...";
+
+                  // Dịch subtitle tài chính sang tiếng việt
+                  String displaySubtitle = subtitle;
+                  if (subtitle == "No change") {
+                    displaySubtitle = "Không thay đổi";
+                  } else if (subtitle == "New sales today") {
+                    displaySubtitle = "Có giao dịch mới hôm nay";
+                  } else if (subtitle == "Stable since yesterday") {
+                    displaySubtitle = "Ổn định từ hôm qua";
+                  } else if (subtitle == "Updating...") {
+                    displaySubtitle = "Đang cập nhật...";
+                  } else if (subtitle.contains("higher than yesterday")) {
+                    final percent = subtitle.split("%")[0];
+                    displaySubtitle = "$percent% cao hơn hôm qua";
+                  } else if (subtitle.contains("lower than yesterday")) {
+                    final percent = subtitle.split("%")[0];
+                    displaySubtitle = "$percent% thấp hơn hôm qua";
+                  }
 
                   // Màu sắc cho Card tối (Dark Mode)
                   Color badgeColor = const Color(0xFFF1F5F9).withValues(alpha: 0.1);
@@ -115,16 +142,23 @@ class SummaryCards extends StatelessWidget {
                     badgeTextColor = Colors.white;
                   }
 
+                  String displayRevenueStatus = "ỔN ĐỊNH";
+                  if (status == "PEAK") {
+                    displayRevenueStatus = "TĂNG TRƯỞNG";
+                  } else if (status == "DROPPING") {
+                    displayRevenueStatus = "GIẢM SÚT";
+                  }
+
                   return _statCard(
-                    title: "TODAY'S REVENUE",
+                    title: "DOANH THU HÔM NAY",
                     value: currencyFormat.format(revenue),
                     icon: Icons.payments_outlined,
                     iconColor: Colors.white,
                     iconBgColor: Colors.white.withValues(alpha: 0.1),
-                    badgeText: status,
+                    badgeText: displayRevenueStatus,
                     badgeColor: badgeColor,
                     badgeTextColor: badgeTextColor,
-                    subtitle: subtitle,
+                    subtitle: displaySubtitle,
                     isDark: true,
                   );
                 },

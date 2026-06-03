@@ -64,7 +64,9 @@ class DatabaseSeeder {
       'checkins',
       'categories',
       'contents',
-      'media_library'
+      'media_library',
+      'classes',
+      'roles'
     ];
     for (var col in collections) {
       await clearCollection(col);
@@ -131,6 +133,14 @@ class DatabaseSeeder {
           break;
         case 'media_library':
           sourceData = DeveloperSeedData.media;
+          idField = 'id';
+          break;
+        case 'classes':
+          sourceData = DeveloperSeedData.classes;
+          idField = 'id';
+          break;
+        case 'roles':
+          sourceData = DeveloperSeedData.roles;
           idField = 'id';
           break;
         default:
@@ -200,7 +210,9 @@ class DatabaseSeeder {
       'feedbacks',
       'categories',
       'contents',
-      'media_library'
+      'media_library',
+      'classes',
+      'roles'
     ];
     for (var col in collections) {
       await seedDefault(col);

@@ -36,6 +36,8 @@ class _DeveloperToolScreenState extends State<DeveloperToolScreen> {
     {'name': 'categories', 'title': 'Danh mục (categories)', 'desc': 'Các nhóm danh mục cho nội dung, trang thiết bị...'},
     {'name': 'media_library', 'title': 'Thư viện Media (media_library)', 'desc': 'Tệp hình ảnh phòng tập & sản phẩm'},
     {'name': 'contents', 'title': 'Bài viết & Tin tức (contents)', 'desc': 'Các bài viết tin tức, khuyến mãi trên app'},
+    {'name': 'classes', 'title': 'Lớp học (classes)', 'desc': 'Lớp học Yoga, HIIT, Zumba...'},
+    {'name': 'roles', 'title': 'Quyền & Vai trò (roles)', 'desc': 'Phân quyền cấp bậc truy cập hệ thống'},
   ];
 
   @override
@@ -370,7 +372,7 @@ class _DeveloperToolScreenState extends State<DeveloperToolScreen> {
               ),
               const SizedBox(height: 12),
               // Custom generator input
-              if (name == 'members' || name == 'transactions' || name == 'products' || name == 'equipment' || name == 'feedbacks' || name == 'users' || name == 'schedules' || name == 'checkins' || name == 'categories' || name == 'media_library' || name == 'contents')
+              if (name == 'members' || name == 'transactions' || name == 'products' || name == 'equipment' || name == 'feedbacks' || name == 'users' || name == 'schedules' || name == 'checkins' || name == 'categories' || name == 'media_library' || name == 'contents' || name == 'classes' || name == 'roles')
                 Row(
                   children: [
                     Expanded(
@@ -420,6 +422,10 @@ class _DeveloperToolScreenState extends State<DeveloperToolScreen> {
                                   await _seeder.generateRandomMedia(count);
                                 } else if (name == 'contents') {
                                   await _seeder.generateRandomContents(count);
+                                } else if (name == 'classes') {
+                                  await _seeder.seedDefault('classes');
+                                } else if (name == 'roles') {
+                                  await _seeder.seedDefault('roles');
                                 }
                               });
                             },

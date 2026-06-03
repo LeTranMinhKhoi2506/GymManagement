@@ -51,7 +51,7 @@ class RecentCheckinsLog extends StatelessWidget {
                       time = (data['timestamp'] as Timestamp).toDate();
                     }
                     String timeStr =
-                        time != null ? DateFormat('HH:mm').format(time) : "Vừa xong";
+                        time != null ? DateFormat('HH:mm dd/MM/yyyy').format(time) : "Vừa xong";
 
                     return Padding(
                       padding: const EdgeInsets.only(bottom: 12.0),

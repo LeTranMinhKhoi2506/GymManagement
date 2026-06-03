@@ -21,6 +21,24 @@ class _RoleManagementScreenState extends State<RoleManagementScreen> {
     'Truyền thông': ['send_notifications', 'reply_feedback', 'manage_media'],
   };
 
+  final Map<String, String> _permissionTranslations = {
+    'view_users': 'Xem người dùng',
+    'edit_users': 'Sửa người dùng',
+    'ban_users': 'Khóa người dùng',
+    'delete_users': 'Xóa người dùng',
+    'create_content': 'Tạo nội dung',
+    'edit_content': 'Sửa nội dung',
+    'publish_content': 'Xuất bản nội dung',
+    'delete_content': 'Xóa nội dung',
+    'manage_admins': 'Quản lý Admin',
+    'assign_roles': 'Phân quyền',
+    'view_sessions': 'Xem phiên tập',
+    'view_reports': 'Xem báo cáo',
+    'send_notifications': 'Gửi thông báo',
+    'reply_feedback': 'Trả lời phản hồi',
+    'manage_media': 'Quản lý Media',
+  };
+
   @override
   Widget build(BuildContext context) {
     final roleController = Provider.of<RoleController>(context);
@@ -128,7 +146,7 @@ class _RoleManagementScreenState extends State<RoleManagementScreen> {
                     spacing: 4,
                     runSpacing: 4,
                     children: role.permissions.map((p) => Chip(
-                      label: Text(p, style: const TextStyle(fontSize: 10)),
+                      label: Text(_permissionTranslations[p] ?? p, style: const TextStyle(fontSize: 10)),
                       backgroundColor: const Color(0xFFFF6B35).withValues(alpha: 0.1),
                       side: BorderSide.none,
                       visualDensity: VisualDensity.compact,
@@ -190,7 +208,7 @@ class _RoleManagementScreenState extends State<RoleManagementScreen> {
                         children: entry.value.map((p) {
                           final isSelected = selectedPermissions.contains(p);
                           return FilterChip(
-                            label: Text(p),
+                            label: Text(_permissionTranslations[p] ?? p),
                             selected: isSelected,
                             onSelected: (val) {
                               setDialogState(() {

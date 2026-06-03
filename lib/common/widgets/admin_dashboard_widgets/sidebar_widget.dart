@@ -120,6 +120,7 @@ class _SidebarWidgetState extends State<SidebarWidget> {
                     currentRoute: currentRoute,
                     items: [
                       _NavItem(icon: Icons.admin_panel_settings, title: "Phân quyền (Roles)", route: Routes.roleManagement),
+                      _NavItem(icon: Icons.manage_accounts, title: "Quản lý Tài khoản", route: Routes.accountManagement),
                       _NavItem(icon: Icons.devices, title: "Quản lý Phiên (Sessions)", route: Routes.sessionManagement),
                       _NavItem(icon: Icons.developer_mode, title: "Công cụ Dev", route: Routes.developerTool),
                       _NavItem(icon: Icons.logout, title: "Đăng xuất", route: Routes.login),

@@ -32,13 +32,22 @@ class ScheduleModel {
   }
 
   factory ScheduleModel.fromMap(Map<String, dynamic> map, String docId) {
+    DateTime parseDate(dynamic val) {
+      if (val == null) return DateTime.now();
+      if (val is Timestamp) return val.toDate();
+      if (val is String) {
+        return DateTime.tryParse(val) ?? DateTime.now();
+      }
+      return DateTime.now();
+    }
+
     return ScheduleModel(
       id: docId,
       staffUid: map['staffUid'] ?? '',
       staffName: map['staffName'] ?? '',
       task: map['task'] ?? '',
-      startTime: (map['startTime'] as Timestamp).toDate(),
-      endTime: (map['endTime'] as Timestamp).toDate(),
+      startTime: parseDate(map['startTime']),
+      endTime: parseDate(map['endTime']),
       status: map['status'] ?? 'pending',
     );
   }

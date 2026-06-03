@@ -429,4 +429,62 @@ class DeveloperSeedData {
       "isPublished": true
     }
   ];
+
+  static const List<Map<String, dynamic>> classes = [
+    {
+      "id": "class_yoga_01",
+      "title": "Lớp Yoga Căn Bản",
+      "time": "08:00 - 09:30",
+      "room": "Phòng Yoga 1",
+      "trainer": "Trần Thị Linh"
+    },
+    {
+      "id": "class_hiit_01",
+      "title": "Cardio HIIT Đốt Mỡ",
+      "time": "15:00 - 16:00",
+      "room": "Khu Functional",
+      "trainer": "Nguyễn Văn Hùng"
+    },
+    {
+      "id": "class_zumba_01",
+      "title": "Zumba Dance Sôi Động",
+      "time": "18:00 - 19:30",
+      "room": "Phòng Group X",
+      "trainer": "Lê Trần Minh Khôi"
+    }
+  ];
+
+  static const List<Map<String, dynamic>> roles = [
+    {
+      "id": "role_admin",
+      "name": "Quản trị viên (Admin)",
+      "permissions": [
+        "view_users", "edit_users", "ban_users", "delete_users",
+        "create_content", "edit_content", "publish_content", "delete_content",
+        "manage_admins", "assign_roles", "view_sessions", "view_reports",
+        "send_notifications", "reply_feedback", "manage_media"
+      ]
+    },
+    {
+      "id": "role_trainer",
+      "name": "Huấn luyện viên (PT)",
+      "permissions": [
+        "view_sessions", "create_content", "edit_content"
+      ]
+    },
+    {
+      "id": "role_receptionist",
+      "name": "Lễ tân",
+      "permissions": [
+        "view_users", "send_notifications", "reply_feedback", "view_sessions"
+      ]
+    },
+    {
+      "id": "role_content",
+      "name": "Biên tập viên nội dung",
+      "permissions": [
+        "create_content", "edit_content", "publish_content", "delete_content", "manage_media"
+      ]
+    }
+  ];
 }
