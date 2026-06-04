@@ -1,4 +1,4 @@
-﻿import 'dart:async';
+import 'dart:async';
 import 'dart:io';
 
 import 'package:file_picker/file_picker.dart';
@@ -141,13 +141,18 @@ class HomeProvider extends ChangeNotifier {
       final result = await FilePicker.platform.pickFiles(
         type: FileType.image,
         allowMultiple: true,
+        withData: true,
       );
       if (result == null) return null;
 
       for (final file in result.files) {
         if (file.path == null) continue;
         _draftMediaItems.add(
-          SocialMediaModel(path: file.path!, type: SocialMediaType.image),
+          SocialMediaModel(
+            path: file.path!,
+            type: SocialMediaType.image,
+            bytes: file.bytes,
+          ),
         );
       }
       notifyListeners();
@@ -162,13 +167,18 @@ class HomeProvider extends ChangeNotifier {
       final result = await FilePicker.platform.pickFiles(
         type: FileType.video,
         allowMultiple: true,
+        withData: true,
       );
       if (result == null) return null;
 
       for (final file in result.files) {
         if (file.path == null) continue;
         _draftMediaItems.add(
-          SocialMediaModel(path: file.path!, type: SocialMediaType.video),
+          SocialMediaModel(
+            path: file.path!,
+            type: SocialMediaType.video,
+            bytes: file.bytes,
+          ),
         );
       }
       notifyListeners();
@@ -232,8 +242,11 @@ class HomeProvider extends ChangeNotifier {
       );
       resetDraft();
       return null;
-    } catch (_) {
-      return 'Post failed. Please try again.';
+    } catch (error) {
+      final message = error.toString();
+      return message.startsWith('Bad state: ')
+          ? message.replaceFirst('Bad state: ', '')
+          : message;
     } finally {
       _isPosting = false;
       notifyListeners();

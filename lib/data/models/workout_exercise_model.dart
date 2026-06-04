@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 class WorkoutExerciseModel {
   WorkoutExerciseModel({
     required this.name,
@@ -33,13 +35,22 @@ class WorkoutExerciseModel {
 enum SocialMediaType { image, video }
 
 class SocialMediaModel {
-  SocialMediaModel({required this.path, required this.type});
+  SocialMediaModel({required this.path, required this.type, this.bytes});
 
   final String path;
   final SocialMediaType type;
+  final Uint8List? bytes;
 
-  SocialMediaModel copyWith({String? path, SocialMediaType? type}) {
-    return SocialMediaModel(path: path ?? this.path, type: type ?? this.type);
+  SocialMediaModel copyWith({
+    String? path,
+    SocialMediaType? type,
+    Uint8List? bytes,
+  }) {
+    return SocialMediaModel(
+      path: path ?? this.path,
+      type: type ?? this.type,
+      bytes: bytes ?? this.bytes,
+    );
   }
 
   Map<String, dynamic> toMap() {

@@ -17,10 +17,7 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
   late final TextEditingController _captionController;
 
   static const Color bg = Color(0xFF070809);
-  static const Color card = Color(0xFF14161A);
-  static const Color card2 = Color(0xFF1B1E24);
   static const Color accent = Color(0xFFE7F0BD);
-  static const Color textMuted = Color(0xFF8E9196);
 
   @override
   void initState() {
@@ -394,7 +391,7 @@ class _SelectedMediaSection extends StatelessWidget {
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
         itemCount: mediaItems.length,
-        separatorBuilder: (_, __) => const SizedBox(width: 10),
+        separatorBuilder: (context, index) => const SizedBox(width: 10),
         itemBuilder: (context, index) {
           final item = mediaItems[index];
           final isLocal = context.read<HomeProvider>().isLocalFile(item.path);
@@ -415,6 +412,8 @@ class _SelectedMediaSection extends StatelessWidget {
                             size: 42,
                           ),
                         )
+                      : item.bytes != null
+                      ? Image.memory(item.bytes!, fit: BoxFit.cover)
                       : isLocal
                       ? Image.file(File(item.path), fit: BoxFit.cover)
                       : Image.network(item.path, fit: BoxFit.cover),

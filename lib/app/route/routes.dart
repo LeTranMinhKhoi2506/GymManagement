@@ -1,5 +1,6 @@
-﻿import 'package:go_router/go_router.dart';
-import '../../screens/login_screen.dart';
+﻿import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:go_router/go_router.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import '../../screens/signup_screen.dart';
 import '../../screens/forgot_password_screen.dart';
 import '../../screens/admins/dashboard/admin_dashboard_screen.dart';
@@ -27,6 +28,7 @@ import '../../screens/PT/pt_schedule_screen.dart';
 import '../../screens/PT/pt_student_management_screen.dart';
 import '../../screens/PT/pt_income_screen.dart';
 import '../../screens/PT/pt_class_registration_screen.dart';
+import '../../data/models/user_model.dart';
 
 // Receptionist Screens
 import '../../screens/receptionist/receptionist_dashboard_screen.dart';
@@ -81,48 +83,209 @@ class Routes {
   static const String receptionistFacility = '/receptionist-facility';
 
   static final GoRouter router = GoRouter(
-    initialLocation: customerLogin,
+    initialLocation: login,
+    redirect: (context, state) async {
+      final user = FirebaseAuth.instance.currentUser;
+      final location = state.matchedLocation;
+      final isAuthPage =
+          location == login ||
+          location == customerLogin ||
+          location == signup ||
+          location == customerSignup ||
+          location == forgotPassword;
+
+      if (user == null) {
+        return isAuthPage ? null : login;
+      }
+
+      final targetRoute = await _resolveDashboardRoute(user.uid);
+      if (isAuthPage) {
+        return targetRoute;
+      }
+
+      const guardedRoutes = <String>{
+        customerHome,
+        adminDashboard,
+        ptDashboard,
+        receptionistDashboard,
+      };
+      if (guardedRoutes.contains(location) && location != targetRoute) {
+        return targetRoute;
+      }
+
+      return null;
+    },
     routes: [
-      GoRoute(path: login, builder: (context, state) => const LoginScreen()),
+      GoRoute(
+        path: login,
+        builder: (context, state) => const customer_login.LoginScreen(),
+      ),
       GoRoute(path: signup, builder: (context, state) => const SignUpScreen()),
-      GoRoute(path: customerLogin, builder: (context, state) => const customer_login.LoginScreen()),
-      GoRoute(path: customerSignup, builder: (context, state) => const customer_signup.SignUpScreen()),
-      GoRoute(path: customerHome, builder: (context, state) => const CustomerHomeScreen()),
-      GoRoute(path: forgotPassword, builder: (context, state) => const ForgotPasswordScreen()),
-      GoRoute(path: adminDashboard, builder: (context, state) => const AdminDashboardScreen()),
-      GoRoute(path: personnelManagement, builder: (context, state) => const PersonnelManagementScreen()),
-      GoRoute(path: scheduleManagement, builder: (context, state) => const ScheduleManagementScreen()),
-      GoRoute(path: customerManagement, builder: (context, state) => const CustomerManagementScreen()),
-      GoRoute(path: storeManagement, builder: (context, state) => const StoreManagementScreen()),
-      GoRoute(path: membershipManagement, builder: (context, state) => const MembershipManagementScreen()),
-      GoRoute(path: financialManagement, builder: (context, state) => const FinancialManagementScreen()),
-      GoRoute(path: paymentManagement, builder: (context, state) => const PaymentManagementScreen()),
-      GoRoute(path: payrollManagement, builder: (context, state) => const PayrollManagementScreen()),
-      GoRoute(path: equipmentManagement, builder: (context, state) => const EquipmentManagementScreen()),
-      GoRoute(path: notificationManagement, builder: (context, state) => const NotificationManagementScreen()),
-      GoRoute(path: feedbackManagement, builder: (context, state) => const FeedbackManagementScreen()),
-      GoRoute(path: contentManagement, builder: (context, state) => const ContentManagementScreen()),
-      GoRoute(path: categoryManagement, builder: (context, state) => const CategoryManagementScreen()),
-      GoRoute(path: roleManagement, builder: (context, state) => const RoleManagementScreen()),
-      GoRoute(path: reportManagement, builder: (context, state) => const ReportManagementScreen()),
-      GoRoute(path: mediaManagement, builder: (context, state) => const MediaManagementScreen()),
-      GoRoute(path: sessionManagement, builder: (context, state) => const SessionManagementScreen()),
-      GoRoute(path: developerTool, builder: (context, state) => const DeveloperToolScreen()),
-      GoRoute(path: accountManagement, builder: (context, state) => const AccountManagementScreen()),
+      GoRoute(
+        path: customerLogin,
+        builder: (context, state) => const customer_login.LoginScreen(),
+      ),
+      GoRoute(
+        path: customerSignup,
+        builder: (context, state) => const customer_signup.SignUpScreen(),
+      ),
+      GoRoute(
+        path: customerHome,
+        builder: (context, state) => const CustomerHomeScreen(),
+      ),
+      GoRoute(
+        path: forgotPassword,
+        builder: (context, state) => const ForgotPasswordScreen(),
+      ),
+      GoRoute(
+        path: adminDashboard,
+        builder: (context, state) => const AdminDashboardScreen(),
+      ),
+      GoRoute(
+        path: personnelManagement,
+        builder: (context, state) => const PersonnelManagementScreen(),
+      ),
+      GoRoute(
+        path: scheduleManagement,
+        builder: (context, state) => const ScheduleManagementScreen(),
+      ),
+      GoRoute(
+        path: customerManagement,
+        builder: (context, state) => const CustomerManagementScreen(),
+      ),
+      GoRoute(
+        path: storeManagement,
+        builder: (context, state) => const StoreManagementScreen(),
+      ),
+      GoRoute(
+        path: membershipManagement,
+        builder: (context, state) => const MembershipManagementScreen(),
+      ),
+      GoRoute(
+        path: financialManagement,
+        builder: (context, state) => const FinancialManagementScreen(),
+      ),
+      GoRoute(
+        path: paymentManagement,
+        builder: (context, state) => const PaymentManagementScreen(),
+      ),
+      GoRoute(
+        path: payrollManagement,
+        builder: (context, state) => const PayrollManagementScreen(),
+      ),
+      GoRoute(
+        path: equipmentManagement,
+        builder: (context, state) => const EquipmentManagementScreen(),
+      ),
+      GoRoute(
+        path: notificationManagement,
+        builder: (context, state) => const NotificationManagementScreen(),
+      ),
+      GoRoute(
+        path: feedbackManagement,
+        builder: (context, state) => const FeedbackManagementScreen(),
+      ),
+      GoRoute(
+        path: contentManagement,
+        builder: (context, state) => const ContentManagementScreen(),
+      ),
+      GoRoute(
+        path: categoryManagement,
+        builder: (context, state) => const CategoryManagementScreen(),
+      ),
+      GoRoute(
+        path: roleManagement,
+        builder: (context, state) => const RoleManagementScreen(),
+      ),
+      GoRoute(
+        path: reportManagement,
+        builder: (context, state) => const ReportManagementScreen(),
+      ),
+      GoRoute(
+        path: mediaManagement,
+        builder: (context, state) => const MediaManagementScreen(),
+      ),
+      GoRoute(
+        path: sessionManagement,
+        builder: (context, state) => const SessionManagementScreen(),
+      ),
 
       // PT Routes
-      GoRoute(path: ptDashboard, builder: (context, state) => const PtDashboardScreen()),
-      GoRoute(path: ptSchedule, builder: (context, state) => const PtScheduleScreen()),
-      GoRoute(path: ptStudentManagement, builder: (context, state) => const PtStudentManagementScreen()),
-      GoRoute(path: ptIncome, builder: (context, state) => const PtIncomeScreen()),
-      GoRoute(path: ptClassRegistration, builder: (context, state) => const PtClassRegistrationScreen()),
+      GoRoute(
+        path: ptDashboard,
+        builder: (context, state) => const PtDashboardScreen(),
+      ),
+      GoRoute(
+        path: ptSchedule,
+        builder: (context, state) => const PtScheduleScreen(),
+      ),
+      GoRoute(
+        path: ptStudentManagement,
+        builder: (context, state) => const PtStudentManagementScreen(),
+      ),
+      GoRoute(
+        path: ptIncome,
+        builder: (context, state) => const PtIncomeScreen(),
+      ),
+      GoRoute(
+        path: ptClassRegistration,
+        builder: (context, state) => const PtClassRegistrationScreen(),
+      ),
 
       // Receptionist Routes
-      GoRoute(path: receptionistDashboard, builder: (context, state) => const ReceptionistDashboardScreen()),
-      GoRoute(path: receptionistCheckIn, builder: (context, state) => const ReceptionistCheckInScreen()),
-      GoRoute(path: receptionistPOS, builder: (context, state) => const ReceptionistPOSScreen()),
-      GoRoute(path: receptionistSupport, builder: (context, state) => const ReceptionistSupportScreen()),
-      GoRoute(path: receptionistFacility, builder: (context, state) => const ReceptionistFacilityScreen()),
+      GoRoute(
+        path: receptionistDashboard,
+        builder: (context, state) => const ReceptionistDashboardScreen(),
+      ),
+      GoRoute(
+        path: receptionistCheckIn,
+        builder: (context, state) => const ReceptionistCheckInScreen(),
+      ),
+      GoRoute(
+        path: receptionistPOS,
+        builder: (context, state) => const ReceptionistPOSScreen(),
+      ),
+      GoRoute(
+        path: receptionistSupport,
+        builder: (context, state) => const ReceptionistSupportScreen(),
+      ),
+      GoRoute(
+        path: receptionistFacility,
+        builder: (context, state) => const ReceptionistFacilityScreen(),
+      ),
     ],
   );
+
+  static String dashboardForUser(UserModel? user) {
+    if (user == null) return customerHome;
+
+    final role = user.role.toLowerCase().trim();
+    final position = (user.position ?? '').toLowerCase().trim();
+
+    if (role == 'admin') return adminDashboard;
+    if (role == 'trainer' || position == 'trainer') return ptDashboard;
+    if (role == 'receptionist' ||
+        role == 'staff' ||
+        position == 'receptionist') {
+      return receptionistDashboard;
+    }
+    return customerHome;
+  }
+
+  static Future<String> _resolveDashboardRoute(String uid) async {
+    try {
+      final doc = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(uid)
+          .get();
+      if (!doc.exists) return customerHome;
+      final user = UserModel.fromMap({
+        ...(doc.data() ?? <String, dynamic>{}),
+        'uid': doc.id,
+      });
+      return dashboardForUser(user);
+    } catch (_) {
+      return customerHome;
+    }
+  }
 }

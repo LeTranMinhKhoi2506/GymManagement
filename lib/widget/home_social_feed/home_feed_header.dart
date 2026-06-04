@@ -25,22 +25,6 @@ class HomeFeedHeader extends StatelessWidget {
             ),
           ],
         ),
-        const SizedBox(height: 16),
-        Align(
-          alignment: Alignment.centerRight,
-          child: TextButton.icon(
-            onPressed: () {},
-            style: TextButton.styleFrom(
-              foregroundColor: const Color(0xFF4DA3FF),
-              padding: const EdgeInsets.symmetric(horizontal: 0, vertical: 2),
-            ),
-            icon: const Icon(Icons.add_rounded, size: 22),
-            label: const Text(
-              'Follow',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.w400),
-            ),
-          ),
-        ),
       ],
     );
   }

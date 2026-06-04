@@ -8,7 +8,7 @@ import 'package:flutter/foundation.dart';
 class AuthController extends ChangeNotifier {
   final AuthRepository _repository = AuthRepository();
   final SessionRepository _sessionRepository = SessionRepository();
-  
+
   bool _isLoading = false;
   bool get isLoading => _isLoading;
 
@@ -24,7 +24,7 @@ class AuthController extends ChangeNotifier {
 
       if (user != null) {
         _currentUser = await _repository.getUserData(user.uid);
-        
+
         if (_currentUser == null) {
           _currentUser = UserModel(
             uid: user.uid,
@@ -34,20 +34,26 @@ class AuthController extends ChangeNotifier {
           );
           await _repository.saveUserData(_currentUser!);
         }
-        
+
         // Ghi lại Session đăng nhập (Session Management)
-        await _sessionRepository.logSession(SessionModel(
-          id: '',
-          userId: _currentUser!.uid,
-          userName: _currentUser!.fullName,
-          device: kIsWeb ? "Web Browser" : "Mobile App",
-          ipAddress: "192.168.1.1", // Trong thực tế sẽ lấy IP thật
-          loginAt: DateTime.now(),
-        ));
-        
+        await _sessionRepository.logSession(
+          SessionModel(
+            id: '',
+            userId: _currentUser!.uid,
+            userName: _currentUser!.fullName,
+            device: kIsWeb ? "Web Browser" : "Mobile App",
+            ipAddress: "192.168.1.1", // Trong thực tế sẽ lấy IP thật
+            loginAt: DateTime.now(),
+          ),
+        );
+
         _setLoading(false);
         notifyListeners();
-        return {"status": "success", "user": _currentUser};
+        return {
+          "status": "success",
+          "user": _currentUser,
+          "route": _resolveLandingRoute(_currentUser),
+        };
       }
       _setLoading(false);
       return {"status": "error", "message": "Đăng nhập thất bại."};
@@ -111,5 +117,21 @@ class AuthController extends ChangeNotifier {
   void _setLoading(bool value) {
     _isLoading = value;
     notifyListeners();
+  }
+
+  String _resolveLandingRoute(UserModel? user) {
+    if (user == null) return '/customer-home';
+
+    final role = user.role.toLowerCase().trim();
+    final position = (user.position ?? '').toLowerCase().trim();
+
+    if (role == 'admin') return '/admin-dashboard';
+    if (role == 'trainer' || position == 'trainer') return '/pt-dashboard';
+    if (role == 'receptionist' ||
+        role == 'staff' ||
+        position == 'receptionist') {
+      return '/receptionist-dashboard';
+    }
+    return '/customer-home';
   }
 }
