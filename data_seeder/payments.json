@@ -1,0 +1,30 @@
+[
+  {
+    "id": "pm_01",
+    "memberId": "user_uid_01",
+    "memberName": "Nguyễn Hoàng Minh",
+    "membershipType": "Standard 1 Month",
+    "amount": 500000.0,
+    "dueDate": "2026-07-01T00:00:00Z",
+    "paymentDate": "2026-06-01T09:30:00Z",
+    "status": "Paid",
+    "paymentMethod": "Transfer",
+    "paymentType": "Membership",
+    "transactionId": "tx_rev_01",
+    "createdAt": "2026-06-01T09:30:00Z",
+    "updatedAt": "2026-06-01T09:30:00Z"
+  },
+  {
+    "id": "pm_02",
+    "memberId": "user_uid_02",
+    "memberName": "Trần Thảo Vy",
+    "membershipType": "Pro Elite 3 Months",
+    "amount": 4500000.0,
+    "dueDate": "2026-06-05T00:00:00Z",
+    "status": "Pending",
+    "paymentMethod": "Cash",
+    "paymentType": "Membership",
+    "createdAt": "2026-03-05T15:30:00Z",
+    "updatedAt": "2026-03-05T15:30:00Z"
+  }
+]
