@@ -1,4 +1,4 @@
-import 'package:go_router/go_router.dart';
+﻿import 'package:go_router/go_router.dart';
 import '../../screens/login_screen.dart';
 import '../../screens/signup_screen.dart';
 import '../../screens/forgot_password_screen.dart';
@@ -41,7 +41,7 @@ import '../../screens/customer_login/signup_screen.dart' as customer_signup;
 class Routes {
   static const String login = '/login';
   static const String signup = '/signup';
-  static const String customerLogin = '/customer-login';
+  static const String customerLogin = '/customer_login';
   static const String customerSignup = '/customer-signup';
   static const String customerHome = '/customer-home';
   static const String forgotPassword = '/forgot-password';
@@ -81,7 +81,7 @@ class Routes {
   static const String receptionistFacility = '/receptionist-facility';
 
   static final GoRouter router = GoRouter(
-    initialLocation: login,
+    initialLocation: customerLogin,
     routes: [
       GoRoute(path: login, builder: (context, state) => const LoginScreen()),
       GoRoute(path: signup, builder: (context, state) => const SignUpScreen()),
@@ -109,7 +109,7 @@ class Routes {
       GoRoute(path: sessionManagement, builder: (context, state) => const SessionManagementScreen()),
       GoRoute(path: developerTool, builder: (context, state) => const DeveloperToolScreen()),
       GoRoute(path: accountManagement, builder: (context, state) => const AccountManagementScreen()),
-      
+
       // PT Routes
       GoRoute(path: ptDashboard, builder: (context, state) => const PtDashboardScreen()),
       GoRoute(path: ptSchedule, builder: (context, state) => const PtScheduleScreen()),

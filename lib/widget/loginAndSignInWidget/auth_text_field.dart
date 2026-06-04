@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 
-import '../../app/theme/app_theme.dart';
-
 class AuthTextField extends StatelessWidget {
   const AuthTextField({
     super.key,
@@ -43,13 +41,20 @@ class AuthTextField extends StatelessWidget {
           controller: controller,
           obscureText: obscureText,
           keyboardType: keyboardType,
+          cursorColor: Colors.black,
           style: const TextStyle(
-            color: AppColors.text,
+            color: Colors.black,
             fontSize: 17,
             fontWeight: FontWeight.w500,
           ),
           decoration: InputDecoration(
+            filled: true,
+            fillColor: const Color(0xFFF8F8F3),
             hintText: hint,
+            hintStyle: const TextStyle(
+              color: Color(0xFF5F5F5F),
+              fontSize: 16,
+            ),
             prefixIcon: prefixIcon == null
                 ? null
                 : Padding(
