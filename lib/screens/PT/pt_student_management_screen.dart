@@ -115,7 +115,6 @@ class _PtStudentManagementScreenState extends State<PtStudentManagementScreen> {
         backgroundColor: const Color(0xFFD0FD3E),
         child: const Icon(Icons.add, color: Colors.black, size: 30),
       ),
-      bottomNavigationBar: _buildBottomNav(context),
     );
   }
 
@@ -187,10 +186,14 @@ class _PtStudentManagementScreenState extends State<PtStudentManagementScreen> {
           });
         },
         decoration: InputDecoration(
+          filled: true,
+          fillColor: Colors.transparent,
           icon: const Icon(Icons.search, color: Colors.grey, size: 20),
           hintText: "Tìm kiếm học viên...",
           hintStyle: const TextStyle(color: Colors.grey, fontSize: 14),
           border: InputBorder.none,
+          enabledBorder: InputBorder.none,
+          focusedBorder: InputBorder.none,
           suffixIcon: searchQuery.isNotEmpty
               ? GestureDetector(
                   onTap: () {
@@ -227,13 +230,13 @@ class _PtStudentManagementScreenState extends State<PtStudentManagementScreen> {
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
               decoration: BoxDecoration(
-                color: isSelected ? Colors.deepOrangeAccent : const Color(0xFF1C1C1E),
+                color: isSelected ? const Color(0xFFD0FD3E) : const Color(0xFF1C1C1E),
                 borderRadius: BorderRadius.circular(20),
               ),
               child: Text(
                 categories[index],
                 style: TextStyle(
-                  color: Colors.white,
+                  color: isSelected ? Colors.black : Colors.white,
                   fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
                   fontSize: 12,
                 ),
@@ -369,152 +372,162 @@ class _PtStudentManagementScreenState extends State<PtStudentManagementScreen> {
                   borderRadius: BorderRadius.circular(25),
                   border: Border.all(color: Colors.white12),
                 ),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      "THÊM HỌC VIÊN MỚI",
-                      style: TextStyle(color: Color(0xFFD0FD3E), fontSize: 16, fontWeight: FontWeight.bold, letterSpacing: 1.0),
-                    ),
-                    const SizedBox(height: 20),
-
-                    // Tên học viên
-                    const Text("HỌ VÀ TÊN", style: TextStyle(color: Colors.grey, fontSize: 10, fontWeight: FontWeight.bold)),
-                    const SizedBox(height: 6),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 5),
-                      decoration: BoxDecoration(color: Colors.black, borderRadius: BorderRadius.circular(12)),
-                      child: TextField(
-                        controller: nameController,
-                        style: const TextStyle(color: Colors.white, fontSize: 14),
-                        decoration: const InputDecoration(
-                          hintText: "VD: Nguyễn Văn A",
-                          hintStyle: TextStyle(color: Colors.grey, fontSize: 13),
-                          border: InputBorder.none,
-                        ),
+                child: SingleChildScrollView(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        "THÊM HỌC VIÊN MỚI",
+                        style: TextStyle(color: Color(0xFFD0FD3E), fontSize: 16, fontWeight: FontWeight.bold, letterSpacing: 1.0),
                       ),
-                    ),
-                    const SizedBox(height: 15),
-
-                    // Số điện thoại
-                    const Text("SỐ ĐIỆN THOẠI", style: TextStyle(color: Colors.grey, fontSize: 10, fontWeight: FontWeight.bold)),
-                    const SizedBox(height: 6),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 5),
-                      decoration: BoxDecoration(color: Colors.black, borderRadius: BorderRadius.circular(12)),
-                      child: TextField(
-                        controller: phoneController,
-                        keyboardType: TextInputType.phone,
-                        style: const TextStyle(color: Colors.white, fontSize: 14),
-                        decoration: const InputDecoration(
-                          hintText: "VD: 0987654321",
-                          hintStyle: TextStyle(color: Colors.grey, fontSize: 13),
-                          border: InputBorder.none,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 15),
-
-                    // Mục tiêu Dropdown
-                    const Text("MỤC TIÊU TẬP LUYỆN", style: TextStyle(color: Colors.grey, fontSize: 10, fontWeight: FontWeight.bold)),
-                    const SizedBox(height: 6),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 5),
-                      decoration: BoxDecoration(color: Colors.black, borderRadius: BorderRadius.circular(12)),
-                      child: DropdownButtonHideUnderline(
-                        child: DropdownButton<String>(
-                          value: selectedGoal,
-                          dropdownColor: const Color(0xFF1C1C1E),
-                          isExpanded: true,
+                      const SizedBox(height: 20),
+  
+                      // Tên học viên
+                      const Text("HỌ VÀ TÊN", style: TextStyle(color: Colors.grey, fontSize: 10, fontWeight: FontWeight.bold)),
+                      const SizedBox(height: 6),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 5),
+                        decoration: BoxDecoration(color: Colors.black, borderRadius: BorderRadius.circular(12)),
+                        child: TextField(
+                          controller: nameController,
                           style: const TextStyle(color: Colors.white, fontSize: 14),
-                          items: const [
-                            DropdownMenuItem(value: "Hypertrophy", child: Text("Tăng cơ (Hypertrophy)")),
-                            DropdownMenuItem(value: "Mobility", child: Text("Linh hoạt (Mobility)")),
-                            DropdownMenuItem(value: "Weight Loss", child: Text("Giảm cân (Weight Loss)")),
-                          ],
-                          onChanged: (value) {
-                            if (value != null) {
-                              setDialogState(() {
-                                selectedGoal = value;
-                              });
-                            }
-                          },
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 30),
-
-                    // Nút xác nhận
-                    Row(
-                      children: [
-                        Expanded(
-                          child: TextButton(
-                            onPressed: () => Navigator.pop(context),
-                            child: const Text("HỦY BỎ", style: TextStyle(color: Colors.grey, fontWeight: FontWeight.bold)),
+                          decoration: const InputDecoration(
+                            filled: true,
+                            fillColor: Colors.transparent,
+                            hintText: "VD: Nguyễn Văn A",
+                            hintStyle: TextStyle(color: Colors.grey, fontSize: 13),
+                            border: InputBorder.none,
+                            enabledBorder: InputBorder.none,
+                            focusedBorder: InputBorder.none,
                           ),
                         ),
-                        const SizedBox(width: 10),
-                        Expanded(
-                          child: ElevatedButton(
-                            onPressed: () async {
-                              String name = nameController.text.trim();
-                              String phone = phoneController.text.trim();
-                              if (name.isEmpty || phone.isEmpty) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(content: Text("Vui lòng nhập đầy đủ họ tên và số điện thoại")),
-                                );
-                                return;
-                              }
-
-                              String goalCode = "HYPERTROPHY";
-                              if (selectedGoal == "Mobility") goalCode = "MOBILITY";
-                              if (selectedGoal == "Weight Loss") goalCode = "WEIGHT LOSS";
-
-                              String randomId = DateTime.now().millisecondsSinceEpoch.toString();
-
-                              // 1. Thêm vào collection students
-                              await FirebaseFirestore.instance.collection('students').add({
-                                'ptId': ptId,
-                                'name': name,
-                                'goal': goalCode,
-                                'lastSession': 'Chưa dạy',
-                                'photoUrl': 'https://i.pravatar.cc/150?u=$randomId',
-                                'phone': phone,
-                                'createdAt': FieldValue.serverTimestamp(),
-                              });
-
-                              // 2. Thêm hoạt động hoạt động pt_activities
-                              await FirebaseFirestore.instance.collection('pt_activities').add({
-                                'ptId': ptId,
-                                'type': 'booking',
-                                'title': 'Gán học viên mới',
-                                'subtitle': 'Đã nhận huấn luyện học viên $name mục tiêu $selectedGoal',
-                                'timestamp': FieldValue.serverTimestamp(),
-                              });
-
-                              if (context.mounted) {
-                                Navigator.pop(context);
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    backgroundColor: const Color(0xFFD0FD3E),
-                                    content: Text("Đã thêm thành công học viên $name!", style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
-                                  ),
-                                );
+                      ),
+                      const SizedBox(height: 15),
+  
+                      // Số điện thoại
+                      const Text("SỐ ĐIỆN THOẠI", style: TextStyle(color: Colors.grey, fontSize: 10, fontWeight: FontWeight.bold)),
+                      const SizedBox(height: 6),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 5),
+                        decoration: BoxDecoration(color: Colors.black, borderRadius: BorderRadius.circular(12)),
+                        child: TextField(
+                          controller: phoneController,
+                          keyboardType: TextInputType.phone,
+                          style: const TextStyle(color: Colors.white, fontSize: 14),
+                          decoration: const InputDecoration(
+                            filled: true,
+                            fillColor: Colors.transparent,
+                            hintText: "VD: 0987654321",
+                            hintStyle: TextStyle(color: Colors.grey, fontSize: 13),
+                            border: InputBorder.none,
+                            enabledBorder: InputBorder.none,
+                            focusedBorder: InputBorder.none,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 15),
+  
+                      // Mục tiêu Dropdown
+                      const Text("MỤC TIÊU TẬP LUYỆN", style: TextStyle(color: Colors.grey, fontSize: 10, fontWeight: FontWeight.bold)),
+                      const SizedBox(height: 6),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 5),
+                        decoration: BoxDecoration(color: Colors.black, borderRadius: BorderRadius.circular(12)),
+                        child: DropdownButtonHideUnderline(
+                          child: DropdownButton<String>(
+                            value: selectedGoal,
+                            dropdownColor: const Color(0xFF1C1C1E),
+                            isExpanded: true,
+                            style: const TextStyle(color: Colors.white, fontSize: 14),
+                            items: const [
+                              DropdownMenuItem(value: "Hypertrophy", child: Text("Tăng cơ (Hypertrophy)")),
+                              DropdownMenuItem(value: "Mobility", child: Text("Linh hoạt (Mobility)")),
+                              DropdownMenuItem(value: "Weight Loss", child: Text("Giảm cân (Weight Loss)")),
+                            ],
+                            onChanged: (value) {
+                              if (value != null) {
+                                setDialogState(() {
+                                  selectedGoal = value;
+                                });
                               }
                             },
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color(0xFFD0FD3E),
-                              foregroundColor: Colors.black,
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                              padding: const EdgeInsets.symmetric(vertical: 12),
-                            ),
-                            child: const Text("THÊM MỚI", style: TextStyle(fontWeight: FontWeight.bold)),
                           ),
                         ),
-                      ],
-                    )
-                  ],
+                      ),
+                      const SizedBox(height: 30),
+  
+                      // Nút xác nhận
+                      Row(
+                        children: [
+                          Expanded(
+                            child: TextButton(
+                              onPressed: () => Navigator.pop(context),
+                              child: const Text("HỦY BỎ", style: TextStyle(color: Colors.grey, fontWeight: FontWeight.bold)),
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: ElevatedButton(
+                              onPressed: () async {
+                                String name = nameController.text.trim();
+                                String phone = phoneController.text.trim();
+                                if (name.isEmpty || phone.isEmpty) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(content: Text("Vui lòng nhập đầy đủ họ tên và số điện thoại")),
+                                  );
+                                  return;
+                                }
+  
+                                String goalCode = "HYPERTROPHY";
+                                if (selectedGoal == "Mobility") goalCode = "MOBILITY";
+                                if (selectedGoal == "Weight Loss") goalCode = "WEIGHT LOSS";
+  
+                                String randomId = DateTime.now().millisecondsSinceEpoch.toString();
+  
+                                // 1. Thêm vào collection students
+                                await FirebaseFirestore.instance.collection('students').add({
+                                  'ptId': ptId,
+                                  'name': name,
+                                  'goal': goalCode,
+                                  'lastSession': 'Chưa dạy',
+                                  'photoUrl': 'https://i.pravatar.cc/150?u=$randomId',
+                                  'phone': phone,
+                                  'createdAt': FieldValue.serverTimestamp(),
+                                });
+  
+                                // 2. Thêm hoạt động hoạt động pt_activities
+                                await FirebaseFirestore.instance.collection('pt_activities').add({
+                                  'ptId': ptId,
+                                  'type': 'booking',
+                                  'title': 'Gán học viên mới',
+                                  'subtitle': 'Đã nhận huấn luyện học viên $name mục tiêu $selectedGoal',
+                                  'timestamp': FieldValue.serverTimestamp(),
+                                });
+  
+                                if (context.mounted) {
+                                  Navigator.pop(context);
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      backgroundColor: const Color(0xFFD0FD3E),
+                                      content: Text("Đã thêm thành công học viên $name!", style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
+                                    ),
+                                  );
+                                }
+                              },
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: const Color(0xFFD0FD3E),
+                                foregroundColor: Colors.black,
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                                padding: const EdgeInsets.symmetric(vertical: 12),
+                              ),
+                              child: const Text("THÊM MỚI", style: TextStyle(fontWeight: FontWeight.bold)),
+                            ),
+                          ),
+                        ],
+                      )
+                    ],
+                  ),
                 ),
               ),
             );
@@ -663,92 +676,98 @@ class _PtStudentManagementScreenState extends State<PtStudentManagementScreen> {
               borderRadius: BorderRadius.circular(25),
               border: Border.all(color: Colors.white12),
             ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const Text("NHẮN TIN KHÍCH LỆ", style: TextStyle(color: Color(0xFFD0FD3E), fontSize: 12, fontWeight: FontWeight.bold)),
-                    IconButton(
-                      onPressed: () => Navigator.pop(context),
-                      icon: const Icon(Icons.close, color: Colors.grey, size: 20),
-                      padding: EdgeInsets.zero,
-                      constraints: const BoxConstraints(),
-                    )
-                  ],
-                ),
-                const SizedBox(height: 10),
-                Text("Gửi lời nhắn tới $studentName", style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
-                const SizedBox(height: 20),
-
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 5),
-                  decoration: BoxDecoration(color: Colors.black, borderRadius: BorderRadius.circular(12)),
-                  child: TextField(
-                    controller: messageController,
-                    maxLines: 3,
-                    style: const TextStyle(color: Colors.white, fontSize: 14),
-                    decoration: const InputDecoration(
-                      hintText: "Hôm nay tập rất tốt nhé! Về nhà nhớ bổ sung protein và uống đủ nước nha...",
-                      hintStyle: TextStyle(color: Colors.grey, fontSize: 13),
-                      border: InputBorder.none,
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text("NHẮN TIN KHÍCH LỆ", style: TextStyle(color: Color(0xFFD0FD3E), fontSize: 12, fontWeight: FontWeight.bold)),
+                      IconButton(
+                        onPressed: () => Navigator.pop(context),
+                        icon: const Icon(Icons.close, color: Colors.grey, size: 20),
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(),
+                      )
+                    ],
+                  ),
+                  const SizedBox(height: 10),
+                  Text("Gửi lời nhắn tới $studentName", style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 20),
+  
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 5),
+                    decoration: BoxDecoration(color: Colors.black, borderRadius: BorderRadius.circular(12)),
+                    child: TextField(
+                      controller: messageController,
+                      maxLines: 3,
+                      style: const TextStyle(color: Colors.white, fontSize: 14),
+                      decoration: const InputDecoration(
+                        filled: true,
+                        fillColor: Colors.transparent,
+                        hintText: "Hôm nay tập rất tốt nhé! Về nhà nhớ bổ sung protein và uống đủ nước nha...",
+                        hintStyle: TextStyle(color: Colors.grey, fontSize: 13),
+                        border: InputBorder.none,
+                        enabledBorder: InputBorder.none,
+                        focusedBorder: InputBorder.none,
+                      ),
                     ),
                   ),
-                ),
-                const SizedBox(height: 25),
-
-                SizedBox(
-                  width: double.infinity,
-                  height: 50,
-                  child: ElevatedButton(
-                    onPressed: () async {
-                      String message = messageController.text.trim();
-                      if (message.isEmpty) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text("Vui lòng nhập nội dung tin nhắn")),
-                        );
-                        return;
-                      }
-
-                      // 1. Tạo bản ghi tin nhắn pt_messages
-                      await FirebaseFirestore.instance.collection('pt_messages').add({
-                        'ptId': ptId,
-                        'studentName': studentName,
-                        'message': message,
-                        'timestamp': FieldValue.serverTimestamp(),
-                        'status': 'sent',
-                      });
-
-                      // 2. Tạo hoạt động pt_activities
-                      await FirebaseFirestore.instance.collection('pt_activities').add({
-                        'ptId': ptId,
-                        'type': 'note',
-                        'title': 'Gửi tin nhắn khích lệ',
-                        'subtitle': 'Lời nhắn tới $studentName: "$message"',
-                        'timestamp': FieldValue.serverTimestamp(),
-                      });
-
-                      if (context.mounted) {
-                        Navigator.pop(context);
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            backgroundColor: Colors.green,
-                            content: Text("Đã gửi tin nhắn động viên học viên thành công!"),
-                          ),
-                        );
-                      }
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFFD0FD3E),
-                      foregroundColor: Colors.black,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                  const SizedBox(height: 25),
+  
+                  SizedBox(
+                    width: double.infinity,
+                    height: 50,
+                    child: ElevatedButton(
+                      onPressed: () async {
+                        String message = messageController.text.trim();
+                        if (message.isEmpty) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text("Vui lòng nhập nội dung tin nhắn")),
+                          );
+                          return;
+                        }
+  
+                        // 1. Tạo bản ghi tin nhắn pt_messages
+                        await FirebaseFirestore.instance.collection('pt_messages').add({
+                          'ptId': ptId,
+                          'studentName': studentName,
+                          'message': message,
+                          'timestamp': FieldValue.serverTimestamp(),
+                          'status': 'sent',
+                        });
+  
+                        // 2. Tạo hoạt động pt_activities
+                        await FirebaseFirestore.instance.collection('pt_activities').add({
+                          'ptId': ptId,
+                          'type': 'note',
+                          'title': 'Gửi tin nhắn khích lệ',
+                          'subtitle': 'Lời nhắn tới $studentName: "$message"',
+                          'timestamp': FieldValue.serverTimestamp(),
+                        });
+  
+                        if (context.mounted) {
+                          Navigator.pop(context);
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              backgroundColor: Colors.green,
+                              content: Text("Đã gửi tin nhắn động viên học viên thành công!"),
+                            ),
+                          );
+                        }
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFFD0FD3E),
+                        foregroundColor: Colors.black,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                      ),
+                      child: const Text("GỬI TIN NHẮN", style: TextStyle(fontWeight: FontWeight.bold)),
                     ),
-                    child: const Text("GỬI TIN NHẮN", style: TextStyle(fontWeight: FontWeight.bold)),
-                  ),
-                )
-              ],
+                  )
+                ],
+              ),
             ),
           ),
         );
@@ -756,32 +775,4 @@ class _PtStudentManagementScreenState extends State<PtStudentManagementScreen> {
     );
   }
 
-  Widget _buildBottomNav(BuildContext context) {
-    return Container(
-      color: Colors.black,
-      padding: const EdgeInsets.symmetric(vertical: 10),
-      child: BottomNavigationBar(
-        backgroundColor: Colors.transparent,
-        type: BottomNavigationBarType.fixed,
-        selectedItemColor: const Color(0xFFD0FD3E),
-        unselectedItemColor: Colors.grey,
-        currentIndex: 2, // Students index
-        showSelectedLabels: true,
-        showUnselectedLabels: true,
-        selectedLabelStyle: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold),
-        unselectedLabelStyle: const TextStyle(fontSize: 10),
-        onTap: (index) {
-          if (index == 0) context.go(Routes.ptDashboard);
-          if (index == 1) context.go(Routes.ptSchedule);
-          if (index == 3) context.go(Routes.ptIncome);
-        },
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.grid_view_rounded), label: "TRANG CHỦ"),
-          BottomNavigationBarItem(icon: Icon(Icons.calendar_today_outlined), label: "LỊCH DẠY"),
-          BottomNavigationBarItem(icon: Icon(Icons.people_rounded), label: "HỌC VIÊN"),
-          BottomNavigationBarItem(icon: Icon(Icons.person_outline), label: "TÀI KHOẢN"),
-        ],
-      ),
-    );
-  }
 }

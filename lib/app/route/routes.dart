@@ -1,4 +1,4 @@
-﻿import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:go_router/go_router.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../../screens/signup_screen.dart';
@@ -32,6 +32,9 @@ import '../../data/models/user_model.dart';
 
 // Receptionist Screens
 import '../../screens/receptionist/receptionist_dashboard_screen.dart';
+import '../../screens/receptionist/receptionist_main_layout.dart';
+import '../../screens/receptionist/swipable_shell_container.dart';
+import '../../screens/PT/pt_main_layout.dart';
 import '../../screens/receptionist/receptionist_checkin_screen.dart';
 import '../../screens/receptionist/receptionist_pos_screen.dart';
 import '../../screens/receptionist/receptionist_support_screen.dart';
@@ -211,21 +214,53 @@ class Routes {
       ),
 
       // PT Routes
-      GoRoute(
-        path: ptDashboard,
-        builder: (context, state) => const PtDashboardScreen(),
-      ),
-      GoRoute(
-        path: ptSchedule,
-        builder: (context, state) => const PtScheduleScreen(),
-      ),
-      GoRoute(
-        path: ptStudentManagement,
-        builder: (context, state) => const PtStudentManagementScreen(),
-      ),
-      GoRoute(
-        path: ptIncome,
-        builder: (context, state) => const PtIncomeScreen(),
+      StatefulShellRoute(
+        navigatorContainerBuilder: (context, navigationShell, children) {
+          return SwipableShellContainer(
+            navigationShell: navigationShell,
+            children: children,
+          );
+        },
+        builder: (context, state, navigationShell) {
+          return PtMainLayout(
+            navigationShell: navigationShell,
+            child: navigationShell,
+          );
+        },
+        branches: [
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: ptDashboard,
+                builder: (context, state) => const PtDashboardScreen(),
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: ptSchedule,
+                builder: (context, state) => const PtScheduleScreen(),
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: ptStudentManagement,
+                builder: (context, state) => const PtStudentManagementScreen(),
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: ptIncome,
+                builder: (context, state) => const PtIncomeScreen(),
+              ),
+            ],
+          ),
+        ],
       ),
       GoRoute(
         path: ptClassRegistration,
@@ -233,25 +268,61 @@ class Routes {
       ),
 
       // Receptionist Routes
-      GoRoute(
-        path: receptionistDashboard,
-        builder: (context, state) => const ReceptionistDashboardScreen(),
-      ),
-      GoRoute(
-        path: receptionistCheckIn,
-        builder: (context, state) => const ReceptionistCheckInScreen(),
-      ),
-      GoRoute(
-        path: receptionistPOS,
-        builder: (context, state) => const ReceptionistPOSScreen(),
-      ),
-      GoRoute(
-        path: receptionistSupport,
-        builder: (context, state) => const ReceptionistSupportScreen(),
-      ),
-      GoRoute(
-        path: receptionistFacility,
-        builder: (context, state) => const ReceptionistFacilityScreen(),
+      StatefulShellRoute(
+        navigatorContainerBuilder: (context, navigationShell, children) {
+          return SwipableShellContainer(
+            navigationShell: navigationShell,
+            children: children,
+          );
+        },
+        builder: (context, state, navigationShell) {
+          return ReceptionistMainLayout(
+            navigationShell: navigationShell,
+            child: navigationShell,
+          );
+        },
+        branches: [
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: receptionistDashboard,
+                builder: (context, state) => const ReceptionistDashboardScreen(),
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: receptionistCheckIn,
+                builder: (context, state) => const ReceptionistCheckInScreen(),
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: receptionistPOS,
+                builder: (context, state) => const ReceptionistPOSScreen(),
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: receptionistSupport,
+                builder: (context, state) => const ReceptionistSupportScreen(),
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: receptionistFacility,
+                builder: (context, state) => const ReceptionistFacilityScreen(),
+              ),
+            ],
+          ),
+        ],
       ),
     ],
   );
