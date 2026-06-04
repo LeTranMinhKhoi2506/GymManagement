@@ -122,7 +122,6 @@ class _PtDashboardScreenState extends State<PtDashboardScreen> {
           ),
         ),
       ),
-      bottomNavigationBar: _buildBottomNav(context),
     );
   }
 
@@ -505,7 +504,7 @@ class _PtDashboardScreenState extends State<PtDashboardScreen> {
 
   Widget _buildMyScheduleCard(BuildContext context, String ptId) {
     return GestureDetector(
-      onTap: () => context.push(Routes.ptSchedule),
+      onTap: () => context.go(Routes.ptSchedule),
       child: Container(
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
@@ -611,7 +610,7 @@ class _PtDashboardScreenState extends State<PtDashboardScreen> {
             title: "Danh sách\nHọc viên",
             subtitle: "XEM & QUẢN LÝ",
             iconColor: Colors.orangeAccent,
-            onTap: () => context.push(Routes.ptStudentManagement),
+            onTap: () => context.go(Routes.ptStudentManagement),
           ),
         ),
         const SizedBox(width: 15),
@@ -621,7 +620,7 @@ class _PtDashboardScreenState extends State<PtDashboardScreen> {
             title: "Báo cáo\nThu nhập",
             subtitle: "CHI TIẾT THÁNG",
             iconColor: Colors.yellowAccent,
-            onTap: () => context.push(Routes.ptIncome),
+            onTap: () => context.go(Routes.ptIncome),
           ),
         ),
       ],
@@ -803,34 +802,6 @@ class _PtDashboardScreenState extends State<PtDashboardScreen> {
     }
   }
 
-  Widget _buildBottomNav(BuildContext context) {
-    return Container(
-      color: Colors.black,
-      padding: const EdgeInsets.symmetric(vertical: 10),
-      child: BottomNavigationBar(
-        backgroundColor: Colors.transparent,
-        type: BottomNavigationBarType.fixed,
-        selectedItemColor: const Color(0xFFD0FD3E),
-        unselectedItemColor: Colors.grey,
-        currentIndex: 0,
-        showSelectedLabels: true,
-        showUnselectedLabels: true,
-        selectedLabelStyle: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold),
-        unselectedLabelStyle: const TextStyle(fontSize: 10),
-        onTap: (index) {
-          if (index == 1) context.go(Routes.ptSchedule);
-          if (index == 2) context.go(Routes.ptStudentManagement);
-          if (index == 3) context.go(Routes.ptIncome);
-        },
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.grid_view_rounded), label: "TRANG CHỦ"),
-          BottomNavigationBarItem(icon: Icon(Icons.calendar_today_outlined), label: "LỊCH DẠY"),
-          BottomNavigationBarItem(icon: Icon(Icons.people_outline), label: "HỌC VIÊN"),
-          BottomNavigationBarItem(icon: Icon(Icons.person_outline), label: "TÀI KHOẢN"),
-        ],
-      ),
-    );
-  }
 }
 
 // Widget Dialog quét mã QR Chấm công với hiệu ứng quét camera cực chuyên nghiệp và mượt mà
