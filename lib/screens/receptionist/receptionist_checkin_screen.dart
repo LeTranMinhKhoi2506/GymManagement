@@ -50,6 +50,14 @@ class _ReceptionistCheckInScreenState extends State<ReceptionistCheckInScreen> {
               'isCurrentlyTraining': newTrainingState,
             });
 
+            // Log global check-in event for admin dashboard
+            await FirebaseFirestore.instance.collection('checkins').add({
+              'memberId': memberId,
+              'userName': fullName,
+              'timestamp': FieldValue.serverTimestamp(),
+              'zone': newTrainingState ? 'Khu vực chính (Check-in)' : 'Khu vực chính (Check-out)',
+            });
+
             // Log activity log inside member document
             await FirebaseFirestore.instance
                 .collection('members')

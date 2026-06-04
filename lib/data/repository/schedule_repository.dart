@@ -19,6 +19,17 @@ class ScheduleRepository {
             .toList());
   }
 
+  Stream<List<ScheduleModel>> getSchedulesForRange(DateTime start, DateTime end) {
+    return _db.collection('schedules')
+        .where('startTime', isGreaterThanOrEqualTo: start)
+        .where('startTime', isLessThanOrEqualTo: end)
+        .orderBy('startTime')
+        .snapshots()
+        .map((snapshot) => snapshot.docs
+            .map((doc) => ScheduleModel.fromMap(doc.data(), doc.id))
+            .toList());
+  }
+
   Future<void> addSchedule(ScheduleModel schedule) async {
     await _db.collection('schedules').add(schedule.toMap());
   }

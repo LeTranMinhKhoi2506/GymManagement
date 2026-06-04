@@ -73,7 +73,7 @@ class AdminRepository {
     DateTime now = DateTime.now();
     DateTime startOfDay = DateTime(now.year, now.month, now.day);
     return _db.collection('payments')
-        .where('timestamp', isGreaterThanOrEqualTo: startOfDay)
+        .where('createdAt', isGreaterThanOrEqualTo: startOfDay)
         .snapshots()
         .map((snapshot) {
           double total = 0;
@@ -91,10 +91,10 @@ class AdminRepository {
       DateTime startOfYesterday = DateTime(now.year, now.month, now.day - 1);
       
       var todayDocs = await _db.collection('payments')
-          .where('timestamp', isGreaterThanOrEqualTo: startOfToday).get();
+          .where('createdAt', isGreaterThanOrEqualTo: startOfToday).get();
       var yesterdayDocs = await _db.collection('payments')
-          .where('timestamp', isGreaterThanOrEqualTo: startOfYesterday)
-          .where('timestamp', isLessThan: startOfToday).get();
+          .where('createdAt', isGreaterThanOrEqualTo: startOfYesterday)
+          .where('createdAt', isLessThan: startOfToday).get();
 
       double todaySum = todayDocs.docs.fold(0.0, (acc, doc) => acc + (doc.data()['amount'] ?? 0).toDouble());
       double yesterdaySum = yesterdayDocs.docs.fold(0.0, (acc, doc) => acc + (doc.data()['amount'] ?? 0).toDouble());
@@ -129,9 +129,9 @@ class AdminRepository {
       List<double> weeklyRevenue = List.filled(7, 0.0);
       DateTime now = DateTime.now();
       DateTime sevenDaysAgo = DateTime(now.year, now.month, now.day - 6);
-      var snapshot = await _db.collection('payments').where('timestamp', isGreaterThanOrEqualTo: sevenDaysAgo).get();
+      var snapshot = await _db.collection('payments').where('createdAt', isGreaterThanOrEqualTo: sevenDaysAgo).get();
       for (var doc in snapshot.docs) {
-        DateTime date = (doc.data()['timestamp'] as Timestamp).toDate();
+        DateTime date = (doc.data()['createdAt'] as Timestamp).toDate();
         int diff = date.difference(sevenDaysAgo).inDays;
         if (diff >= 0 && diff < 7) weeklyRevenue[diff] += (doc.data()['amount'] ?? 0).toDouble();
       }
@@ -143,9 +143,9 @@ class AdminRepository {
     try {
       List<double> monthlyRevenue = List.filled(12, 0.0);
       DateTime now = DateTime.now();
-      var snapshot = await _db.collection('payments').where('timestamp', isGreaterThanOrEqualTo: DateTime(now.year, 1, 1)).get();
+      var snapshot = await _db.collection('payments').where('createdAt', isGreaterThanOrEqualTo: DateTime(now.year, 1, 1)).get();
       for (var doc in snapshot.docs) {
-        DateTime date = (doc.data()['timestamp'] as Timestamp).toDate();
+        DateTime date = (doc.data()['createdAt'] as Timestamp).toDate();
         if (date.year == now.year) monthlyRevenue[date.month - 1] += (doc.data()['amount'] ?? 0).toDouble();
       }
       return monthlyRevenue;

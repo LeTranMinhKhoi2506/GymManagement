@@ -1,0 +1,11 @@
+[
+  {
+    "id": "fb_01",
+    "userId": "user_uid_01",
+    "userName": "Nguyễn Hoàng Minh",
+    "subject": "Ý kiến về máy chạy bộ",
+    "message": "Máy Matrix T50 số 2 bị hỏng bàn chạy khoảng 1 tuần nay rồi, mong trung tâm sớm sửa chữa.",
+    "status": "pending",
+    "createdAt": "2026-05-28T10:00:00Z"
+  }
+]

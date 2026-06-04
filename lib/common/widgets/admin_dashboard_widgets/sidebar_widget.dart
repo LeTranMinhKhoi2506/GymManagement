@@ -12,6 +12,7 @@ class SidebarWidget extends StatefulWidget {
 class _SidebarWidgetState extends State<SidebarWidget> {
   bool _isMemberExpanded = true;
   bool _isOperationsExpanded = true;
+  bool _isFinancialExpanded = true;
   bool _isContentExpanded = true;
   bool _isCommunicationExpanded = true;
   bool _isSystemExpanded = true;
@@ -68,6 +69,20 @@ class _SidebarWidgetState extends State<SidebarWidget> {
                       _NavItem(icon: Icons.badge, title: "Quản lý Nhân sự", route: Routes.personnelManagement),
                       _NavItem(icon: Icons.calendar_month, title: "Lịch làm việc", route: Routes.scheduleManagement),
                       _NavItem(icon: Icons.build, title: "Quản lý Thiết bị", route: Routes.equipmentManagement),
+                      _NavItem(icon: Icons.store, title: "Quản lý Cửa hàng", route: Routes.storeManagement),
+                    ],
+                  ),
+                  _buildGroup(
+                    context,
+                    title: "Tài chính & Doanh thu",
+                    icon: Icons.monetization_on,
+                    isExpanded: _isFinancialExpanded,
+                    onToggle: () => setState(() => _isFinancialExpanded = !_isFinancialExpanded),
+                    currentRoute: currentRoute,
+                    items: [
+                      _NavItem(icon: Icons.analytics, title: "Báo cáo tài chính", route: Routes.financialManagement),
+                      _NavItem(icon: Icons.payment, title: "Thanh toán hội viên", route: Routes.paymentManagement),
+                      _NavItem(icon: Icons.paid, title: "Lương nhân sự", route: Routes.payrollManagement),
                     ],
                   ),
                   _buildGroup(
@@ -105,7 +120,9 @@ class _SidebarWidgetState extends State<SidebarWidget> {
                     currentRoute: currentRoute,
                     items: [
                       _NavItem(icon: Icons.admin_panel_settings, title: "Phân quyền (Roles)", route: Routes.roleManagement),
+                      _NavItem(icon: Icons.manage_accounts, title: "Quản lý Tài khoản", route: Routes.accountManagement),
                       _NavItem(icon: Icons.devices, title: "Quản lý Phiên (Sessions)", route: Routes.sessionManagement),
+                      _NavItem(icon: Icons.developer_mode, title: "Công cụ Dev", route: Routes.developerTool),
                       _NavItem(icon: Icons.logout, title: "Đăng xuất", route: Routes.login),
                     ],
                   ),

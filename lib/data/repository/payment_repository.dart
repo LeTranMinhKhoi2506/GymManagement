@@ -3,7 +3,7 @@ import '../models/payment_model.dart';
 
 class PaymentRepository {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  final String _paymentsCollection = 'member_payments';
+  final String _paymentsCollection = 'payments';
 
   // Create a new payment
   Future<String> createPayment(PaymentModel payment) async {

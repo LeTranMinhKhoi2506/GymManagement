@@ -1,0 +1,76 @@
+[
+  {
+    "uid": "admin_uid_01",
+    "email": "admin@kinetic.com",
+    "fullName": "Lê Trần Minh Khôi",
+    "role": "admin",
+    "status": "active",
+    "createdAt": "2026-01-01T08:00:00Z",
+    "phoneNumber": "0901234567",
+    "address": "123 Đường 3/2, Quận 10, TP.HCM",
+    "position": "Manager",
+    "salary": 25000000.0,
+    "gender": "Nam"
+  },
+  {
+    "uid": "pt_uid_01",
+    "email": "pt.hung@kinetic.com",
+    "fullName": "Nguyễn Văn Hùng",
+    "role": "trainer",
+    "status": "active",
+    "createdAt": "2026-01-15T09:00:00Z",
+    "phoneNumber": "0912345678",
+    "address": "456 Lê Hồng Phong, Quận 5, TP.HCM",
+    "position": "PT/Trainer",
+    "salary": 15000000.0,
+    "gender": "Nam"
+  },
+  {
+    "uid": "pt_uid_02",
+    "email": "pt.linh@kinetic.com",
+    "fullName": "Trần Thị Linh",
+    "role": "trainer",
+    "status": "active",
+    "createdAt": "2026-02-01T10:00:00Z",
+    "phoneNumber": "0923456789",
+    "address": "789 Nguyễn Trãi, Quận 1, TP.HCM",
+    "position": "PT/Trainer",
+    "salary": 14500000.0,
+    "gender": "Nữ"
+  },
+  {
+    "uid": "receptionist_uid_01",
+    "email": "receptionist.mai@kinetic.com",
+    "fullName": "Phạm Thanh Mai",
+    "role": "receptionist",
+    "status": "active",
+    "createdAt": "2026-01-20T08:30:00Z",
+    "phoneNumber": "0934567890",
+    "address": "101 Cách Mạng Tháng 8, Quận 3, TP.HCM",
+    "position": "Receptionist",
+    "salary": 8000000.0,
+    "gender": "Nữ"
+  },
+  {
+    "uid": "user_uid_01",
+    "email": "customer.minh@gmail.com",
+    "fullName": "Nguyễn Hoàng Minh",
+    "role": "user",
+    "status": "active",
+    "createdAt": "2026-03-01T14:00:00Z",
+    "phoneNumber": "0945678901",
+    "address": "202 Điện Biên Phủ, Bình Thạnh, TP.HCM",
+    "gender": "Nam"
+  },
+  {
+    "uid": "user_uid_02",
+    "email": "customer.vy@gmail.com",
+    "fullName": "Trần Thảo Vy",
+    "role": "user",
+    "status": "active",
+    "createdAt": "2026-03-05T15:30:00Z",
+    "phoneNumber": "0956789012",
+    "address": "303 Nam Kỳ Khởi Nghĩa, Quận 3, TP.HCM",
+    "gender": "Nữ"
+  }
+]
