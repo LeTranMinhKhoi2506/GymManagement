@@ -1,140 +1,90 @@
-﻿import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
-import '../../provider/home_provider.dart';
+import '../../app/route/routes.dart';
 
 class HomeFeedHeader extends StatelessWidget {
-  const HomeFeedHeader({super.key});
+  const HomeFeedHeader({
+    super.key,
+    this.onSearchTap,
+    this.onNotificationsTap,
+  });
+
+  final VoidCallback? onSearchTap;
+  final VoidCallback? onNotificationsTap;
 
   @override
   Widget build(BuildContext context) {
-    final mode = context.select<HomeProvider, HomeFeedMode>((p) => p.feedMode);
+    final searchTap = onSearchTap ?? () => context.push(Routes.socialSearch);
+    final notificationsTap =
+        onNotificationsTap ?? () => context.push(Routes.socialNotifications);
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            _FeedModeDropdown(mode: mode),
-            const Spacer(),
-            _HeaderIconButton(icon: Icons.search_rounded, onTap: () {}),
-            const SizedBox(width: 10),
-            _HeaderIconButton(
-              icon: Icons.notifications_none_rounded,
-              onTap: () {},
-            ),
-          ],
-        ),
-        const SizedBox(height: 16),
-        Align(
-          alignment: Alignment.centerRight,
-          child: TextButton.icon(
-            onPressed: () {},
-            style: TextButton.styleFrom(
-              foregroundColor: const Color(0xFF4DA3FF),
-              padding: const EdgeInsets.symmetric(horizontal: 0, vertical: 2),
-            ),
-            icon: const Icon(Icons.add_rounded, size: 22),
-            label: const Text(
-              'Follow',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.w400),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _FeedModeDropdown extends StatelessWidget {
-  const _FeedModeDropdown({required this.mode});
-
-  final HomeFeedMode mode;
-
-  @override
-  Widget build(BuildContext context) {
-    final provider = context.read<HomeProvider>();
-    final label = mode == HomeFeedMode.following ? 'Home (Following)' : 'Discover';
-
-    return PopupMenuButton<HomeFeedMode>(
-      onSelected: provider.changeFeedMode,
-      color: const Color(0xFF1A1B20),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
-      offset: const Offset(0, 48),
-      itemBuilder: (_) => [
-        PopupMenuItem(
-          value: HomeFeedMode.following,
-          child: Row(
-            children: [
-              const Icon(Icons.home_outlined, color: Colors.white),
-              const SizedBox(width: 12),
-              const Expanded(
-                child: Text(
-                  'Home (Following)',
-                  style: TextStyle(color: Colors.white),
-                ),
-              ),
-              if (mode == HomeFeedMode.following)
-                const Icon(Icons.check_rounded, color: Color(0xFF4DA3FF)),
-            ],
-          ),
-        ),
-        PopupMenuItem(
-          value: HomeFeedMode.discover,
-          child: Row(
-            children: [
-              const Icon(Icons.language_rounded, color: Colors.white),
-              const SizedBox(width: 12),
-              const Expanded(
-                child: Text(
-                  'Discover',
-                  style: TextStyle(color: Colors.white),
-                ),
-              ),
-              if (mode == HomeFeedMode.discover)
-                const Icon(Icons.check_rounded, color: Color(0xFF4DA3FF)),
-            ],
-          ),
-        ),
-      ],
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(18, 12, 18, 8),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            label,
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 28,
-              fontWeight: FontWeight.w900,
-              letterSpacing: -0.4,
+          Row(
+            children: [
+              const Text(
+                'Discover',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 31,
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+              const SizedBox(width: 6),
+              Container(
+                width: 28,
+                height: 28,
+                decoration: const BoxDecoration(
+                  color: Color(0xFF1A1C21),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.keyboard_arrow_down_rounded,
+                  color: Color(0xFFD7D9DE),
+                  size: 20,
+                ),
+              ),
+              const Spacer(),
+              IconButton(
+                onPressed: searchTap,
+                icon: const Icon(Icons.search_rounded),
+                color: Colors.white,
+                iconSize: 29,
+              ),
+              const SizedBox(width: 4),
+              IconButton(
+                onPressed: notificationsTap,
+                icon: const Icon(Icons.notifications_none_rounded),
+                color: Colors.white,
+                iconSize: 29,
+              ),
+            ],
+          ),
+          const SizedBox(height: 2),
+          Align(
+            alignment: Alignment.centerRight,
+            child: TextButton(
+              onPressed: () {},
+              style: TextButton.styleFrom(
+                foregroundColor: const Color(0xFF2A8EF7),
+                padding: EdgeInsets.zero,
+                minimumSize: const Size(0, 28),
+                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              ),
+              child: const Text(
+                '+ Follow',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
             ),
           ),
-          const SizedBox(width: 6),
-          const Icon(Icons.keyboard_arrow_down_rounded, color: Colors.white54),
         ],
-      ),
-    );
-  }
-}
-
-class _HeaderIconButton extends StatelessWidget {
-  const _HeaderIconButton({required this.icon, required this.onTap});
-
-  final IconData icon;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return Material(
-      color: Colors.transparent,
-      child: InkResponse(
-        onTap: onTap,
-        radius: 26,
-        child: SizedBox(
-          width: 36,
-          height: 36,
-          child: Icon(icon, color: Colors.white, size: 24),
-        ),
       ),
     );
   }

@@ -1,4 +1,4 @@
-﻿import 'dart:async';
+import 'dart:async';
 import 'dart:io';
 
 import 'package:file_picker/file_picker.dart';
@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 
 import '../data/models/comment_model.dart';
 import '../data/models/social_post_model.dart';
+import '../data/models/user_model.dart';
 import '../data/models/workout_exercise_model.dart';
 import '../data/repository/social_post_repository.dart';
 
@@ -195,6 +196,14 @@ class HomeProvider extends ChangeNotifier {
     return _repository.watchComments(postId);
   }
 
+  Stream<List<SocialPostModel>> watchPostsByUserId(String userId) {
+    return _repository.watchPostsByUserId(userId);
+  }
+
+  Future<UserModel?> getUserById(String userId) {
+    return _repository.getUserById(userId);
+  }
+
   Future<String?> addComment({
     required String postId,
     required String content,
@@ -232,8 +241,10 @@ class HomeProvider extends ChangeNotifier {
       );
       resetDraft();
       return null;
-    } catch (_) {
-      return 'Post failed. Please try again.';
+    } catch (e, stackTrace) {
+      debugPrint('Error creating post: $e');
+      debugPrint('StackTrace: $stackTrace');
+      return 'Post failed: $e';
     } finally {
       _isPosting = false;
       notifyListeners();

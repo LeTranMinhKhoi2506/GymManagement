@@ -8,6 +8,7 @@ import 'package:path/path.dart' as p;
 
 import '../models/comment_model.dart';
 import '../models/social_post_model.dart';
+import '../models/user_model.dart';
 import '../models/workout_exercise_model.dart';
 
 class SocialPostRepository {
@@ -257,6 +258,42 @@ class SocialPostRepository {
     if (diff.inDays < 1) return '${diff.inHours}h ago';
     if (diff.inDays == 1) return 'Yesterday';
     return '${diff.inDays}d ago';
+  }
+
+  Stream<List<SocialPostModel>> watchPostsByUserId(String userId) {
+    final currentUserId = _auth.currentUser?.uid;
+    return _firestore
+        .collection('posts')
+        .where('authorId', isEqualTo: userId)
+        .snapshots()
+        .asyncMap((snapshot) async {
+      final posts = snapshot.docs.map(_fromDoc).toList();
+      posts.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+      if (currentUserId == null) {
+        return posts;
+      }
+
+      final likedDocs = await Future.wait(
+        snapshot.docs.map(
+          (doc) => doc.reference.collection('likes').doc(currentUserId).get(),
+        ),
+      );
+
+      return [
+        for (var index = 0; index < posts.length; index++)
+          posts[index].copyWith(isLiked: likedDocs[index].exists),
+      ];
+    });
+  }
+
+  Future<UserModel?> getUserById(String userId) async {
+    try {
+      final doc = await _firestore.collection('users').doc(userId).get();
+      if (!doc.exists) return null;
+      return UserModel.fromMap(doc.data()!);
+    } catch (_) {
+      return null;
+    }
   }
 }
 
