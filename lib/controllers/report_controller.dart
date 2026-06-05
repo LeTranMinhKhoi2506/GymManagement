@@ -35,6 +35,19 @@ class ReportController extends ChangeNotifier {
     }
   }
 
+  Future<void> createReport(ReportModel report) async {
+    _isLoading = true;
+    notifyListeners();
+    try {
+      await _repository.createReport(report);
+    } catch (e) {
+      rethrow;
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
   Future<void> deleteReport(String id) async {
     await _repository.deleteReport(id);
   }

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
@@ -6,9 +7,11 @@ import '../../controllers/store_controller.dart';
 import '../../controllers/membership_controller.dart';
 import '../../controllers/customer_controller.dart';
 import '../../controllers/payment_controller.dart';
+import '../../controllers/financial_controller.dart';
 import '../../data/models/product_model.dart';
 import '../../data/models/membership_plan_model.dart';
 import '../../data/models/member_model.dart';
+import '../../data/services/momo_service.dart';
 
 class ReceptionistPOSScreen extends StatefulWidget {
   const ReceptionistPOSScreen({super.key});
@@ -151,6 +154,25 @@ class _ReceptionistPOSScreenState extends State<ReceptionistPOSScreen> with Sing
         }
       }
 
+      // 1.5. Create transaction document for financial accounting
+      final transactionRef = firestore.collection('transactions').doc();
+      batch.set(transactionRef, {
+        'type': 'Revenue',
+        'category': paymentType, // 'Membership' or 'Product'
+        'description': purchasedPlan != null 
+            ? 'Đăng ký gói tập ${purchasedPlan.name} cho $customerName'
+            : 'Bán lẻ sản phẩm tại quầy cho $customerName',
+        'amount': totalAmount,
+        'transactionDate': Timestamp.fromDate(DateTime.now()),
+        'paymentMethod': method,
+        'status': 'Completed',
+        'relatedMemberId': customerId != 'GUEST' ? customerId : null,
+        'createdAt': Timestamp.fromDate(DateTime.now()),
+        'updatedAt': Timestamp.fromDate(DateTime.now()),
+        'createdBy': 'Lễ tân (POS)',
+        'notes': 'Hóa đơn bán hàng POS tại quầy. Phương thức: $method',
+      });
+
       // 3. Update customer LTV + activity log + membership package if registered
       if (_selectedCustomer != null) {
         final memberRef = firestore.collection('members').doc(customerId);
@@ -185,10 +207,12 @@ class _ReceptionistPOSScreenState extends State<ReceptionistPOSScreen> with Sing
       // Commit all operations atomically — all-or-nothing
       await batch.commit();
 
-      // Refresh payment list in controller
+      // Refresh payment list and transaction lists in controllers
       if (mounted) {
         final paymentController = Provider.of<PaymentController>(context, listen: false);
+        final financialController = Provider.of<FinancialController>(context, listen: false);
         await paymentController.fetchAllPayments();
+        await financialController.fetchAllTransactions();
       }
 
       if (!mounted) return;
@@ -1133,6 +1157,15 @@ class _ReceptionistPOSScreenState extends State<ReceptionistPOSScreen> with Sing
               ),
               const Divider(color: Colors.white10),
               ListTile(
+                leading: const Icon(Icons.qr_code_scanner_rounded, color: Colors.pinkAccent),
+                title: const Text("Thanh toán MoMo QR", style: TextStyle(color: Colors.white)),
+                onTap: () {
+                  Navigator.pop(sheetCtx);
+                  _showMoMoQRDialog(context);
+                },
+              ),
+              const Divider(color: Colors.white10),
+              ListTile(
                 leading: const Icon(Icons.credit_card_rounded, color: Colors.orangeAccent),
                 title: const Text("Quẹt thẻ ngân hàng", style: TextStyle(color: Colors.white)),
                 onTap: () {
@@ -1142,6 +1175,27 @@ class _ReceptionistPOSScreenState extends State<ReceptionistPOSScreen> with Sing
               ),
             ],
           ),
+        );
+      },
+    );
+  }
+
+  void _showMoMoQRDialog(BuildContext context) {
+    final double totalAmount = _calculateTotal();
+    final String orderId = "POS${DateTime.now().millisecondsSinceEpoch.toString()}";
+    final String description = "Thanh toan don hang $orderId";
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogCtx) {
+        return MoMoQRDialog(
+          amount: totalAmount,
+          orderId: orderId,
+          description: description,
+          onSuccess: () {
+            _checkout(context, 'MoMo QR');
+          },
         );
       },
     );
@@ -1420,5 +1474,261 @@ class _ReceptionistPOSScreenState extends State<ReceptionistPOSScreen> with Sing
       }
       rethrow;
     }
+  }
+}
+
+class MoMoQRDialog extends StatefulWidget {
+  final double amount;
+  final String orderId;
+  final String description;
+  final VoidCallback onSuccess;
+
+  const MoMoQRDialog({
+    super.key,
+    required this.amount,
+    required this.orderId,
+    required this.description,
+    required this.onSuccess,
+  });
+
+  @override
+  State<MoMoQRDialog> createState() => _MoMoQRDialogState();
+}
+
+class _MoMoQRDialogState extends State<MoMoQRDialog> {
+  late Future<String?> _momoPaymentFuture;
+  Timer? _pollingTimer;
+
+  @override
+  void initState() {
+    super.initState();
+    _momoPaymentFuture = MomoService().createMomoPayment(
+      amount: widget.amount,
+      orderId: widget.orderId,
+      description: widget.description,
+    );
+    
+    // Start polling status
+    _startPolling();
+  }
+
+  void _startPolling() {
+    _pollingTimer = Timer.periodic(const Duration(seconds: 3), (timer) async {
+      final bool isPaid = await MomoService().checkPaymentStatus(widget.orderId);
+      if (isPaid) {
+        _pollingTimer?.cancel();
+        if (mounted) {
+          Navigator.pop(context); // Close dialog
+          widget.onSuccess(); // Run checkout success callback
+        }
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _pollingTimer?.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final formatter = NumberFormat.currency(locale: 'vi_VN', symbol: '₫');
+    return AlertDialog(
+      backgroundColor: const Color(0xFF1C1C1E),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20), side: const BorderSide(color: Colors.white10)),
+      title: Row(
+        children: [
+          Container(
+            width: 30,
+            height: 30,
+            decoration: BoxDecoration(
+              color: const Color(0xFFD82D8B),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: const Center(
+              child: Text(
+                "M",
+                style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 18),
+              ),
+            ),
+          ),
+          const SizedBox(width: 10),
+          const Text(
+            "THANH TOÁN MOMO QR",
+            style: TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.bold, letterSpacing: 0.5),
+          ),
+        ],
+      ),
+      content: FutureBuilder<String?>(
+        future: _momoPaymentFuture,
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const SizedBox(
+              height: 200,
+              child: Center(
+                child: CircularProgressIndicator(color: Color(0xFFD82D8B)),
+              ),
+            );
+          }
+
+          if (snapshot.hasError) {
+            return SizedBox(
+              height: 200,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(Icons.error_outline_rounded, color: Colors.redAccent, size: 48),
+                  const SizedBox(height: 12),
+                  Text(
+                    "Lỗi kết nối cổng thanh toán:\n${snapshot.error}",
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(color: Colors.white70, fontSize: 12),
+                  ),
+                ],
+              ),
+            );
+          }
+
+          final String? payUrl = snapshot.data;
+          if (payUrl == null || payUrl.isEmpty) {
+            return const SizedBox(
+              height: 200,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.error_outline_rounded, color: Colors.redAccent, size: 48),
+                  SizedBox(height: 12),
+                  Text(
+                    "Không thể khởi tạo link thanh toán từ MoMo.",
+                    textAlign: TextAlign.center,
+                    style: TextStyle(color: Colors.white70, fontSize: 12),
+                  ),
+                ],
+              ),
+            );
+          }
+
+          final String qrUrl = "https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${Uri.encodeComponent(payUrl)}";
+
+          return SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text(
+                  "Quét mã QR dưới đây để đi đến trang thanh toán test của MoMo. Khi quét và xác nhận xong trên MoMo, đơn hàng sẽ tự động hoàn tất.",
+                  textAlign: TextAlign.center,
+                  style: TextStyle(color: Colors.white70, fontSize: 12),
+                ),
+                const SizedBox(height: 16),
+                
+                // QR Code Container
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: Image.network(
+                    qrUrl,
+                    width: 200,
+                    height: 200,
+                    fit: BoxFit.contain,
+                    loadingBuilder: (context, child, loadingProgress) {
+                      if (loadingProgress == null) return child;
+                      return const SizedBox(
+                        width: 200,
+                        height: 200,
+                        child: Center(
+                          child: CircularProgressIndicator(color: Color(0xFFD82D8B)),
+                        ),
+                      );
+                    },
+                    errorBuilder: (context, error, stackTrace) {
+                      return const SizedBox(
+                        width: 200,
+                        height: 200,
+                        child: Center(
+                          child: Icon(Icons.broken_image, color: Colors.grey, size: 50),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+                const SizedBox(height: 16),
+
+                // Details Box
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.black,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: Colors.white10),
+                  ),
+                  child: Column(
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Text("Đối tác:", style: TextStyle(color: Colors.grey, fontSize: 12)),
+                          const Text("MoMo Sandbox", style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold)),
+                        ],
+                      ),
+                      const SizedBox(height: 6),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Text("Số tiền:", style: TextStyle(color: Colors.grey, fontSize: 12)),
+                          Text(
+                            formatter.format(widget.amount),
+                            style: const TextStyle(color: Color(0xFFFF6B35), fontSize: 13, fontWeight: FontWeight.bold),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 6),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Text("Mã đơn hàng:", style: TextStyle(color: Colors.grey, fontSize: 12)),
+                          Text(widget.orderId, style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold)),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          );
+        },
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text("Hủy", style: TextStyle(color: Colors.grey)),
+        ),
+        // Confirm button (enabled only when we have data, as backup helper)
+        FutureBuilder<String?>(
+          future: _momoPaymentFuture,
+          builder: (context, snapshot) {
+            final bool hasData = snapshot.hasData && snapshot.data != null;
+            return ElevatedButton(
+              onPressed: !hasData
+                  ? null
+                  : () {
+                      _pollingTimer?.cancel();
+                      Navigator.pop(context);
+                      widget.onSuccess();
+                    },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFFD82D8B),
+                disabledBackgroundColor: Colors.grey[850],
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              ),
+              child: const Text("Xác nhận đã nhận tiền", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12)),
+            );
+          },
+        ),
+      ],
+    );
   }
 }

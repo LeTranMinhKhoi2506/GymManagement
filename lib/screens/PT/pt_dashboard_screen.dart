@@ -470,11 +470,12 @@ class _QRScannerDialogState extends State<QRScannerDialog> with SingleTickerProv
           _isSuccess = true;
         });
         _lineAnimationController.stop();
-        // Thực thi tác vụ xử lý DB
-        await widget.onSuccess();
-        // Đóng Dialog sau 1 giây hiển thị thành công
-        Timer(const Duration(seconds: 1), () {
-          if (mounted) Navigator.pop(context);
+        // Đóng Dialog sau 1 giây hiển thị thành công, sau đó chạy onSuccess
+        Timer(const Duration(seconds: 1), () async {
+          if (mounted) {
+            Navigator.pop(context); // Đóng QRScannerDialog trước
+            await widget.onSuccess(); // Chạy callback để cập nhật và hiện kết quả
+          }
         });
       }
     });

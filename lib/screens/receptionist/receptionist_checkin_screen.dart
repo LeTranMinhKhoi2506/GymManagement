@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
 import 'dart:math';
+import 'package:mobile_scanner/mobile_scanner.dart';
 import '../PT/pt_dashboard_screen.dart'; // Import QRScannerDialog
 
 class ReceptionistCheckInScreen extends StatefulWidget {
@@ -15,6 +16,51 @@ class _ReceptionistCheckInScreenState extends State<ReceptionistCheckInScreen> {
   String _searchQuery = '';
   String _filterStatus = 'All'; // 'All', 'Active', 'Expired'
   final TextEditingController _searchController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    _checkAndResetDailyTrainingStatus();
+  }
+
+  Future<void> _checkAndResetDailyTrainingStatus() async {
+    try {
+      final now = DateTime.now();
+      final todayStr = DateFormat('yyyy-MM-dd').format(now);
+      
+      final docRef = FirebaseFirestore.instance.collection('system_config').doc('checkin_reset');
+      final docSnap = await docRef.get();
+      
+      bool needsReset = false;
+      if (!docSnap.exists) {
+        needsReset = true;
+      } else {
+        final lastReset = docSnap.data()?['lastResetDate'] as String?;
+        if (lastReset != todayStr) {
+          needsReset = true;
+        }
+      }
+      
+      if (needsReset) {
+        final query = await FirebaseFirestore.instance
+            .collection('members')
+            .where('isCurrentlyTraining', isEqualTo: true)
+            .get();
+            
+        if (query.docs.isNotEmpty) {
+          final batch = FirebaseFirestore.instance.batch();
+          for (var doc in query.docs) {
+            batch.update(doc.reference, {'isCurrentlyTraining': false});
+          }
+          await batch.commit();
+        }
+        
+        await docRef.set({'lastResetDate': todayStr});
+      }
+    } catch (e) {
+      debugPrint("Lỗi reset trạng thái hàng ngày: $e");
+    }
+  }
 
   void _launchQRScanner(BuildContext context, Map<String, dynamic> memberData, String memberId) {
     String fullName = memberData['fullName'] ?? 'Khách hàng';
@@ -83,23 +129,80 @@ class _ReceptionistCheckInScreenState extends State<ReceptionistCheckInScreen> {
     );
   }
 
-  void _quickRandomCheckin(BuildContext context) async {
-    // Pick a random member from Firestore to simulate scanning
-    final snapshot = await FirebaseFirestore.instance.collection('members').get();
-    if (snapshot.docs.isEmpty) {
-      if (!context.mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Không có thành viên nào trong cơ sở dữ liệu để quét.")),
-      );
-      return;
-    }
+  void _scanQRCodeGeneral(BuildContext context) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogContext) => CameraQRScannerDialog(
+        onScanSuccess: (scannedUid) async {
+          try {
+            DocumentSnapshot? finalMemberDoc;
+            
+            // 1. Try to get member by document ID directly
+            final docGet = await FirebaseFirestore.instance.collection('members').doc(scannedUid).get();
+            if (docGet.exists) {
+              finalMemberDoc = docGet;
+            } else {
+              // 2. Try to look up the user by UID in the 'users' collection to get their email
+              final userDoc = await FirebaseFirestore.instance.collection('users').doc(scannedUid).get();
+              if (userDoc.exists) {
+                final email = userDoc.data()?['email'];
+                if (email != null && email.toString().isNotEmpty) {
+                  final query = await FirebaseFirestore.instance
+                      .collection('members')
+                      .where('email', isEqualTo: email.toString())
+                      .limit(1)
+                      .get();
+                  if (query.docs.isNotEmpty) {
+                    finalMemberDoc = query.docs.first;
+                  }
+                }
+              }
+            }
 
-    final randomIndex = Random().nextInt(snapshot.docs.length);
-    final doc = snapshot.docs[randomIndex];
-    final data = doc.data();
+            if (finalMemberDoc == null) {
+              // 3. Fallback: search members by email or phone directly
+              final queryEmail = await FirebaseFirestore.instance
+                  .collection('members')
+                  .where('email', isEqualTo: scannedUid)
+                  .limit(1)
+                  .get();
+              if (queryEmail.docs.isNotEmpty) {
+                finalMemberDoc = queryEmail.docs.first;
+              } else {
+                final queryPhone = await FirebaseFirestore.instance
+                    .collection('members')
+                    .where('phoneNumber', isEqualTo: scannedUid)
+                    .limit(1)
+                    .get();
+                if (queryPhone.docs.isNotEmpty) {
+                  finalMemberDoc = queryPhone.docs.first;
+                }
+              }
+            }
 
-    if (!context.mounted) return;
-    _launchQRScanner(context, data, doc.id);
+            if (finalMemberDoc == null || !finalMemberDoc.exists) {
+              _showStatusOverlay(
+                success: false,
+                title: "THẺ KHÔNG HỢP LỆ",
+                message: "Mã QR / UID này không khớp với bất kỳ hội viên nào trong hệ thống.",
+              );
+              return;
+            }
+
+            final memberData = finalMemberDoc.data() as Map<String, dynamic>;
+            if (!context.mounted) return;
+            _launchQRScanner(context, memberData, finalMemberDoc.id);
+          } catch (e) {
+            _showStatusOverlay(
+              success: false,
+              title: "LỖI HỆ THỐNG",
+              message: "Đã xảy ra lỗi khi tìm kiếm thông tin: $e",
+            );
+          }
+        },
+      ),
+    );
   }
 
   void _showStatusOverlay({required bool success, required String title, required String message}) {
@@ -185,7 +288,7 @@ class _ReceptionistCheckInScreenState extends State<ReceptionistCheckInScreen> {
                     children: [
                       Expanded(
                         child: ElevatedButton.icon(
-                          onPressed: () => _quickRandomCheckin(context),
+                          onPressed: () => _scanQRCodeGeneral(context),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: const Color(0xFFFF6B35),
                             foregroundColor: Colors.white,
@@ -195,7 +298,7 @@ class _ReceptionistCheckInScreenState extends State<ReceptionistCheckInScreen> {
                           ),
                           icon: const Icon(Icons.qr_code_scanner, size: 22),
                           label: const Text(
-                            "QUÉT QR NHANH (MÔ PHỎNG)",
+                            "QUÉT MÃ QR (ĐIỂM DANH)",
                             style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12, letterSpacing: 0.5),
                           ),
                         ),
@@ -417,3 +520,176 @@ class _ReceptionistCheckInScreenState extends State<ReceptionistCheckInScreen> {
     );
   }
 }
+
+class CameraQRScannerDialog extends StatefulWidget {
+  final Function(String code) onScanSuccess;
+
+  const CameraQRScannerDialog({super.key, required this.onScanSuccess});
+
+  @override
+  State<CameraQRScannerDialog> createState() => _CameraQRScannerDialogState();
+}
+
+class _CameraQRScannerDialogState extends State<CameraQRScannerDialog> {
+  final MobileScannerController _controller = MobileScannerController(
+    detectionSpeed: DetectionSpeed.noDuplicates,
+  );
+  bool _hasScanned = false;
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Dialog(
+      backgroundColor: Colors.transparent,
+      insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+      child: Container(
+        width: 320,
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: const Color(0xFF1C1C1E),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: Colors.white10),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text(
+              "QUÉT MÃ QR CAMERA",
+              style: TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.bold, letterSpacing: 1),
+            ),
+            const SizedBox(height: 8),
+            const Text(
+              "Hướng camera về phía mã QR của khách hàng",
+              textAlign: TextAlign.center,
+              style: TextStyle(color: Colors.grey, fontSize: 11),
+            ),
+            const SizedBox(height: 20),
+            
+            AspectRatio(
+              aspectRatio: 1.0,
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(15),
+                child: Stack(
+                  children: [
+                    MobileScanner(
+                      controller: _controller,
+                      onDetect: (capture) {
+                        if (_hasScanned) return;
+                        final List<Barcode> barcodes = capture.barcodes;
+                        for (final barcode in barcodes) {
+                          if (barcode.rawValue != null) {
+                            setState(() {
+                              _hasScanned = true;
+                            });
+                            Navigator.pop(context); // Close dialog first
+                            widget.onScanSuccess(barcode.rawValue!);
+                            break;
+                          }
+                        }
+                      },
+                    ),
+                    const QRScanLineOverlay(),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 20),
+            
+            TextField(
+              style: const TextStyle(color: Colors.white, fontSize: 12),
+              onSubmitted: (val) {
+                if (val.trim().isNotEmpty) {
+                  Navigator.pop(context); // Close dialog first
+                  widget.onScanSuccess(val.trim());
+                }
+              },
+              decoration: InputDecoration(
+                hintText: "Hoặc nhập thủ công mã UID...",
+                hintStyle: const TextStyle(color: Colors.grey, fontSize: 11),
+                filled: true,
+                fillColor: Colors.black,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10),
+                  borderSide: BorderSide.none,
+                ),
+                contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+              ),
+            ),
+            const SizedBox(height: 15),
+            
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                IconButton(
+                  icon: const Icon(Icons.flash_on, color: Colors.orange),
+                  onPressed: () => _controller.toggleTorch(),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.switch_camera, color: Colors.cyan),
+                  onPressed: () => _controller.switchCamera(),
+                ),
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text("HỦY BỎ", style: TextStyle(color: Colors.grey, fontWeight: FontWeight.bold, fontSize: 12)),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class QRScanLineOverlay extends StatefulWidget {
+  const QRScanLineOverlay({super.key});
+
+  @override
+  State<QRScanLineOverlay> createState() => _QRScanLineOverlayState();
+}
+
+class _QRScanLineOverlayState extends State<QRScanLineOverlay> with SingleTickerProviderStateMixin {
+  late AnimationController _animationController;
+
+  @override
+  void initState() {
+    super.initState();
+    _animationController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 2),
+    )..repeat(reverse: true);
+  }
+
+  @override
+  void dispose() {
+    _animationController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _animationController,
+      builder: (context, child) {
+        return Positioned(
+          top: 280 * _animationController.value,
+          left: 0,
+          right: 0,
+          child: Center(
+            child: Container(
+              width: double.infinity,
+              height: 2,
+              color: const Color(0xFFFF6B35),
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+

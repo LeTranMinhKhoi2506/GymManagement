@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
+import '../../controllers/feedback_controller.dart';
+import '../../app/route/routes.dart';
 import '../home_social_feed/home_social_feed_theme.dart';
 
 class CustomerHomeProfileTab extends StatefulWidget {
@@ -256,6 +260,447 @@ class _CustomerHomeProfileTabState extends State<CustomerHomeProfileTab> {
       ),
     );
   }
+
+  void _showTermsAndSupportSheet(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: const Color(0xFF14161A),
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+      ),
+      builder: (context) {
+        return DraggableScrollableSheet(
+          initialChildSize: 0.85,
+          minChildSize: 0.6,
+          maxChildSize: 0.95,
+          expand: false,
+          builder: (context, scrollController) {
+            return Container(
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Center(
+                    child: Container(
+                      width: 44,
+                      height: 5,
+                      decoration: BoxDecoration(
+                        color: Colors.white24,
+                        borderRadius: BorderRadius.circular(99),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 18),
+                  const Text(
+                    'ĐIỀU KHOẢN & HỖ TRỢ KỸ THUẬT',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 18,
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  const Divider(color: Colors.white10, height: 1),
+                  const SizedBox(height: 12),
+                  Expanded(
+                    child: ListView(
+                      controller: scrollController,
+                      children: [
+                        const Text(
+                          '1. NỘI QUY PHÒNG TẬP (KINETIC CLUB)',
+                          style: TextStyle(
+                            color: HomeSocialFeedTheme.accent,
+                            fontSize: 14,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 10),
+                        _buildRuleItem('1', 'Luôn mang theo khăn tập cá nhân và lau sạch mồ hôi trên thiết bị sau khi sử dụng.'),
+                        _buildRuleItem('2', 'Xếp tạ, thanh đòn và các phụ kiện tập luyện về đúng vị trí cũ sau khi hoàn thành bài tập.'),
+                        _buildRuleItem('3', 'Không thả tạ mạnh đột ngột xuống sàn gây tiếng ồn lớn và nguy hiểm cho người xung quanh.'),
+                        _buildRuleItem('4', 'Mặc trang phục thể thao lịch sự, đi giày thể thao sạch và phù hợp.'),
+                        _buildRuleItem('5', 'Không mang đồ ăn, chất kích thích hoặc chai nước không có nắp đậy vào khu vực tập.'),
+                        _buildRuleItem('6', 'Tôn trọng không gian tập luyện chung, giữ gìn vệ sinh và không gây ồn ào mất trật tự.'),
+                        const SizedBox(height: 20),
+                        const Text(
+                          '2. ĐIỀU KHOẢN SỬ DỤNG DỊCH VỤ',
+                          style: TextStyle(
+                            color: HomeSocialFeedTheme.accent,
+                            fontSize: 14,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 10),
+                        _buildRuleItem('•', 'Thẻ hội viên KINETIC là tài sản cá nhân, không được tự ý cho người khác mượn hoặc chuyển nhượng.'),
+                        _buildRuleItem('•', 'Hội viên cần thực hiện check-in đầy đủ tại quầy lễ tân trước khi vào khu vực tập luyện.'),
+                        _buildRuleItem('•', 'KINETIC không chịu trách nhiệm đối với các mất mát tài sản cá nhân nếu không được gửi tại tủ đồ bảo mật.'),
+                        const SizedBox(height: 20),
+                        const Text(
+                          '3. HỖ TRỢ KỸ THUẬT & LIÊN HỆ',
+                          style: TextStyle(
+                            color: HomeSocialFeedTheme.accent,
+                            fontSize: 14,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 10),
+                        const Text(
+                          'Nếu gặp lỗi phần mềm, sự cố tài khoản hoặc cần hỗ trợ về các tính năng trên ứng dụng KINETIC, vui lòng liên hệ qua các kênh hỗ trợ kỹ thuật sau:',
+                          style: TextStyle(color: Colors.white70, fontSize: 13, height: 1.4),
+                        ),
+                        const SizedBox(height: 12),
+                        _buildContactInfoRow(Icons.email_outlined, 'Email hỗ trợ', 'support@kinetic.com'),
+                        _buildContactInfoRow(Icons.phone_in_talk_outlined, 'Hotline kỹ thuật', '1900 8888 (24/7)'),
+                        _buildContactInfoRow(Icons.security_outlined, 'Phòng ban an ninh', 'security@kinetic.com'),
+                        const SizedBox(height: 24),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Widget _buildRuleItem(String index, String content) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8.0),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            '$index. ',
+            style: const TextStyle(
+              color: HomeSocialFeedTheme.accent,
+              fontSize: 13,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          Expanded(
+            child: Text(
+              content,
+              style: const TextStyle(
+                color: Colors.white70,
+                fontSize: 13,
+                height: 1.4,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildContactInfoRow(IconData icon, String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10.0),
+      child: Row(
+        children: [
+          Icon(icon, color: Colors.white60, size: 18),
+          const SizedBox(width: 12),
+          Text(
+            '$label: ',
+            style: const TextStyle(color: Colors.white54, fontSize: 13),
+          ),
+          Text(
+            value,
+            style: const TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.bold),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showFeedbackSheet(BuildContext context, String uid, String userName) {
+    final subjectController = TextEditingController();
+    final messageController = TextEditingController();
+    
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: const Color(0xFF14161A),
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+      ),
+      builder: (context) {
+        return Padding(
+          padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+          child: DraggableScrollableSheet(
+            initialChildSize: 0.85,
+            minChildSize: 0.6,
+            maxChildSize: 0.95,
+            expand: false,
+            builder: (context, scrollController) {
+            return Consumer<FeedbackController>(
+              builder: (context, feedbackController, child) {
+                final userFeedbacks = feedbackController.feedbacks
+                    .where((fb) => fb.userId == uid)
+                    .toList();
+
+                return Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Center(
+                        child: Container(
+                          width: 44,
+                          height: 5,
+                          decoration: BoxDecoration(
+                            color: Colors.white24,
+                            borderRadius: BorderRadius.circular(99),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 18),
+                      const Text(
+                        'GỬI FEEDBACK & PHẢN HỒI',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 18,
+                          fontWeight: FontWeight.w900,
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      Expanded(
+                        child: DefaultTabController(
+                          length: 2,
+                          child: Column(
+                            children: [
+                              TabBar(
+                                indicatorColor: HomeSocialFeedTheme.accent,
+                                labelColor: HomeSocialFeedTheme.accent,
+                                unselectedLabelColor: Colors.white60,
+                                tabs: const [
+                                  Tab(text: 'Gửi Phản Hồi Mới'),
+                                  Tab(text: 'Lịch Sử Phản Hồi'),
+                                ],
+                              ),
+                              const SizedBox(height: 16),
+                              Expanded(
+                                child: TabBarView(
+                                  children: [
+                                    // Tab 1: Create feedback
+                                    SingleChildScrollView(
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          const Text('TIÊU ĐỀ', style: TextStyle(color: Color(0xFF8E9196), fontSize: 10, fontWeight: FontWeight.bold)),
+                                          const SizedBox(height: 8),
+                                          Container(
+                                            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
+                                            decoration: BoxDecoration(
+                                              color: const Color(0xFF20242B),
+                                              borderRadius: BorderRadius.circular(14),
+                                            ),
+                                            child: TextField(
+                                              controller: subjectController,
+                                              style: const TextStyle(color: Colors.white, fontSize: 14),
+                                              cursorColor: HomeSocialFeedTheme.accent,
+                                              decoration: const InputDecoration(
+                                                hintText: 'VD: Lỗi ứng dụng, Đóng góp ý kiến...',
+                                                hintStyle: TextStyle(color: Colors.white30, fontSize: 13),
+                                                border: InputBorder.none,
+                                                filled: false,
+                                              ),
+                                            ),
+                                          ),
+                                          const SizedBox(height: 16),
+                                          const Text('NỘI DUNG PHẢN HỒI', style: TextStyle(color: Color(0xFF8E9196), fontSize: 10, fontWeight: FontWeight.bold)),
+                                          const SizedBox(height: 8),
+                                          Container(
+                                            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
+                                            decoration: BoxDecoration(
+                                              color: const Color(0xFF20242B),
+                                              borderRadius: BorderRadius.circular(14),
+                                            ),
+                                            child: TextField(
+                                              controller: messageController,
+                                              maxLines: 5,
+                                              minLines: 3,
+                                              style: const TextStyle(color: Colors.white, fontSize: 14),
+                                              cursorColor: HomeSocialFeedTheme.accent,
+                                              decoration: const InputDecoration(
+                                                hintText: 'Nhập chi tiết ý kiến đóng góp của bạn ở đây...',
+                                                hintStyle: TextStyle(color: Colors.white30, fontSize: 13),
+                                                border: InputBorder.none,
+                                                filled: false,
+                                              ),
+                                            ),
+                                          ),
+                                          const SizedBox(height: 24),
+                                          SizedBox(
+                                            width: double.infinity,
+                                            height: 52,
+                                            child: FilledButton(
+                                              onPressed: feedbackController.isLoading
+                                                  ? null
+                                                  : () async {
+                                                      final subj = subjectController.text.trim();
+                                                      final msg = messageController.text.trim();
+                                                      if (subj.isEmpty || msg.isEmpty) {
+                                                        ScaffoldMessenger.of(context).showSnackBar(
+                                                          const SnackBar(content: Text('Vui lòng điền đầy đủ tiêu đề và nội dung.')),
+                                                        );
+                                                        return;
+                                                      }
+                                                      try {
+                                                        await feedbackController.createFeedback(
+                                                          userId: uid,
+                                                          userName: userName,
+                                                          subject: subj,
+                                                          message: msg,
+                                                        );
+                                                        subjectController.clear();
+                                                        messageController.clear();
+                                                        if (context.mounted) {
+                                                          ScaffoldMessenger.of(context).showSnackBar(
+                                                            const SnackBar(
+                                                              backgroundColor: HomeSocialFeedTheme.accent,
+                                                              content: Text(
+                                                                'Gửi feedback thành công!',
+                                                                style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
+                                                              ),
+                                                              duration: Duration(seconds: 2),
+                                                            ),
+                                                          );
+                                                        }
+                                                      } catch (e) {
+                                                        if (context.mounted) {
+                                                          ScaffoldMessenger.of(context).showSnackBar(
+                                                            SnackBar(content: Text('Lỗi: $e')),
+                                                          );
+                                                        }
+                                                      }
+                                                    },
+                                              style: FilledButton.styleFrom(
+                                                backgroundColor: HomeSocialFeedTheme.accent,
+                                                foregroundColor: Colors.black,
+                                                shape: RoundedRectangleBorder(
+                                                  borderRadius: BorderRadius.circular(16),
+                                                ),
+                                              ),
+                                              child: Text(
+                                                feedbackController.isLoading ? 'ĐANG GỬI...' : 'GỬI PHẢN HỒI',
+                                                style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w900),
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    // Tab 2: View feedback history
+                                    userFeedbacks.isEmpty
+                                        ? const Center(
+                                            child: Text(
+                                              'Bạn chưa gửi phản hồi nào.',
+                                              style: TextStyle(color: Colors.white38),
+                                            ),
+                                          )
+                                        : ListView.separated(
+                                            controller: scrollController,
+                                            itemCount: userFeedbacks.length,
+                                            separatorBuilder: (context, index) => const SizedBox(height: 12),
+                                            itemBuilder: (context, index) {
+                                              final fb = userFeedbacks[index];
+                                              final isReplied = fb.status == 'replied';
+                                              return Container(
+                                                padding: const EdgeInsets.all(16),
+                                                decoration: BoxDecoration(
+                                                  color: const Color(0xFF20242B),
+                                                  borderRadius: BorderRadius.circular(18),
+                                                  border: Border.all(color: Colors.white10),
+                                                ),
+                                                child: Column(
+                                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                                  children: [
+                                                    Row(
+                                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                                      children: [
+                                                        Expanded(
+                                                          child: Text(
+                                                            fb.subject.toUpperCase(),
+                                                            style: const TextStyle(
+                                                              color: Colors.white,
+                                                              fontWeight: FontWeight.bold,
+                                                              fontSize: 14,
+                                                            ),
+                                                          ),
+                                                        ),
+                                                        const SizedBox(width: 8),
+                                                        Container(
+                                                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                                          decoration: BoxDecoration(
+                                                            color: isReplied
+                                                                ? const Color(0xFFE7F0BD).withOpacity(0.2)
+                                                                : Colors.orange.withOpacity(0.2),
+                                                            borderRadius: BorderRadius.circular(8),
+                                                          ),
+                                                          child: Text(
+                                                            isReplied ? 'ĐÃ TRẢ LỜI' : 'ĐANG CHỜ',
+                                                            style: TextStyle(
+                                                              color: isReplied ? const Color(0xFFE7F0BD) : Colors.orange,
+                                                              fontSize: 10,
+                                                              fontWeight: FontWeight.bold,
+                                                            ),
+                                                          ),
+                                                        ),
+                                                      ],
+                                                    ),
+                                                    const SizedBox(height: 8),
+                                                    Text(
+                                                      fb.message,
+                                                      style: const TextStyle(color: Colors.white70, fontSize: 13),
+                                                    ),
+                                                    if (isReplied && fb.adminReply != null) ...[
+                                                      const SizedBox(height: 12),
+                                                      const Divider(color: Colors.white10),
+                                                      const SizedBox(height: 8),
+                                                      const Text(
+                                                        'PHẢN HỒI TỪ QUẢN TRỊ VIÊN:',
+                                                        style: TextStyle(
+                                                          color: HomeSocialFeedTheme.accent,
+                                                          fontSize: 10,
+                                                          fontWeight: FontWeight.bold,
+                                                        ),
+                                                      ),
+                                                      const SizedBox(height: 4),
+                                                      Text(
+                                                        fb.adminReply!,
+                                                        style: const TextStyle(
+                                                          color: Colors.white,
+                                                          fontSize: 13,
+                                                          fontStyle: FontStyle.italic,
+                                                        ),
+                                                      ),
+                                                    ],
+                                                  ],
+                                                ),
+                                              );
+                                            },
+                                          ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              },
+            );
+          },
+        ),
+      );
+    },
+  );
+}
 
   @override
   Widget build(BuildContext context) {
@@ -550,12 +995,12 @@ class _CustomerHomeProfileTabState extends State<CustomerHomeProfileTab> {
                               padding: EdgeInsets.symmetric(horizontal: 16),
                               child: Divider(color: Colors.white10, height: 1),
                             ),
-                            _buildUtilityTile(
-                              context,
-                              icon: Icons.vpn_key_rounded,
-                              title: 'Nhật ký sử dụng Tủ đồ (Locker)',
-                              onTap: () => _showUnimplementedToast(context, 'Nhật ký sử dụng Tủ đồ'),
-                            ),
+                             _buildUtilityTile(
+                               context,
+                               icon: Icons.feedback_rounded,
+                               title: 'Feedback',
+                               onTap: () => _showFeedbackSheet(context, user.uid, name),
+                             ),
                             const Padding(
                               padding: EdgeInsets.symmetric(horizontal: 16),
                               child: Divider(color: Colors.white10, height: 1),
@@ -564,41 +1009,18 @@ class _CustomerHomeProfileTabState extends State<CustomerHomeProfileTab> {
                               context,
                               icon: Icons.lock_reset_rounded,
                               title: 'Đổi mật khẩu tài khoản',
-                              onTap: () async {
-                                try {
-                                  if (email.isNotEmpty) {
-                                    await FirebaseAuth.instance.sendPasswordResetEmail(email: email);
-                                    if (context.mounted) {
-                                      ScaffoldMessenger.of(context).showSnackBar(
-                                        SnackBar(
-                                          backgroundColor: HomeSocialFeedTheme.accent,
-                                          content: Text(
-                                            'Đã gửi email đặt lại mật khẩu đến $email',
-                                            style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
-                                          ),
-                                        ),
-                                      );
-                                    }
-                                  }
-                                } catch (e) {
-                                  if (context.mounted) {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(content: Text('Lỗi: $e')),
-                                    );
-                                  }
-                                }
-                              },
+                              onTap: () => context.push(Routes.forgotPassword),
                             ),
                             const Padding(
                               padding: EdgeInsets.symmetric(horizontal: 16),
                               child: Divider(color: Colors.white10, height: 1),
                             ),
-                            _buildUtilityTile(
-                              context,
-                              icon: Icons.info_outline_rounded,
-                              title: 'Điều khoản & Hỗ trợ kỹ thuật',
-                              onTap: () => _showUnimplementedToast(context, 'Điều khoản & Hỗ trợ kỹ thuật'),
-                            ),
+                             _buildUtilityTile(
+                               context,
+                               icon: Icons.info_outline_rounded,
+                               title: 'Điều khoản & Hỗ trợ kỹ thuật',
+                               onTap: () => _showTermsAndSupportSheet(context),
+                             ),
                           ],
                         ),
                       ),
