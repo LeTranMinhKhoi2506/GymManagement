@@ -125,7 +125,7 @@ class _SidebarWidgetState extends State<SidebarWidget> {
                       _NavItem(icon: Icons.manage_accounts, title: "Quản lý Tài khoản", route: Routes.accountManagement),
                       _NavItem(icon: Icons.devices, title: "Quản lý Phiên (Sessions)", route: Routes.sessionManagement),
                       _NavItem(icon: Icons.developer_mode, title: "Công cụ Dev", route: Routes.developerTool),
-                      _NavItem(icon: Icons.logout, title: "Đăng xuất", route: Routes.customerLogin),
+                      _NavItem(icon: Icons.logout, title: "Đăng xuất", route: Routes.login),
                     ],
                   ),
                 ],
@@ -191,10 +191,13 @@ class _SidebarWidgetState extends State<SidebarWidget> {
         leading: Icon(icon, size: 18, color: isActive ? const Color(0xFFFF6B35) : Colors.blueGrey[400]),
         title: Text(title, style: TextStyle(fontSize: 12, color: isActive ? const Color(0xFFFF6B35) : Colors.blueGrey[300], fontWeight: isActive ? FontWeight.w600 : FontWeight.normal)),
         onTap: () async {
-          if (route == Routes.login) {
+          if (route == Routes.login || route == Routes.customerLogin) {
+            // Hiển thị loading hoặc dialog xác nhận nếu cần
             await context.read<AuthController>().signOut();
-          }
-          if (context.mounted) {
+            if (context.mounted) {
+              context.go(Routes.login);
+            }
+          } else {
             context.go(route);
           }
         },

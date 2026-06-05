@@ -44,6 +44,10 @@ import '../../screens/customer_home/customer_home_screen.dart';
 import '../../screens/customer_login/login_screen.dart' as customer_login;
 import '../../screens/customer_login/signup_screen.dart' as customer_signup;
 
+import '../../screens/customer_home/social_feed/search_screen.dart';
+import '../../screens/customer_home/social_feed/notifications_screen.dart';
+import '../../screens/customer_home/social_feed/user_profile_screen.dart';
+
 class Routes {
   static const String login = '/login';
   static const String signup = '/signup';
@@ -71,6 +75,10 @@ class Routes {
   static const String sessionManagement = '/session-management';
   static const String developerTool = '/developer-tool';
   static const String accountManagement = '/account-management';
+
+  static const String socialSearch = '/social-search';
+  static const String socialNotifications = '/social-notifications';
+  static const String userProfile = '/user-profile';
 
 
   // PT Routes
@@ -220,6 +228,21 @@ class Routes {
       GoRoute(
         path: accountManagement,
         builder: (context, state) => const AccountManagementScreen(),
+      ),
+      GoRoute(
+        path: socialSearch,
+        builder: (context, state) => const SearchScreen(),
+      ),
+      GoRoute(
+        path: socialNotifications,
+        builder: (context, state) => const NotificationsScreen(),
+      ),
+      GoRoute(
+        path: '$userProfile/:userId',
+        builder: (context, state) {
+          final userId = state.pathParameters['userId']!;
+          return UserProfileScreen(userId: userId);
+        },
       ),
 
 
