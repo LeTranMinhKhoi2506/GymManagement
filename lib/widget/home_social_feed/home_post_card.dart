@@ -1,5 +1,8 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
+
+import '../../app/route/routes.dart';
 
 import '../../data/models/comment_model.dart';
 import '../../data/models/social_post_model.dart';
@@ -35,50 +38,60 @@ class HomePostCard extends StatelessWidget {
         children: [
           Row(
             children: [
-              CircleAvatar(
-                radius: 21,
-                backgroundColor: HomeSocialFeedTheme.cardAlt,
-                backgroundImage: (post.authorAvatarUrl != null &&
-                        post.authorAvatarUrl!.trim().isNotEmpty)
-                    ? NetworkImage(post.authorAvatarUrl!)
-                    : null,
-                child: (post.authorAvatarUrl == null ||
-                        post.authorAvatarUrl!.trim().isEmpty)
-                    ? Text(
-                        post.authorName.isNotEmpty
-                            ? post.authorName[0].toUpperCase()
-                            : '?',
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.w800,
-                        ),
-                      )
-                    : null,
+              GestureDetector(
+                onTap: () {
+                  context.push('${Routes.userProfile}/${post.authorId}');
+                },
+                child: CircleAvatar(
+                  radius: 21,
+                  backgroundColor: HomeSocialFeedTheme.cardAlt,
+                  backgroundImage: (post.authorAvatarUrl != null &&
+                          post.authorAvatarUrl!.trim().isNotEmpty)
+                      ? NetworkImage(post.authorAvatarUrl!)
+                      : null,
+                  child: (post.authorAvatarUrl == null ||
+                          post.authorAvatarUrl!.trim().isEmpty)
+                      ? Text(
+                          post.authorName.isNotEmpty
+                              ? post.authorName[0].toUpperCase()
+                              : '?',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        )
+                      : null,
+                ),
               ),
               const SizedBox(width: 12),
               Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      post.authorName,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 16,
-                        fontWeight: FontWeight.w800,
+                child: GestureDetector(
+                  onTap: () {
+                    context.push('${Routes.userProfile}/${post.authorId}');
+                  },
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        post.authorName,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w800,
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 3),
-                    Text(
-                      post.timeLabel.isNotEmpty
-                          ? post.timeLabel
-                          : homeRelativeTime(post.createdAt),
-                      style: const TextStyle(
-                        color: HomeSocialFeedTheme.muted,
-                        fontSize: 12,
+                      const SizedBox(height: 3),
+                      Text(
+                        post.timeLabel.isNotEmpty
+                            ? post.timeLabel
+                            : homeRelativeTime(post.createdAt),
+                        style: const TextStyle(
+                          color: HomeSocialFeedTheme.muted,
+                          fontSize: 12,
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
               TextButton(

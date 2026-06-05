@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 
 import '../data/models/comment_model.dart';
 import '../data/models/social_post_model.dart';
+import '../data/models/user_model.dart';
 import '../data/models/workout_exercise_model.dart';
 import '../data/repository/social_post_repository.dart';
 
@@ -141,18 +142,13 @@ class HomeProvider extends ChangeNotifier {
       final result = await FilePicker.platform.pickFiles(
         type: FileType.image,
         allowMultiple: true,
-        withData: true,
       );
       if (result == null) return null;
 
       for (final file in result.files) {
         if (file.path == null) continue;
         _draftMediaItems.add(
-          SocialMediaModel(
-            path: file.path!,
-            type: SocialMediaType.image,
-            bytes: file.bytes,
-          ),
+          SocialMediaModel(path: file.path!, type: SocialMediaType.image),
         );
       }
       notifyListeners();
@@ -167,18 +163,13 @@ class HomeProvider extends ChangeNotifier {
       final result = await FilePicker.platform.pickFiles(
         type: FileType.video,
         allowMultiple: true,
-        withData: true,
       );
       if (result == null) return null;
 
       for (final file in result.files) {
         if (file.path == null) continue;
         _draftMediaItems.add(
-          SocialMediaModel(
-            path: file.path!,
-            type: SocialMediaType.video,
-            bytes: file.bytes,
-          ),
+          SocialMediaModel(path: file.path!, type: SocialMediaType.video),
         );
       }
       notifyListeners();
@@ -203,6 +194,14 @@ class HomeProvider extends ChangeNotifier {
 
   Stream<List<CommentModel>> watchComments(String postId) {
     return _repository.watchComments(postId);
+  }
+
+  Stream<List<SocialPostModel>> watchPostsByUserId(String userId) {
+    return _repository.watchPostsByUserId(userId);
+  }
+
+  Future<UserModel?> getUserById(String userId) {
+    return _repository.getUserById(userId);
   }
 
   Future<String?> addComment({
@@ -242,11 +241,10 @@ class HomeProvider extends ChangeNotifier {
       );
       resetDraft();
       return null;
-    } catch (error) {
-      final message = error.toString();
-      return message.startsWith('Bad state: ')
-          ? message.replaceFirst('Bad state: ', '')
-          : message;
+    } catch (e, stackTrace) {
+      debugPrint('Error creating post: $e');
+      debugPrint('StackTrace: $stackTrace');
+      return 'Post failed: $e';
     } finally {
       _isPosting = false;
       notifyListeners();
