@@ -14,7 +14,6 @@ class ReceptionistDashboardScreen extends StatefulWidget {
 }
 
 class _ReceptionistDashboardScreenState extends State<ReceptionistDashboardScreen> {
-  int _currentIndex = 0;
 
   @override
   Widget build(BuildContext context) {
@@ -55,7 +54,6 @@ class _ReceptionistDashboardScreenState extends State<ReceptionistDashboardScree
           ),
         ),
       ),
-      bottomNavigationBar: _buildBottomNav(),
     );
   }
 
@@ -196,7 +194,7 @@ class _ReceptionistDashboardScreenState extends State<ReceptionistDashboardScree
 
             // Entry Control Card (Quick Check-in Button)
             GestureDetector(
-              onTap: () => context.push(Routes.receptionistCheckIn),
+              onTap: () => context.go(Routes.receptionistCheckIn),
               child: Container(
                 width: double.infinity,
                 padding: const EdgeInsets.symmetric(vertical: 22, horizontal: 20),
@@ -265,28 +263,28 @@ class _ReceptionistDashboardScreenState extends State<ReceptionistDashboardScree
           title: "Bán hàng POS",
           subtitle: "Sản phẩm & Gói tập",
           color: Colors.orangeAccent,
-          onTap: () => context.push(Routes.receptionistPOS),
+          onTap: () => context.go(Routes.receptionistPOS),
         ),
         _buildMenuCard(
           icon: Icons.support_agent_rounded,
           title: "Hỗ trợ khách",
           subtitle: "Ý kiến & Sự cố",
           color: Colors.cyanAccent,
-          onTap: () => context.push(Routes.receptionistSupport),
+          onTap: () => context.go(Routes.receptionistSupport),
         ),
         _buildMenuCard(
           icon: Icons.fitness_center_rounded,
           title: "Cơ sở vật chất",
           subtitle: "Kiểm tra thiết bị",
           color: Colors.greenAccent,
-          onTap: () => context.push(Routes.receptionistFacility),
+          onTap: () => context.go(Routes.receptionistFacility),
         ),
         _buildMenuCard(
           icon: Icons.assignment_turned_in_rounded,
           title: "Check-in Hôm Nay",
           subtitle: "Lịch sử ra vào",
           color: Colors.purpleAccent,
-          onTap: () => context.push(Routes.receptionistCheckIn),
+          onTap: () => context.go(Routes.receptionistCheckIn),
         ),
       ],
     );
@@ -418,40 +416,4 @@ class _ReceptionistDashboardScreenState extends State<ReceptionistDashboardScree
     );
   }
 
-  Widget _buildBottomNav() {
-    return Container(
-      decoration: const BoxDecoration(
-        color: Colors.black,
-        border: Border(top: BorderSide(color: Colors.white10, width: 0.5)),
-      ),
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      child: BottomNavigationBar(
-        backgroundColor: Colors.transparent,
-        type: BottomNavigationBarType.fixed,
-        selectedItemColor: const Color(0xFFFF6B35),
-        unselectedItemColor: Colors.grey,
-        currentIndex: _currentIndex,
-        showSelectedLabels: true,
-        showUnselectedLabels: true,
-        selectedLabelStyle: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold),
-        unselectedLabelStyle: const TextStyle(fontSize: 10),
-        onTap: (index) {
-          setState(() {
-            _currentIndex = index;
-          });
-          if (index == 1) context.push(Routes.receptionistCheckIn);
-          if (index == 2) context.push(Routes.receptionistPOS);
-          if (index == 3) context.push(Routes.receptionistSupport);
-          if (index == 4) context.push(Routes.receptionistFacility);
-        },
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.dashboard_rounded), label: "TRANG CHỦ"),
-          BottomNavigationBarItem(icon: Icon(Icons.qr_code_scanner_rounded), label: "CHECK-IN"),
-          BottomNavigationBarItem(icon: Icon(Icons.point_of_sale_rounded), label: "MUA BÁN"),
-          BottomNavigationBarItem(icon: Icon(Icons.support_agent_rounded), label: "HỖ TRỢ"),
-          BottomNavigationBarItem(icon: Icon(Icons.fitness_center_rounded), label: "THIẾT BỊ"),
-        ],
-      ),
-    );
-  }
 }

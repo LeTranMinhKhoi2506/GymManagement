@@ -23,6 +23,10 @@ class ReportRepository {
     await _db.collection(_collection).doc(id).update(data);
   }
 
+  Future<void> createReport(ReportModel report) async {
+    await _db.collection(_collection).doc(report.id).set(report.toMap());
+  }
+
   Future<void> deleteReport(String id) async {
     await _db.collection(_collection).doc(id).delete();
   }

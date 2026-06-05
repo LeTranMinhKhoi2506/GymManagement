@@ -1,3 +1,5 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
@@ -5,6 +7,7 @@ import 'package:provider/provider.dart';
 import '../../app/route/routes.dart';
 import '../../app/theme/app_theme.dart';
 import '../../controllers/auth_controller.dart';
+import '../../data/models/user_model.dart';
 import '../../widget/loginAndSignInWidget/auth_background.dart';
 import '../../widget/loginAndSignInWidget/auth_text_field.dart';
 import '../../widget/loginAndSignInWidget/brand_logo.dart';
@@ -28,10 +31,39 @@ class _LoginScreenState extends State<LoginScreen> {
   bool _obscurePassword = true;
 
   @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _redirectIfAlreadyLoggedIn();
+    });
+  }
+
+  @override
   void dispose() {
     _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
+  }
+
+  Future<void> _redirectIfAlreadyLoggedIn() async {
+    final firebaseUser = FirebaseAuth.instance.currentUser;
+    if (firebaseUser == null || !mounted) return;
+
+    final doc = await FirebaseFirestore.instance
+        .collection('users')
+        .doc(firebaseUser.uid)
+        .get();
+    if (!mounted) return;
+
+    final route = doc.exists
+        ? Routes.dashboardForUser(
+            UserModel.fromMap({
+              ...(doc.data() ?? <String, dynamic>{}),
+              'uid': doc.id,
+            }),
+          )
+        : Routes.customerHome;
+    context.go(route);
   }
 
   Future<void> _submit() async {

@@ -15,6 +15,7 @@ class CreatePostScreen extends StatefulWidget {
 
 class _CreatePostScreenState extends State<CreatePostScreen> {
   late final TextEditingController _captionController;
+  bool _hasText = false;
 
   static const Color bg = Color(0xFF070809);
   static const Color accent = Color(0xFFE7F0BD);
@@ -22,14 +23,19 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
   @override
   void initState() {
     super.initState();
-    _captionController = TextEditingController(
-      text: context.read<HomeProvider>().draftCaption,
-    );
+    final initialCaption = context.read<HomeProvider>().draftCaption;
+    _captionController = TextEditingController(text: initialCaption);
+    _hasText = initialCaption.trim().isNotEmpty;
     _captionController.addListener(_onCaptionChanged);
   }
 
   void _onCaptionChanged() {
-    context.read<HomeProvider>().updateDraftCaption(_captionController.text);
+    final isNotEmpty = _captionController.text.trim().isNotEmpty;
+    if (_hasText != isNotEmpty) {
+      setState(() {
+        _hasText = isNotEmpty;
+      });
+    }
   }
 
   @override
@@ -41,7 +47,11 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final canPost = context.select<HomeProvider, bool>((p) => p.canPost);
+    final hasMedia = context.select<HomeProvider, bool>(
+      (p) => p.draftMediaItems.isNotEmpty,
+    );
+    final isPosting = context.select<HomeProvider, bool>((p) => p.isPosting);
+    final canPost = !isPosting && (_hasText || hasMedia);
 
     return Scaffold(
       backgroundColor: bg,
@@ -79,6 +89,11 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
               onPressed: !canPost
                   ? null
                   : () async {
+                      // Cập nhật caption từ controller cục bộ vào Provider trước khi đăng bài
+                      context
+                          .read<HomeProvider>()
+                          .updateDraftCaption(_captionController.text);
+
                       final error = await context
                           .read<HomeProvider>()
                           .createPost();

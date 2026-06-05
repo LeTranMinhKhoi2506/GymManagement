@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../data/models/payment_model.dart';
 import '../data/repository/payment_repository.dart';
-import 'package:uuid/uuid.dart';
+
 
 class PaymentController extends ChangeNotifier {
   final PaymentRepository _repository = PaymentRepository();
@@ -91,8 +91,8 @@ class PaymentController extends ChangeNotifier {
     }
   }
 
-  // Create new payment
-  Future<void> createPayment({
+  // Create new payment — returns Firestore document ID
+  Future<String> createPayment({
     required String memberId,
     required String memberName,
     required String membershipType,
@@ -103,9 +103,8 @@ class PaymentController extends ChangeNotifier {
   }) async {
     _clearError();
     try {
-      const uuid = Uuid();
       final payment = PaymentModel(
-        id: uuid.v4(),
+        id: '',
         memberId: memberId,
         memberName: memberName,
         membershipType: membershipType,
@@ -118,11 +117,13 @@ class PaymentController extends ChangeNotifier {
         createdAt: DateTime.now(),
         updatedAt: DateTime.now(),
       );
-      await _repository.createPayment(payment);
+      final docId = await _repository.createPayment(payment);
       await fetchAllPayments();
       notifyListeners();
+      return docId;
     } catch (e) {
       _setError(e.toString());
+      rethrow;
     }
   }
 

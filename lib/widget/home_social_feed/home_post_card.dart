@@ -1,15 +1,16 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
+
+import '../../app/route/routes.dart';
 
 import '../../data/models/comment_model.dart';
 import '../../data/models/social_post_model.dart';
-import '../../data/models/workout_exercise_model.dart';
 import '../../provider/home_provider.dart';
 import 'home_action_chip.dart';
 import 'home_comment_tile.dart';
 import 'home_exercise_list.dart';
 import 'home_latest_comment_hint.dart';
-import 'home_metric_tile.dart';
 import 'home_post_media_gallery.dart';
 import 'home_social_feed_theme.dart';
 
@@ -21,7 +22,6 @@ class HomePostCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final provider = context.read<HomeProvider>();
-    final workoutInfo = _WorkoutInfo.fromExercises(post.exercises);
 
     return Container(
       decoration: BoxDecoration(
@@ -35,63 +35,78 @@ class HomePostCard extends StatelessWidget {
         children: [
           Row(
             children: [
-              CircleAvatar(
-                radius: 21,
-                backgroundColor: HomeSocialFeedTheme.cardAlt,
-                backgroundImage: (post.authorAvatarUrl != null &&
-                        post.authorAvatarUrl!.trim().isNotEmpty)
-                    ? NetworkImage(post.authorAvatarUrl!)
-                    : null,
-                child: (post.authorAvatarUrl == null ||
-                        post.authorAvatarUrl!.trim().isEmpty)
-                    ? Text(
-                        post.authorName.isNotEmpty
-                            ? post.authorName[0].toUpperCase()
-                            : '?',
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.w800,
-                        ),
-                      )
-                    : null,
+              GestureDetector(
+                onTap: post.authorId.startsWith('admin')
+                    ? null
+                    : () {
+                        context.push('${Routes.userProfile}/${post.authorId}');
+                      },
+                child: CircleAvatar(
+                  radius: 21,
+                  backgroundColor: HomeSocialFeedTheme.cardAlt,
+                  backgroundImage: (post.authorAvatarUrl != null &&
+                          post.authorAvatarUrl!.trim().isNotEmpty)
+                      ? NetworkImage(post.authorAvatarUrl!)
+                      : null,
+                  child: (post.authorAvatarUrl == null ||
+                          post.authorAvatarUrl!.trim().isEmpty)
+                      ? Text(
+                          post.authorName.isNotEmpty
+                              ? post.authorName[0].toUpperCase()
+                              : '?',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        )
+                      : null,
+                ),
               ),
               const SizedBox(width: 12),
               Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      post.authorName,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 16,
-                        fontWeight: FontWeight.w800,
+                child: GestureDetector(
+                  onTap: post.authorId.startsWith('admin')
+                      ? null
+                      : () {
+                          context.push('${Routes.userProfile}/${post.authorId}');
+                        },
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        post.authorName,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w800,
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 3),
-                    Text(
-                      post.timeLabel.isNotEmpty
-                          ? post.timeLabel
-                          : homeRelativeTime(post.createdAt),
-                      style: const TextStyle(
-                        color: HomeSocialFeedTheme.muted,
-                        fontSize: 12,
+                      const SizedBox(height: 3),
+                      Text(
+                        post.timeLabel.isNotEmpty
+                            ? post.timeLabel
+                            : homeRelativeTime(post.createdAt),
+                        style: const TextStyle(
+                          color: HomeSocialFeedTheme.muted,
+                          fontSize: 12,
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
-              TextButton(
-                onPressed: () {},
-                style: TextButton.styleFrom(
-                  foregroundColor: const Color(0xFFFF8B63),
-                  padding: const EdgeInsets.symmetric(horizontal: 8),
+              if (!post.authorId.startsWith('admin'))
+                TextButton(
+                  onPressed: () {},
+                  style: TextButton.styleFrom(
+                    foregroundColor: const Color(0xFFFF8B63),
+                    padding: const EdgeInsets.symmetric(horizontal: 8),
+                  ),
+                  child: const Text(
+                    '+ Follow',
+                    style: TextStyle(fontWeight: FontWeight.w800),
+                  ),
                 ),
-                child: const Text(
-                  '+ Follow',
-                  style: TextStyle(fontWeight: FontWeight.w800),
-                ),
-              ),
             ],
           ),
           if (post.caption.trim().isNotEmpty) ...[
@@ -114,31 +129,7 @@ class HomePostCard extends StatelessWidget {
             const SizedBox(height: 14),
             HomePostMediaGallery(mediaItems: post.mediaItems),
           ],
-          const SizedBox(height: 14),
-          Row(
-            children: [
-              Expanded(
-                child: HomeMetricTile(
-                  label: 'TIME',
-                  value: workoutInfo.workoutTime,
-                ),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: HomeMetricTile(
-                  label: 'VOLUME',
-                  value: workoutInfo.volumeLabel,
-                ),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: HomeMetricTile(
-                  label: 'COMMENTS',
-                  value: post.commentCount.toString(),
-                ),
-              ),
-            ],
-          ),
+
           const SizedBox(height: 12),
           Row(
             children: [
@@ -213,16 +204,21 @@ class _HomeCommentsSheetState extends State<HomeCommentsSheet> {
   Widget build(BuildContext context) {
     final provider = context.read<HomeProvider>();
 
-    return DraggableScrollableSheet(
-      initialChildSize: 0.82,
-      minChildSize: 0.55,
-      maxChildSize: 0.96,
-      builder: (context, scrollController) {
-        return Container(
-          decoration: const BoxDecoration(
-            color: Color(0xFF111317),
-            borderRadius: BorderRadius.vertical(top: Radius.circular(26)),
-          ),
+    return Padding(
+      padding: EdgeInsets.only(
+        bottom: MediaQuery.of(context).viewInsets.bottom,
+      ),
+      child: DraggableScrollableSheet(
+        initialChildSize: 0.82,
+        minChildSize: 0.55,
+        maxChildSize: 0.96,
+        expand: false,
+        builder: (context, scrollController) {
+          return Container(
+            decoration: const BoxDecoration(
+              color: Color(0xFF111317),
+              borderRadius: BorderRadius.vertical(top: Radius.circular(26)),
+            ),
           child: Column(
             children: [
               const SizedBox(height: 12),
@@ -331,9 +327,35 @@ class _HomeCommentsSheetState extends State<HomeCommentsSheet> {
                             );
                             if (!context.mounted) return;
                             if (error != null) {
-                              ScaffoldMessenger.of(context)
-                                ..hideCurrentSnackBar()
-                                ..showSnackBar(SnackBar(content: Text(error)));
+                              showDialog<void>(
+                                context: context,
+                                builder: (dialogContext) => AlertDialog(
+                                  backgroundColor: const Color(0xFF1B1E24),
+                                  title: const Text(
+                                    'Thông báo',
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  content: Text(
+                                    error,
+                                    style: const TextStyle(color: Colors.white70),
+                                  ),
+                                  actions: [
+                                    TextButton(
+                                      onPressed: () => Navigator.pop(dialogContext),
+                                      child: const Text(
+                                        'Đồng ý',
+                                        style: TextStyle(
+                                          color: HomeSocialFeedTheme.accent,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              );
                               return;
                             }
                             _controller.clear();
@@ -354,31 +376,9 @@ class _HomeCommentsSheetState extends State<HomeCommentsSheet> {
           ),
         );
       },
-    );
-  }
+    ),
+  );
+}
 }
 
-class _WorkoutInfo {
-  const _WorkoutInfo({required this.workoutTime, required this.volumeLabel});
 
-  final String workoutTime;
-  final String volumeLabel;
-
-  factory _WorkoutInfo.fromExercises(List<WorkoutExerciseModel> exercises) {
-    if (exercises.isEmpty) {
-      return const _WorkoutInfo(workoutTime: '--', volumeLabel: '--');
-    }
-
-    final totalSets = exercises.fold<int>(0, (sum, item) => sum + item.sets);
-    final totalVolume = exercises.fold<int>(
-      0,
-      (sum, item) => sum + (item.sets * item.reps),
-    );
-    final workoutMinutes = (totalSets * 4).clamp(10, 180);
-
-    return _WorkoutInfo(
-      workoutTime: '${workoutMinutes}m',
-      volumeLabel: '$totalVolume reps',
-    );
-  }
-}

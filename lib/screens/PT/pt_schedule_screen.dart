@@ -119,7 +119,6 @@ class _PtScheduleScreenState extends State<PtScheduleScreen> {
           ),
         ),
       ),
-      bottomNavigationBar: _buildBottomNav(context),
     );
   }
 
@@ -343,7 +342,7 @@ class _PtScheduleScreenState extends State<PtScheduleScreen> {
       }
     } else if (status == "ONGOING") {
       // Mở Bottom Sheet ghi nhật ký tập và Hoàn thành ca dạy
-      _showTrainingJournalBottomSheet(sessionId, studentName);
+      _showTrainingJournalBottomSheet(sessionId, studentName, data['studentUid'] as String?);
     } else if (status == "COMPLETED") {
       // Xem tóm tắt ca dạy
       _showSessionSummary(studentName, data);
@@ -351,7 +350,7 @@ class _PtScheduleScreenState extends State<PtScheduleScreen> {
   }
 
   // Bottom Sheet ghi nhật ký tập luyện & Hoàn thành ca dạy
-  void _showTrainingJournalBottomSheet(String sessionId, String studentName) {
+  void _showTrainingJournalBottomSheet(String sessionId, String studentName, String? studentUid) {
     final TextEditingController focusController = TextEditingController();
     final TextEditingController notesController = TextEditingController();
 
@@ -447,6 +446,26 @@ class _PtScheduleScreenState extends State<PtScheduleScreen> {
                       'notes': notes,
                       'commission': 30000.0,
                     });
+
+                    // 1.5. Trừ 1 buổi tập còn lại của học viên trong collection students
+                    if (studentUid != null && studentUid.isNotEmpty) {
+                      try {
+                        final studentQuery = await FirebaseFirestore.instance
+                            .collection('students')
+                            .where('ptId', isEqualTo: ptId)
+                            .where('memberId', isEqualTo: studentUid)
+                            .get();
+                        
+                        for (var studentDoc in studentQuery.docs) {
+                          await studentDoc.reference.update({
+                            'remainingSessions': FieldValue.increment(-1),
+                            'lastSession': DateFormat('dd/MM').format(DateTime.now()),
+                          });
+                        }
+                      } catch (e) {
+                        debugPrint("Lỗi cập nhật remainingSessions học viên: $e");
+                      }
+                    }
 
                     // 2. Tạo bản ghi doanh thu pt_sessions
                     await FirebaseFirestore.instance.collection('pt_sessions').add({
@@ -607,28 +626,4 @@ class _PtScheduleScreenState extends State<PtScheduleScreen> {
     );
   }
 
-  Widget _buildBottomNav(BuildContext context) {
-    return Container(
-      color: Colors.black,
-      padding: const EdgeInsets.symmetric(vertical: 10),
-      child: BottomNavigationBar(
-        backgroundColor: Colors.transparent,
-        type: BottomNavigationBarType.fixed,
-        selectedItemColor: const Color(0xFFD0FD3E),
-        unselectedItemColor: Colors.grey,
-        currentIndex: 1,
-        onTap: (index) {
-          if (index == 0) context.go(Routes.ptDashboard);
-          if (index == 2) context.go(Routes.ptStudentManagement);
-          if (index == 3) context.go(Routes.ptIncome);
-        },
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.grid_view_rounded), label: "TRANG CHỦ"),
-          BottomNavigationBarItem(icon: Icon(Icons.calendar_today_rounded), label: "LỊCH DẠY"),
-          BottomNavigationBarItem(icon: Icon(Icons.people_outline), label: "HỌC VIÊN"),
-          BottomNavigationBarItem(icon: Icon(Icons.person_outline), label: "TÀI KHOẢN"),
-        ],
-      ),
-    );
-  }
 }

@@ -5,9 +5,13 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 
 import '../data/models/comment_model.dart';
+import '../data/models/content_model.dart';
 import '../data/models/social_post_model.dart';
+import '../data/models/user_model.dart';
 import '../data/models/workout_exercise_model.dart';
+import '../data/repository/content_repository.dart';
 import '../data/repository/social_post_repository.dart';
+import '../utils/comment_filter.dart';
 
 enum HomeFeedMode { discover, following }
 
@@ -28,26 +32,23 @@ class DraftExerciseInput {
 }
 
 class HomeProvider extends ChangeNotifier {
-  HomeProvider({SocialPostRepository? repository})
-    : _repository = repository ?? SocialPostRepository(),
-      _draftExercises = [DraftExerciseInput()] {
-    _postsSubscription = _repository.watchPosts().listen(
-      (items) {
-        _posts = _markLiked(items);
-        _loading = false;
-        _errorMessage = null;
-        notifyListeners();
-      },
-      onError: (Object error) {
-        _loading = false;
-        _errorMessage = error.toString();
-        notifyListeners();
-      },
-    );
+  HomeProvider({
+    SocialPostRepository? repository,
+    ContentRepository? contentRepository,
+  })  : _repository = repository ?? SocialPostRepository(),
+        _contentRepository = contentRepository ?? ContentRepository(),
+        _draftExercises = [DraftExerciseInput()] {
+    _setupCombinedStreams();
   }
 
   final SocialPostRepository _repository;
-  late final StreamSubscription<List<SocialPostModel>> _postsSubscription;
+  final ContentRepository _contentRepository;
+  
+  StreamSubscription<List<SocialPostModel>>? _postsSubscription;
+  StreamSubscription<List<ContentModel>>? _contentsSubscription;
+
+  List<SocialPostModel> _rawPTPosts = [];
+  List<ContentModel> _rawAdminContents = [];
 
   int _selectedIndex = 0;
   HomeFeedMode _feedMode = HomeFeedMode.discover;
@@ -59,6 +60,8 @@ class HomeProvider extends ChangeNotifier {
   List<SocialPostModel> _posts = [];
   List<DraftExerciseInput> _draftExercises;
   final Set<String> _likedPostIds = <String>{};
+  String? _lastCommentText;
+  DateTime? _lastCommentTime;
 
   int get selectedIndex => _selectedIndex;
   HomeFeedMode get feedMode => _feedMode;
@@ -141,18 +144,13 @@ class HomeProvider extends ChangeNotifier {
       final result = await FilePicker.platform.pickFiles(
         type: FileType.image,
         allowMultiple: true,
-        withData: true,
       );
       if (result == null) return null;
 
       for (final file in result.files) {
         if (file.path == null) continue;
         _draftMediaItems.add(
-          SocialMediaModel(
-            path: file.path!,
-            type: SocialMediaType.image,
-            bytes: file.bytes,
-          ),
+          SocialMediaModel(path: file.path!, type: SocialMediaType.image),
         );
       }
       notifyListeners();
@@ -167,18 +165,13 @@ class HomeProvider extends ChangeNotifier {
       final result = await FilePicker.platform.pickFiles(
         type: FileType.video,
         allowMultiple: true,
-        withData: true,
       );
       if (result == null) return null;
 
       for (final file in result.files) {
         if (file.path == null) continue;
         _draftMediaItems.add(
-          SocialMediaModel(
-            path: file.path!,
-            type: SocialMediaType.video,
-            bytes: file.bytes,
-          ),
+          SocialMediaModel(path: file.path!, type: SocialMediaType.video),
         );
       }
       notifyListeners();
@@ -205,20 +198,40 @@ class HomeProvider extends ChangeNotifier {
     return _repository.watchComments(postId);
   }
 
+  Stream<List<SocialPostModel>> watchPostsByUserId(String userId) {
+    return _repository.watchPostsByUserId(userId);
+  }
+
+  Future<UserModel?> getUserById(String userId) {
+    return _repository.getUserById(userId);
+  }
+
   Future<String?> addComment({
     required String postId,
     required String content,
   }) async {
     final trimmed = content.trim();
     if (trimmed.isEmpty) {
-      return 'Binh luan khong duoc de trong.';
+      return 'Bình luận không được để trống.';
+    }
+
+    final validationError = await CommentFilter.validateComment(
+      content: trimmed,
+      lastCommentText: _lastCommentText,
+      lastCommentTime: _lastCommentTime,
+    );
+
+    if (validationError != null) {
+      return validationError;
     }
 
     try {
       await _repository.addComment(postId: postId, content: trimmed);
+      _lastCommentText = trimmed;
+      _lastCommentTime = DateTime.now();
       return null;
     } catch (_) {
-      return 'Dang binh luan that bai. Vui long thu lai.';
+      return 'Đăng bình luận thất bại. Vui lòng thử lại.';
     }
   }
 
@@ -242,11 +255,10 @@ class HomeProvider extends ChangeNotifier {
       );
       resetDraft();
       return null;
-    } catch (error) {
-      final message = error.toString();
-      return message.startsWith('Bad state: ')
-          ? message.replaceFirst('Bad state: ', '')
-          : message;
+    } catch (e, stackTrace) {
+      debugPrint('Error creating post: $e');
+      debugPrint('StackTrace: $stackTrace');
+      return 'Post failed: $e';
     } finally {
       _isPosting = false;
       notifyListeners();
@@ -292,9 +304,71 @@ class HomeProvider extends ChangeNotifier {
         .toList();
   }
 
+  void _setupCombinedStreams() {
+    _postsSubscription = _repository.watchPosts().listen(
+      (items) {
+        _rawPTPosts = items;
+        _combineAndPublish();
+      },
+      onError: (Object error) {
+        _loading = false;
+        _errorMessage = error.toString();
+        notifyListeners();
+      },
+    );
+
+    _contentsSubscription = _contentRepository.getContentStream().listen(
+      (contents) {
+        _rawAdminContents = contents.where((c) => c.isPublished).toList();
+        _combineAndPublish();
+      },
+      onError: (Object error) {
+        debugPrint("Error loading contents: $error");
+      },
+    );
+  }
+
+  void _combineAndPublish() {
+    final adminPosts = _rawAdminContents.map((content) {
+      final mediaItems = <SocialMediaModel>[];
+      if (content.imageUrl != null && content.imageUrl!.trim().isNotEmpty) {
+        mediaItems.add(
+          SocialMediaModel(
+            path: content.imageUrl!,
+            type: SocialMediaType.image,
+          ),
+        );
+      }
+
+      return SocialPostModel(
+        id: content.id,
+        authorId: 'admin_${content.id}',
+        authorName: content.author.isNotEmpty ? content.author : 'Admin',
+        caption: '${content.title}\n\n${content.body}',
+        mediaItems: mediaItems,
+        timeLabel: '',
+        likeCount: 0,
+        commentCount: 0,
+        exercises: const [],
+        createdAt: content.createdAt,
+        updatedAt: content.createdAt,
+        isLiked: false,
+      );
+    }).toList();
+
+    final combined = [..._rawPTPosts, ...adminPosts];
+    combined.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+
+    _posts = _markLiked(combined);
+    _loading = false;
+    _errorMessage = null;
+    notifyListeners();
+  }
+
   @override
   void dispose() {
-    _postsSubscription.cancel();
+    _postsSubscription?.cancel();
+    _contentsSubscription?.cancel();
     super.dispose();
   }
 }

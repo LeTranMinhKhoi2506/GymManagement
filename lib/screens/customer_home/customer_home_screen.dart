@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
@@ -7,7 +7,8 @@ import '../../provider/auth_provider.dart';
 import '../../screens/main_Screen_Customer/home_screen.dart';
 import '../../widget/customer_home/customer_home_bottom_nav_bar.dart';
 import '../../widget/customer_home/customer_home_profile_tab.dart';
-import '../../widget/customer_home/customer_home_tab_placeholder.dart';
+import '../../widget/customer_home/customer_home_workouts_tab.dart';
+import '../../widget/customer_home/customer_home_trainers_tab.dart';
 
 class CustomerHomeScreen extends StatefulWidget {
   const CustomerHomeScreen({super.key});
@@ -43,9 +44,9 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
   Widget build(BuildContext context) {
     final loading = context.select<AuthProvider, bool>((p) => p.loading);
     final pages = <Widget>[
-      const HomeScreenCustomer(showCreateFab: true, bottomPadding: 120),
-      const CustomerHomeTabPlaceholder(title: 'TRAINERS'),
-      const CustomerHomeTabPlaceholder(title: 'WORKOUTS'),
+      const HomeScreenCustomer(showCreateFab: false, bottomPadding: 120),
+      const CustomerTrainersTab(),
+      const CustomerHomeWorkoutsTab(),
       CustomerHomeProfileTab(onLogout: _handleLogout, loading: loading),
     ];
 

@@ -21,7 +21,7 @@ class PtIncomeScreen extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _buildHeader(),
+              _buildHeader(context),
               const SizedBox(height: 30),
               const Text(
                 "BÁO CÁO THU NHẬP",
@@ -130,7 +130,6 @@ class PtIncomeScreen extends StatelessWidget {
           ),
         ),
       ),
-      bottomNavigationBar: _buildBottomNav(context),
     );
   }
 
@@ -142,7 +141,7 @@ class PtIncomeScreen extends StatelessWidget {
     }
   }
 
-  Widget _buildHeader() {
+  Widget _buildHeader(BuildContext context) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
@@ -161,7 +160,23 @@ class PtIncomeScreen extends StatelessWidget {
             ),
           ],
         ),
-        const Icon(Icons.notifications_none, color: Colors.white, size: 28),
+        Row(
+          children: [
+            const Icon(Icons.notifications_none, color: Colors.white, size: 28),
+            const SizedBox(width: 10),
+            IconButton(
+              icon: const Icon(Icons.logout_rounded, color: Colors.redAccent, size: 24),
+              padding: EdgeInsets.zero,
+              constraints: const BoxConstraints(),
+              onPressed: () async {
+                await FirebaseAuth.instance.signOut();
+                if (context.mounted) {
+                  context.go(Routes.login);
+                }
+              },
+            ),
+          ],
+        ),
       ],
     );
   }
@@ -458,32 +473,4 @@ class PtIncomeScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildBottomNav(BuildContext context) {
-    return Container(
-      color: Colors.black,
-      padding: const EdgeInsets.symmetric(vertical: 10),
-      child: BottomNavigationBar(
-        backgroundColor: Colors.transparent,
-        type: BottomNavigationBarType.fixed,
-        selectedItemColor: const Color(0xFFD0FD3E),
-        unselectedItemColor: Colors.grey,
-        currentIndex: 3, // Account/Earnings index
-        showSelectedLabels: true,
-        showUnselectedLabels: true,
-        selectedLabelStyle: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold),
-        unselectedLabelStyle: const TextStyle(fontSize: 10),
-        onTap: (index) {
-          if (index == 0) context.go(Routes.ptDashboard);
-          if (index == 1) context.go(Routes.ptSchedule);
-          if (index == 2) context.go(Routes.ptStudentManagement);
-        },
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.grid_view_rounded), label: "TRANG CHỦ"),
-          BottomNavigationBarItem(icon: Icon(Icons.calendar_today_outlined), label: "LỊCH DẠY"),
-          BottomNavigationBarItem(icon: Icon(Icons.people_outline), label: "HỌC VIÊN"),
-          BottomNavigationBarItem(icon: Icon(Icons.person_rounded), label: "TÀI KHOẢN"),
-        ],
-      ),
-    );
-  }
 }

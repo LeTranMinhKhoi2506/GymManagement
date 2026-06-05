@@ -1,15 +1,6 @@
 # SQL files
 *.sql
 
-# Flutter / Dart generated files
-.dart_tool/
-.flutter-plugins
-.flutter-plugins-dependencies
-.packages
-.pub/
-.pub-cache/
-build/
-
 # Gradle files
 .gradle/
 build/

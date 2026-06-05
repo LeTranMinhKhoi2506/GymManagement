@@ -1,8 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:uuid/uuid.dart';
 import '../../controllers/equipment_controller.dart';
+import '../../controllers/report_controller.dart';
 import '../../data/models/equipment_model.dart';
+import '../../data/models/report_model.dart';
+
 
 class ReceptionistFacilityScreen extends StatefulWidget {
   const ReceptionistFacilityScreen({super.key});
@@ -60,6 +65,134 @@ class _ReceptionistFacilityScreenState extends State<ReceptionistFacilityScreen>
     }
   }
 
+  void _showReportDialog(BuildContext context) {
+    final eqController = Provider.of<EquipmentController>(context, listen: false);
+    final reportController = Provider.of<ReportController>(context, listen: false);
+    final user = FirebaseAuth.instance.currentUser;
+
+    final total = eqController.equipment.length;
+    final operational = eqController.equipment.where((e) => e.status == 'Operational').length;
+    final maintenance = eqController.equipment.where((e) => e.status == 'Needs Maintenance' || e.status == 'Maintenance').length;
+    final broken = eqController.equipment.where((e) => e.status == 'Broken').length;
+
+    // Build lists of devices needing maintenance or broken
+    final issueList = eqController.equipment.where((e) => e.status != 'Operational').toList();
+    
+    final StringBuffer issueBuffer = StringBuffer();
+    if (issueList.isEmpty) {
+      issueBuffer.write("Tất cả thiết bị hoạt động bình thường.");
+    } else {
+      for (var eq in issueList) {
+        final statusVn = (eq.status == 'Broken') ? 'Hỏng hóc' : 'Cần bảo trì';
+        issueBuffer.writeln("- ${eq.name} (${eq.location ?? 'Chung'}): $statusVn${eq.notes != null && eq.notes!.isNotEmpty ? ' (Ghi chú: ${eq.notes})' : ''}");
+      }
+    }
+
+    final dateStr = DateFormat('dd/MM/yyyy HH:mm').format(DateTime.now());
+    final defaultReason = """Báo cáo tình trạng thiết bị ngày $dateStr:
+- Tổng số thiết bị: $total
+- Bình thường: $operational
+- Cần bảo trì: $maintenance
+- Hỏng hóc: $broken
+
+Chi tiết thiết bị cần chú ý:
+${issueBuffer.toString()}""";
+
+    final reasonController = TextEditingController(text: defaultReason);
+
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: const Color(0xFF1C1C1E),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Text(
+          "Báo cáo cơ sở vật chất hôm nay",
+          style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
+        ),
+        content: SizedBox(
+          width: 500,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                "Nội dung báo cáo gửi lên quản trị viên:",
+                style: TextStyle(color: Colors.grey, fontSize: 12),
+              ),
+              const SizedBox(height: 10),
+              TextField(
+                controller: reasonController,
+                maxLines: 10,
+                style: const TextStyle(color: Colors.white, fontSize: 12),
+                decoration: InputDecoration(
+                  filled: true,
+                  fillColor: Colors.black,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                    borderSide: const BorderSide(color: Colors.white10),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                    borderSide: const BorderSide(color: Color(0xFFFF6B35)),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text("Hủy", style: TextStyle(color: Colors.grey)),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              final report = ReportModel(
+                id: const Uuid().v4(),
+                reporterId: user?.uid ?? 'receptionist',
+                reporterName: user?.displayName ?? 'Lễ Tân',
+                reportedItemId: 'gym_equipment_daily_check',
+                type: 'facility',
+                reason: reasonController.text.trim(),
+                status: 'pending',
+                createdAt: DateTime.now(),
+              );
+
+              final messenger = ScaffoldMessenger.of(context);
+              final navigator = Navigator.of(ctx);
+
+              try {
+                await reportController.createReport(report);
+                navigator.pop();
+                messenger.showSnackBar(
+                  const SnackBar(
+                    content: Text("Đã gửi báo cáo cơ sở vật chất thành công!"),
+                    backgroundColor: Colors.green,
+                    behavior: SnackBarBehavior.floating,
+                  ),
+                );
+              } catch (e) {
+                messenger.showSnackBar(
+                  SnackBar(
+                    content: Text("Lỗi gửi báo cáo: $e"),
+                    backgroundColor: Colors.redAccent,
+                    behavior: SnackBarBehavior.floating,
+                  ),
+                );
+              }
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFFFF6B35),
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            ),
+            child: const Text("Gửi báo cáo"),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final controller = Provider.of<EquipmentController>(context);
@@ -81,6 +214,12 @@ class _ReceptionistFacilityScreenState extends State<ReceptionistFacilityScreen>
         backgroundColor: const Color(0xFF1C1C1E),
         iconTheme: const IconThemeData(color: Colors.white),
         elevation: 0,
+      ),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () => _showReportDialog(context),
+        label: const Text('Báo cáo hôm nay', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
+        icon: const Icon(Icons.assignment_turned_in, color: Colors.white),
+        backgroundColor: const Color(0xFFFF6B35),
       ),
       body: SafeArea(
         child: Center(

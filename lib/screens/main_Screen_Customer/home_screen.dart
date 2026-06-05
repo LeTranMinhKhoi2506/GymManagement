@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../data/models/social_post_model.dart';
@@ -13,7 +13,7 @@ import '../customer_home/social_feed/create_post_screen.dart';
 class HomeScreenCustomer extends StatelessWidget {
   const HomeScreenCustomer({
     super.key,
-    this.showCreateFab = true,
+    this.showCreateFab = false,
     this.bottomPadding = 120,
   });
 

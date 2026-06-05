@@ -12,6 +12,7 @@ class UserModel {
   final String? position; // e.g., 'Trainer', 'Receptionist', 'Manager'
   final double? salary;
   final String? gender;
+  final String? avatarUrl;
 
   UserModel({
     required this.uid,
@@ -25,6 +26,7 @@ class UserModel {
     this.position,
     this.salary,
     this.gender,
+    this.avatarUrl,
   });
 
   Map<String, dynamic> toMap() {
@@ -40,6 +42,7 @@ class UserModel {
       'position': position,
       'salary': salary,
       'gender': gender,
+      'avatarUrl': avatarUrl,
     };
   }
 
@@ -56,6 +59,7 @@ class UserModel {
       position: map['position'],
       salary: (map['salary'] as num?)?.toDouble(),
       gender: map['gender'],
+      avatarUrl: map['avatarUrl'],
     );
   }
 
@@ -71,6 +75,7 @@ class UserModel {
     String? position,
     double? salary,
     String? gender,
+    String? avatarUrl,
   }) {
     return UserModel(
       uid: uid ?? this.uid,
@@ -84,6 +89,7 @@ class UserModel {
       position: position ?? this.position,
       salary: salary ?? this.salary,
       gender: gender ?? this.gender,
+      avatarUrl: avatarUrl ?? this.avatarUrl,
     );
   }
 }
