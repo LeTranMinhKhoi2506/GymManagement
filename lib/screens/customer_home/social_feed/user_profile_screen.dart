@@ -139,20 +139,26 @@ class UserProfileScreen extends StatelessWidget {
                     padding: const EdgeInsets.all(20),
                     child: Column(
                       children: [
-                        CircleAvatar(
-                          radius: 48,
-                          backgroundColor: HomeSocialFeedTheme.cardAlt,
-                          backgroundImage: mockImageUrl != null ? NetworkImage(mockImageUrl) : null,
-                          child: mockImageUrl == null
-                              ? Text(
-                                  displayName.isNotEmpty ? displayName[0].toUpperCase() : '?',
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 36,
-                                    fontWeight: FontWeight.w900,
-                                  ),
-                                )
-                              : null,
+                        Builder(
+                          builder: (context) {
+                            final displayAvatarUrl = mockImageUrl ?? resolvedUser?.avatarUrl;
+                            final hasAvatar = displayAvatarUrl != null && displayAvatarUrl.trim().isNotEmpty;
+                            return CircleAvatar(
+                              radius: 48,
+                              backgroundColor: HomeSocialFeedTheme.cardAlt,
+                              backgroundImage: hasAvatar ? NetworkImage(displayAvatarUrl) : null,
+                              child: !hasAvatar
+                                  ? Text(
+                                      displayName.isNotEmpty ? displayName[0].toUpperCase() : '?',
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 36,
+                                        fontWeight: FontWeight.w900,
+                                      ),
+                                    )
+                                  : null,
+                            );
+                          }
                         ),
                         const SizedBox(height: 16),
                         Text(
@@ -208,97 +214,7 @@ class UserProfileScreen extends StatelessWidget {
                 ),
               ),
 
-              // HIRE PT SECTION (Only for Trainers)
-              if (isTrainer)
-                SliverToBoxAdapter(
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 4.0),
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: HomeSocialFeedTheme.card,
-                        borderRadius: BorderRadius.circular(24),
-                        border: Border.all(color: const Color(0xFFE7F0BD).withOpacity(0.2)),
-                      ),
-                      padding: const EdgeInsets.all(20),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            children: [
-                              Container(
-                                padding: const EdgeInsets.all(10),
-                                decoration: BoxDecoration(
-                                  color: const Color(0xFF20242B),
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                child: const Icon(
-                                  Icons.fitness_center_rounded,
-                                  color: Color(0xFFE7F0BD),
-                                  size: 20,
-                                ),
-                              ),
-                              const SizedBox(width: 14),
-                              const Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      'THUÊ HUẤN LUYỆN VIÊN',
-                                      style: TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.w900,
-                                      ),
-                                    ),
-                                    SizedBox(height: 3),
-                                    Text(
-                                      'Đồng hành tập luyện 1-1 tối ưu',
-                                      style: TextStyle(
-                                        color: Color(0xFF8E9196),
-                                        fontSize: 11,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 16),
-                          const Text(
-                            'Sẵn sàng lên lịch trình, giáo án và đồng hành 1-1 cùng bạn để hoàn thành mục tiêu tập luyện nhanh nhất.',
-                            style: TextStyle(
-                              color: Colors.white70,
-                              fontSize: 13,
-                              height: 1.4,
-                            ),
-                          ),
-                          const SizedBox(height: 20),
-                          SizedBox(
-                            width: double.infinity,
-                            height: 50,
-                            child: FilledButton(
-                              onPressed: () => _showBookingSheet(context, user!),
-                              style: FilledButton.styleFrom(
-                                backgroundColor: const Color(0xFFE7F0BD),
-                                foregroundColor: Colors.black,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(16),
-                                ),
-                              ),
-                              child: const Text(
-                                'LIÊN HỆ NGAY',
-                                style: TextStyle(
-                                  fontWeight: FontWeight.w900,
-                                  letterSpacing: 1.1,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
+
 
               // SECTION POSTS LABEL
               const SliverToBoxAdapter(

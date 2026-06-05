@@ -204,16 +204,21 @@ class _HomeCommentsSheetState extends State<HomeCommentsSheet> {
   Widget build(BuildContext context) {
     final provider = context.read<HomeProvider>();
 
-    return DraggableScrollableSheet(
-      initialChildSize: 0.82,
-      minChildSize: 0.55,
-      maxChildSize: 0.96,
-      builder: (context, scrollController) {
-        return Container(
-          decoration: const BoxDecoration(
-            color: Color(0xFF111317),
-            borderRadius: BorderRadius.vertical(top: Radius.circular(26)),
-          ),
+    return Padding(
+      padding: EdgeInsets.only(
+        bottom: MediaQuery.of(context).viewInsets.bottom,
+      ),
+      child: DraggableScrollableSheet(
+        initialChildSize: 0.82,
+        minChildSize: 0.55,
+        maxChildSize: 0.96,
+        expand: false,
+        builder: (context, scrollController) {
+          return Container(
+            decoration: const BoxDecoration(
+              color: Color(0xFF111317),
+              borderRadius: BorderRadius.vertical(top: Radius.circular(26)),
+            ),
           child: Column(
             children: [
               const SizedBox(height: 12),
@@ -371,8 +376,9 @@ class _HomeCommentsSheetState extends State<HomeCommentsSheet> {
           ),
         );
       },
-    );
-  }
+    ),
+  );
+}
 }
 
 

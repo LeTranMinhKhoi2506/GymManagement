@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../data/models/user_model.dart';
 import '../../screens/PT/pt_class_registration_screen.dart';
+import '../../screens/chat/chat_screen.dart';
 import '../../screens/PT/pt_main_layout.dart';
 import '../../screens/receptionist/receptionist_main_layout.dart';
 import '../../screens/receptionist/swipable_shell_container.dart';
@@ -79,6 +80,7 @@ class Routes {
   static const String ptStudentManagement = '/pt-student-management';
   static const String ptIncome = '/pt-income';
   static const String ptClassRegistration = '/pt-class-registration';
+  static const String chat = '/chat';
 
   static const String receptionistDashboard = '/receptionist-dashboard';
   static const String receptionistCheckIn = '/receptionist-checkin';
@@ -275,6 +277,19 @@ class Routes {
       GoRoute(
         path: ptClassRegistration,
         builder: (context, state) => const PtClassRegistrationScreen(),
+      ),
+      GoRoute(
+        path: chat,
+        builder: (context, state) {
+          final chatRoomId = state.uri.queryParameters['chatRoomId'] ?? '';
+          final otherUserId = state.uri.queryParameters['otherUserId'] ?? '';
+          final otherUserName = state.uri.queryParameters['otherUserName'] ?? '';
+          return ChatScreen(
+            chatRoomId: chatRoomId,
+            otherUserId: otherUserId,
+            otherUserName: otherUserName,
+          );
+        },
       ),
       StatefulShellRoute(
         navigatorContainerBuilder: (context, navigationShell, children) {

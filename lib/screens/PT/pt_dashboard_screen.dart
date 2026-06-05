@@ -1,10 +1,19 @@
+import 'dart:io';
+import 'package:path/path.dart' as p;
+import 'package:file_picker/file_picker.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
 import 'dart:async';
 import '../../app/route/routes.dart';
+import '../../data/models/social_post_model.dart';
+import '../../provider/home_provider.dart';
+import '../customer_home/social_feed/create_post_screen.dart';
+import '../../widget/home_social_feed/home_post_card.dart';
 
 class PtDashboardScreen extends StatefulWidget {
   const PtDashboardScreen({super.key});
@@ -16,774 +25,395 @@ class PtDashboardScreen extends StatefulWidget {
 class _PtDashboardScreenState extends State<PtDashboardScreen> {
   @override
   Widget build(BuildContext context) {
-    final String ptId = FirebaseAuth.instance.currentUser?.uid ?? 'anonymous';
-    final DateTime now = DateTime.now();
-    final DateTime todayStart = DateTime(now.year, now.month, now.day);
-    final DateTime todayEnd = DateTime(now.year, now.month, now.day, 23, 59, 59);
+    return ChangeNotifierProvider<HomeProvider>(
+      create: (_) => HomeProvider(),
+      child: const PtSocialFeedContent(),
+    );
+  }
+}
+
+class PtSocialFeedContent extends StatefulWidget {
+  const PtSocialFeedContent({super.key});
+
+  @override
+  State<PtSocialFeedContent> createState() => _PtSocialFeedContentState();
+}
+
+class _PtSocialFeedContentState extends State<PtSocialFeedContent> {
+  bool _isUploadingAvatar = false;
+
+  void _confirmDeletePost(BuildContext context, String postId) {
+    showDialog(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        backgroundColor: const Color(0xFF1C1C1E),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+          side: const BorderSide(color: Colors.white10),
+        ),
+        title: const Text(
+          "XÓA BÀI VIẾT",
+          style: TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+            fontSize: 16,
+          ),
+        ),
+        content: const Text(
+          "Bạn có chắc chắn muốn xóa bài viết này không? Bài viết sẽ không còn xuất hiện trên bảng tin của học viên.",
+          style: TextStyle(color: Colors.white70, fontSize: 14),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: const Text(
+              "HỦY",
+              style: TextStyle(color: Colors.grey, fontWeight: FontWeight.bold),
+            ),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              Navigator.pop(dialogContext);
+              await FirebaseFirestore.instance.collection('posts').doc(postId).delete();
+              if (context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text("Đã xóa bài viết thành công!"),
+                    backgroundColor: Colors.redAccent,
+                  ),
+                );
+              }
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.redAccent,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            ),
+            child: const Text("XÓA", style: TextStyle(fontWeight: FontWeight.bold)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _updateAvatar(BuildContext context, String ptId) async {
+    try {
+      final result = await FilePicker.platform.pickFiles(
+        type: FileType.image,
+        allowMultiple: false,
+      );
+      if (result == null || result.files.isEmpty || result.files.first.path == null) return;
+
+      setState(() {
+        _isUploadingAvatar = true;
+      });
+
+      final filePath = result.files.first.path!;
+      final file = File(filePath);
+
+      final fileName = p.basename(filePath);
+      final storageRef = FirebaseStorage.instance
+          .ref()
+          .child('avatars')
+          .child(ptId)
+          .child(fileName);
+
+      await storageRef.putFile(file);
+      final downloadUrl = await storageRef.getDownloadURL();
+
+      final user = FirebaseAuth.instance.currentUser;
+      if (user != null) {
+        await user.updatePhotoURL(downloadUrl);
+      }
+
+      await FirebaseFirestore.instance.collection('users').doc(ptId).update({
+        'avatarUrl': downloadUrl,
+        'photoUrl': downloadUrl,
+        'profileImageUrl': downloadUrl,
+      });
+
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text("Cập nhật ảnh đại diện thành công!"),
+            backgroundColor: Color(0xFFD0FD3E),
+          ),
+        );
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text("Lỗi cập nhật ảnh đại diện: $e"),
+            backgroundColor: Colors.redAccent,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isUploadingAvatar = false;
+        });
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final ptUser = FirebaseAuth.instance.currentUser;
+    final String ptId = ptUser?.uid ?? 'anonymous';
+    final String ptName = ptUser?.displayName ?? 'Huấn luyện viên';
+    final String? avatarUrl = ptUser?.photoURL;
+
+    final loading = context.select<HomeProvider, bool>((p) => p.loading);
+    final posts = context.select<HomeProvider, List<SocialPostModel>>((p) => p.posts);
+    final myPosts = posts.where((p) => p.authorId == ptId).toList();
 
     return Scaffold(
       backgroundColor: Colors.black,
       body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 20.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const SizedBox(height: 10),
-              _buildHeader(),
-              const SizedBox(height: 30),
-              _buildGreeting(),
-              const SizedBox(height: 30),
-              
-              // Stats Row with Real Data
-              StreamBuilder<QuerySnapshot>(
-                stream: FirebaseFirestore.instance
-                    .collection('pt_sessions')
-                    .where('ptId', isEqualTo: ptId)
-                    .where('timestamp', isGreaterThanOrEqualTo: Timestamp.fromDate(todayStart))
-                    .where('timestamp', isLessThanOrEqualTo: Timestamp.fromDate(todayEnd))
-                    .snapshots(),
-                builder: (context, sessionSnapshot) {
-                  int sessionsToday = sessionSnapshot.hasData ? sessionSnapshot.data!.docs.length : 0;
-                  
-                  return StreamBuilder<QuerySnapshot>(
-                    stream: FirebaseFirestore.instance
-                        .collection('students')
-                        .where('ptId', isEqualTo: ptId)
-                        .snapshots(),
-                    builder: (context, studentSnapshot) {
-                      int activeStudents = studentSnapshot.hasData ? studentSnapshot.data!.docs.length : 0;
-                      
-                      return Row(
+        child: CustomScrollView(
+          physics: const BouncingScrollPhysics(),
+          slivers: [
+            // Header
+            SliverPadding(
+              padding: const EdgeInsets.fromLTRB(20, 16, 20, 10),
+              sliver: SliverToBoxAdapter(
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Row(
+                      children: [
+                        CircleAvatar(
+                          radius: 18,
+                          backgroundColor: Colors.grey[900],
+                          backgroundImage: (avatarUrl != null && avatarUrl.isNotEmpty)
+                              ? NetworkImage(avatarUrl)
+                              : null,
+                          child: avatarUrl == null
+                              ? const Icon(Icons.person, color: Colors.white70, size: 18)
+                              : null,
+                        ),
+                        const SizedBox(width: 10),
+                        const Text(
+                          "KINETIC",
+                          style: TextStyle(
+                            color: Color(0xFFD0FD3E),
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            letterSpacing: 1.2,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const Icon(Icons.notifications_none, color: Colors.white, size: 28),
+                  ],
+                ),
+              ),
+            ),
+            
+            // Welcome Section
+            SliverPadding(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+              sliver: SliverToBoxAdapter(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    RichText(
+                      text: TextSpan(
+                        style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold, height: 1.1),
                         children: [
-                          Expanded(
-                            child: _buildSmallStatCard(
-                              icon: Icons.bolt,
-                              value: sessionsToday.toString(),
-                              label: "CA DẠY HÔM NAY",
-                              iconColor: const Color(0xFFD0FD3E),
-                            ),
-                          ),
-                          const SizedBox(width: 15),
-                          Expanded(
-                            child: _buildSmallStatCard(
-                              icon: Icons.people_outline,
-                              value: activeStudents.toString(),
-                              label: "HỌC VIÊN ĐANG THEO",
-                              iconColor: Colors.orangeAccent,
-                            ),
-                          ),
+                          const TextSpan(text: "Bảng tin,\n", style: TextStyle(color: Colors.white)),
+                          TextSpan(text: ptName, style: const TextStyle(color: Color(0xFFD0FD3E))),
                         ],
-                      );
-                    }
-                  );
-                }
-              ),
-              
-              const SizedBox(height: 15),
-              
-              // Earnings Card with Real Data
-              StreamBuilder<QuerySnapshot>(
-                stream: FirebaseFirestore.instance
-                    .collection('pt_sessions')
-                    .where('ptId', isEqualTo: ptId)
-                    .where('status', isEqualTo: 'HOÀN THÀNH')
-                    .where('timestamp', isGreaterThanOrEqualTo: Timestamp.fromDate(todayStart))
-                    .snapshots(),
-                builder: (context, snapshot) {
-                  double todayEarnings = 0;
-                  if (snapshot.hasData) {
-                    for (var doc in snapshot.data!.docs) {
-                      todayEarnings += (doc.data() as Map<String, dynamic>)['amount'] ?? 0.0;
-                    }
-                  }
-                  return _buildEarningsCard(todayEarnings);
-                },
-              ),
-
-              const SizedBox(height: 30),
-              _buildSectionTitle("QUY TRÌNH VẬN HÀNH"),
-              const SizedBox(height: 15),
-              _buildOperationalProtocol(context, ptId),
-              const SizedBox(height: 30),
-              _buildSectionTitle("TRUNG TÂM QUẢN LÝ"),
-              const SizedBox(height: 15),
-              _buildMyScheduleCard(context, ptId),
-              const SizedBox(height: 15),
-              _buildHubSecondaryRow(context),
-              const SizedBox(height: 15),
-              _buildHubThirdRow(context),
-              const SizedBox(height: 30),
-              _buildSectionHeader("HOẠT ĐỘNG GẦN ĐÂY", () {}),
-              const SizedBox(height: 15),
-              _buildRecentActivityList(ptId),
-              const SizedBox(height: 30),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildHeader() {
-    final user = FirebaseAuth.instance.currentUser;
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Row(
-          children: [
-            _buildSafeAvatar(user?.photoURL ?? 'https://i.pravatar.cc/150?u=pt_marcus', 18),
-            const SizedBox(width: 10),
-            const Text(
-              "KINETIC",
-              style: TextStyle(
-                color: Color(0xFFD0FD3E),
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                letterSpacing: 1.2,
-              ),
-            ),
-          ],
-        ),
-        const Icon(Icons.notifications_none, color: Colors.white, size: 28),
-      ],
-    );
-  }
-
-  Widget _buildSafeAvatar(String url, double radius) {
-    return CircleAvatar(
-      radius: radius,
-      backgroundColor: Colors.grey[900],
-      child: ClipOval(
-        child: Image.network(
-          url,
-          fit: BoxFit.cover,
-          width: radius * 2,
-          height: radius * 2,
-          errorBuilder: (context, error, stackTrace) {
-            return Icon(Icons.person, color: Colors.white, size: radius);
-          },
-        ),
-      ),
-    );
-  }
-
-  Widget _buildGreeting() {
-    final user = FirebaseAuth.instance.currentUser;
-    String name = user?.displayName ?? "Huấn luyện viên";
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        RichText(
-          text: TextSpan(
-            style: const TextStyle(fontSize: 32, fontWeight: FontWeight.bold, height: 1.1),
-            children: [
-              const TextSpan(text: "Xin chào,\n", style: TextStyle(color: Colors.white)),
-              TextSpan(text: name, style: const TextStyle(color: Color(0xFFD0FD3E))),
-            ],
-          ),
-        ),
-        const SizedBox(height: 10),
-        const Text(
-          "Hệ thống đã sẵn sàng. Chúc bạn một ngày làm việc hiệu quả.",
-          style: TextStyle(color: Colors.grey, fontSize: 14),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildSmallStatCard({required IconData icon, required String value, required String label, required Color iconColor}) {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: const Color(0xFF1C1C1E),
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Icon(icon, color: iconColor, size: 24),
-          const SizedBox(height: 20),
-          Text(value, style: const TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold)),
-          const SizedBox(height: 4),
-          Text(label, style: const TextStyle(color: Colors.grey, fontSize: 10, fontWeight: FontWeight.bold)),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildEarningsCard(double earnings) {
-    final formatter = NumberFormat.currency(locale: 'vi_VN', symbol: '₫');
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: const Color(0xFFD0FD3E),
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              const Icon(Icons.account_balance_wallet_outlined, color: Colors.black, size: 28),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: Colors.black.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: const Text(
-                  "HÔM NAY",
-                  style: TextStyle(color: Colors.black, fontSize: 10, fontWeight: FontWeight.bold),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 15),
-          Text(
-            formatter.format(earnings),
-            style: const TextStyle(color: Colors.black, fontSize: 28, fontWeight: FontWeight.bold),
-          ),
-          const Text(
-            "THU NHẬP ĐÃ HOÀN THÀNH",
-            style: TextStyle(color: Colors.black54, fontSize: 12, fontWeight: FontWeight.bold),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildSectionTitle(String title) {
-    return Text(
-      title,
-      style: const TextStyle(color: Colors.grey, fontSize: 12, fontWeight: FontWeight.bold, letterSpacing: 1.0),
-    );
-  }
-
-  // Chức năng VẬN HÀNH: Vào ca / Hết ca (Tích hợp QR Chấm công) và Điểm danh học viên
-  Widget _buildOperationalProtocol(BuildContext context, String ptId) {
-    return StreamBuilder<QuerySnapshot>(
-      stream: FirebaseFirestore.instance
-          .collection('pt_shifts')
-          .where('ptId', isEqualTo: ptId)
-          .where('endTime', isNull: true)
-          .limit(1)
-          .snapshots(),
-      builder: (context, snapshot) {
-        bool checkedIn = snapshot.hasData && snapshot.data!.docs.isNotEmpty;
-        String shiftId = checkedIn ? snapshot.data!.docs.first.id : '';
-
-        return Row(
-          children: [
-            Expanded(
-              child: GestureDetector(
-                onTap: () => _handleQRShiftCheck(context, ptId, checkedIn, shiftId),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(vertical: 18),
-                  decoration: BoxDecoration(
-                    color: checkedIn ? const Color(0xFF1E3A1E) : const Color(0xFF1C1C1E),
-                    borderRadius: BorderRadius.circular(15),
-                    border: checkedIn ? Border.all(color: Colors.greenAccent, width: 1.5) : null,
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        Icons.qr_code_scanner, 
-                        color: checkedIn ? Colors.greenAccent : Colors.white, 
-                        size: 20
-                      ),
-                      const SizedBox(width: 10),
-                      Text(
-                        checkedIn ? "HẾT CA" : "VÀO CA (QR)", 
-                        style: TextStyle(
-                          color: checkedIn ? Colors.greenAccent : Colors.white, 
-                          fontSize: 12, 
-                          fontWeight: FontWeight.bold
-                        )
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(width: 15),
-            Expanded(
-              child: GestureDetector(
-                onTap: () => _showAttendanceBottomSheet(context, ptId),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(vertical: 18),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF1C1C1E),
-                    borderRadius: BorderRadius.circular(15),
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: const [
-                      Icon(Icons.person_search_outlined, color: Colors.orangeAccent, size: 20),
-                      SizedBox(width: 10),
-                      Text("ĐIỂM DANH", style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold)),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          ],
-        );
-      }
-    );
-  }
-
-  // Mở Dialog quét QR chấm công Vào ca / Hết ca
-  void _handleQRShiftCheck(BuildContext context, String ptId, bool isCheckedIn, String shiftId) {
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (dialogContext) => QRScannerDialog(
-        title: isCheckedIn ? "QUÉT QR CHẤM CÔNG HẾT CA" : "QUÉT QR CHẤM CÔNG VÀO CA",
-        subtitle: isCheckedIn ? "Hãy căn chỉnh mã QR hết ca của phòng tập vào khung hình" : "Hãy căn chỉnh mã QR vào ca của phòng tập vào khung hình",
-        onSuccess: () async {
-          if (isCheckedIn) {
-            // Hết ca: cập nhật endTime
-            await FirebaseFirestore.instance.collection('pt_shifts').doc(shiftId).update({
-              'endTime': FieldValue.serverTimestamp(),
-            });
-            // Thêm vào hoạt động
-            await FirebaseFirestore.instance.collection('pt_activities').add({
-              'ptId': ptId,
-              'type': 'session',
-              'title': 'Hết ca làm việc',
-              'subtitle': 'Đã hoàn thành ca làm việc lúc ${DateFormat('HH:mm').format(DateTime.now())}',
-              'timestamp': FieldValue.serverTimestamp(),
-            });
-          } else {
-            // Vào ca: tạo doc mới
-            await FirebaseFirestore.instance.collection('pt_shifts').add({
-              'ptId': ptId,
-              'startTime': FieldValue.serverTimestamp(),
-              'endTime': null,
-              'date': DateFormat('yyyy-MM-dd').format(DateTime.now()),
-              'type': 'QR_CHECK_IN',
-            });
-            // Thêm vào hoạt động
-            await FirebaseFirestore.instance.collection('pt_activities').add({
-              'ptId': ptId,
-              'type': 'session',
-              'title': 'Vào ca làm việc',
-              'subtitle': 'Bắt đầu ca làm việc bằng QR lúc ${DateFormat('HH:mm').format(DateTime.now())}',
-              'timestamp': FieldValue.serverTimestamp(),
-            });
-          }
-        },
-      ),
-    );
-  }
-
-  // Mở Bottom Sheet danh sách học viên để điểm danh nhanh
-  void _showAttendanceBottomSheet(BuildContext context, String ptId) {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: const Color(0xFF1C1C1E),
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(25)),
-      ),
-      builder: (context) {
-        return DraggableScrollableSheet(
-          initialChildSize: 0.7,
-          minChildSize: 0.5,
-          maxChildSize: 0.95,
-          expand: false,
-          builder: (context, scrollController) {
-            return Container(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Center(
-                    child: Container(
-                      width: 40,
-                      height: 5,
-                      decoration: BoxDecoration(
-                        color: Colors.grey[700],
-                        borderRadius: BorderRadius.circular(10),
                       ),
                     ),
-                  ),
-                  const SizedBox(height: 20),
-                  const Text(
-                    "ĐIỂM DANH HỌC VIÊN",
-                    style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
-                  ),
-                  const Text(
-                    "Chọn học viên dưới đây để quét mã QR điểm danh buổi tập",
-                    style: TextStyle(color: Colors.grey, fontSize: 12),
-                  ),
-                  const SizedBox(height: 20),
-                  Expanded(
-                    child: StreamBuilder<QuerySnapshot>(
-                      stream: FirebaseFirestore.instance
-                          .collection('students')
-                          .where('ptId', isEqualTo: ptId)
-                          .snapshots(),
-                      builder: (context, snapshot) {
-                        if (snapshot.hasError) return const Center(child: Text("Lỗi tải dữ liệu học viên", style: TextStyle(color: Colors.red)));
-                        if (snapshot.connectionState == ConnectionState.waiting) {
-                          return const Center(child: CircularProgressIndicator(color: Color(0xFFD0FD3E)));
-                        }
-                        if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-                          return const Center(child: Text("Chưa có học viên nào để điểm danh", style: TextStyle(color: Colors.grey)));
-                        }
+                    const SizedBox(height: 8),
+                    const Text(
+                      "Cập nhật các bài viết tương tác, chia sẻ kiến thức tập luyện với các học viên.",
+                      style: TextStyle(color: Colors.grey, fontSize: 13),
+                    ),
+                  ],
+                ),
+              ),
+            ),
 
-                        return ListView.separated(
-                          controller: scrollController,
-                          itemCount: snapshot.data!.docs.length,
-                          separatorBuilder: (context, index) => const Divider(color: Colors.white10),
-                          itemBuilder: (context, index) {
-                            var doc = snapshot.data!.docs[index];
-                            var data = doc.data() as Map<String, dynamic>;
-                            String studentName = data['name'] ?? "Học viên";
-                            String goal = data['goal'] ?? "CHƯA XÁC ĐỊNH";
-
-                            return ListTile(
-                              contentPadding: EdgeInsets.zero,
-                              leading: _buildSafeAvatar(data['photoUrl'] ?? 'https://i.pravatar.cc/150?u=${doc.id}', 24),
-                              title: Text(studentName, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 15)),
-                              subtitle: Text("Mục tiêu: $goal", style: const TextStyle(color: Colors.grey, fontSize: 12)),
-                              trailing: ElevatedButton.icon(
-                                onPressed: () {
-                                  Navigator.pop(context); // Đóng Bottom Sheet trước
-                                  _handleStudentQRCheck(context, ptId, studentName);
-                                },
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: const Color(0xFFD0FD3E),
-                                  foregroundColor: Colors.black,
-                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            // Prompt Card for Creating Posts
+            SliverPadding(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+              sliver: SliverToBoxAdapter(
+                child: Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF1C1C1E),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(color: Colors.white.withOpacity(0.05)),
+                  ),
+                  child: Row(
+                    children: [
+                      GestureDetector(
+                        onTap: _isUploadingAvatar ? null : () => _updateAvatar(context, ptId),
+                        child: Stack(
+                          children: [
+                            CircleAvatar(
+                              radius: 20,
+                              backgroundColor: const Color(0xFF2C2F36),
+                              backgroundImage: (avatarUrl != null && avatarUrl.isNotEmpty && !_isUploadingAvatar) ? NetworkImage(avatarUrl) : null,
+                              child: (avatarUrl == null || _isUploadingAvatar)
+                                  ? _isUploadingAvatar
+                                      ? const SizedBox(
+                                          width: 16,
+                                          height: 16,
+                                          child: CircularProgressIndicator(color: Color(0xFFD0FD3E), strokeWidth: 1.5),
+                                        )
+                                      : const Icon(Icons.person, color: Colors.white70, size: 20)
+                                  : null,
+                            ),
+                            if (!_isUploadingAvatar)
+                              Positioned(
+                                bottom: 0,
+                                right: 0,
+                                child: Container(
+                                  padding: const EdgeInsets.all(2),
+                                  decoration: const BoxDecoration(
+                                    color: Color(0xFFD0FD3E),
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: const Icon(
+                                    Icons.add,
+                                    color: Colors.black,
+                                    size: 10,
+                                  ),
                                 ),
-                                icon: const Icon(Icons.qr_code_scanner, size: 16),
-                                label: const Text("QUÉT QR", style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
+                              ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 14),
+                      Expanded(
+                        child: GestureDetector(
+                          onTap: () {
+                            final provider = context.read<HomeProvider>();
+                            Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder: (_) => ChangeNotifierProvider.value(
+                                  value: provider,
+                                  child: const CreatePostScreen(),
+                                ),
                               ),
                             );
                           },
-                        );
-                      },
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                            decoration: BoxDecoration(
+                              color: Colors.black.withOpacity(0.3),
+                              borderRadius: BorderRadius.circular(99),
+                            ),
+                            child: const Text(
+                              "Chia sẻ kinh nghiệm tập luyện của bạn...",
+                              style: TextStyle(color: Colors.white30, fontSize: 13),
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      IconButton(
+                        icon: const Icon(Icons.add_photo_alternate_rounded, color: Color(0xFFD0FD3E)),
+                        onPressed: () {
+                          final provider = context.read<HomeProvider>();
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (_) => ChangeNotifierProvider.value(
+                                value: provider,
+                                child: const CreatePostScreen(),
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+
+            // Title Section "BÀI VIẾT CỦA BẠN"
+            SliverPadding(
+              padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
+              sliver: SliverToBoxAdapter(
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text(
+                      "BÀI VIẾT CỦA BẠN",
+                      style: TextStyle(color: Colors.grey, fontSize: 12, fontWeight: FontWeight.bold, letterSpacing: 1.0),
+                    ),
+                    Text(
+                      "${myPosts.length} bài viết",
+                      style: const TextStyle(color: Color(0xFFD0FD3E), fontSize: 12, fontWeight: FontWeight.bold),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+
+            // Feed list
+            if (loading)
+              const SliverFillRemaining(
+                hasScrollBody: false,
+                child: Center(
+                  child: CircularProgressIndicator(color: Color(0xFFD0FD3E)),
+                ),
+              )
+            else if (myPosts.isEmpty)
+              const SliverFillRemaining(
+                hasScrollBody: false,
+                child: Center(
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(vertical: 40),
+                    child: Text(
+                      "Bạn chưa đăng bài viết nào.\nHãy chia sẻ bài tập hoặc kiến thức đầu tiên!",
+                      style: TextStyle(color: Colors.grey, fontSize: 14),
+                      textAlign: TextAlign.center,
                     ),
                   ),
-                ],
-              ),
-            );
-          },
-        );
-      },
-    );
-  }
-
-  // Quét QR điểm danh cho học viên
-  void _handleStudentQRCheck(BuildContext context, String ptId, String studentName) {
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (dialogContext) => QRScannerDialog(
-        title: "QUÉT MÃ QR HỌC VIÊN",
-        subtitle: "Đặt mã QR của học viên $studentName vào giữa khung hình để điểm danh",
-        onSuccess: () async {
-          // Thêm hoạt động điểm danh thành công
-          await FirebaseFirestore.instance.collection('pt_activities').add({
-            'ptId': ptId,
-            'type': 'booking',
-            'title': 'Điểm danh học viên thành công',
-            'subtitle': 'Học viên $studentName đã có mặt đúng giờ',
-            'timestamp': FieldValue.serverTimestamp(),
-          });
-        },
-      ),
-    );
-  }
-
-  Widget _buildMyScheduleCard(BuildContext context, String ptId) {
-    return GestureDetector(
-      onTap: () => context.go(Routes.ptSchedule),
-      child: Container(
-        padding: const EdgeInsets.all(20),
-        decoration: BoxDecoration(
-          color: const Color(0xFF1C1C1E),
-          borderRadius: BorderRadius.circular(20),
-        ),
-        child: Column(
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Expanded(
-                  child: StreamBuilder<QuerySnapshot>(
-                    stream: FirebaseFirestore.instance
-                        .collection('schedules')
-                        .where('staffUid', isEqualTo: ptId)
-                        .snapshots(),
-                    builder: (context, snapshot) {
-                      String nextSessionInfo = "Không có ca dạy sắp tới";
-                      if (snapshot.hasData && snapshot.data!.docs.isNotEmpty) {
-                        // Tìm ca sắp tới ở local
-                        final now = DateTime.now();
-                        var upcomingDocs = snapshot.data!.docs.where((doc) {
-                          var data = doc.data() as Map<String, dynamic>;
-                          if (data['startTime'] == null) return false;
-                          DateTime startTime = (data['startTime'] as Timestamp).toDate();
-                          String status = data['status'] ?? 'pending';
-                          return startTime.isAfter(now) && status != 'completed';
-                        }).toList();
-
-                        if (upcomingDocs.isNotEmpty) {
-                          upcomingDocs.sort((a, b) {
-                            var aTime = (a.data() as Map<String, dynamic>)['startTime'] as Timestamp;
-                            var bTime = (b.data() as Map<String, dynamic>)['startTime'] as Timestamp;
-                            return aTime.compareTo(bTime);
-                          });
-
-                          var data = upcomingDocs.first.data() as Map<String, dynamic>;
-                          DateTime time = (data['startTime'] as Timestamp).toDate();
-                          nextSessionInfo = "Ca tiếp theo: ${DateFormat('HH:mm').format(time)} - ${data['task'] ?? 'Huấn luyện'}";
-                        }
-                      }
-                      return Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text("Lịch dạy của tôi", style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
-                          const SizedBox(height: 4),
-                          Text(nextSessionInfo, style: const TextStyle(color: Colors.grey, fontSize: 12)),
-                        ],
-                      );
-                    }
-                  ),
                 ),
-                const Icon(Icons.calendar_month, color: Color(0xFFD0FD3E), size: 30),
-              ],
-            ),
-            const SizedBox(height: 20),
-            Row(
-              children: [
-                _buildAvatarStack(ptId),
-                const SizedBox(width: 10),
-                const Text("Học viên sắp tới", style: TextStyle(color: Colors.grey, fontSize: 12)),
-              ],
-            )
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildAvatarStack(String ptId) {
-    return StreamBuilder<QuerySnapshot>(
-      stream: FirebaseFirestore.instance
-          .collection('students')
-          .where('ptId', isEqualTo: ptId)
-          .limit(3)
-          .snapshots(),
-      builder: (context, snapshot) {
-        if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-          return const SizedBox(width: 20);
-        }
-        return Row(
-          mainAxisSize: MainAxisSize.min,
-          children: snapshot.data!.docs.asMap().entries.map((entry) {
-            int index = entry.key;
-            var data = entry.value.data() as Map<String, dynamic>;
-            return Align(
-              widthFactor: 0.6,
-              child: _buildSafeAvatar(data['photoUrl'] ?? 'https://i.pravatar.cc/150?u=student$index', 14),
-            );
-          }).toList(),
-        );
-      }
-    );
-  }
-
-  Widget _buildHubSecondaryRow(BuildContext context) {
-    return Row(
-      children: [
-        Expanded(
-          child: _buildHubCard(
-            icon: Icons.person_search,
-            title: "Danh sách\nHọc viên",
-            subtitle: "XEM & QUẢN LÝ",
-            iconColor: Colors.orangeAccent,
-            onTap: () => context.go(Routes.ptStudentManagement),
-          ),
-        ),
-        const SizedBox(width: 15),
-        Expanded(
-          child: _buildHubCard(
-            icon: Icons.bar_chart,
-            title: "Báo cáo\nThu nhập",
-            subtitle: "CHI TIẾT THÁNG",
-            iconColor: Colors.yellowAccent,
-            onTap: () => context.go(Routes.ptIncome),
-          ),
-        ),
-      ],
-    );
-  }
-
-  // Dòng thẻ quản lý thứ ba: Nút điều hướng đến "ĐĂNG KÝ MỞ LỚP" (Class registration) cực đẹp
-  Widget _buildHubThirdRow(BuildContext context) {
-    return GestureDetector(
-      onTap: () => context.push(Routes.ptClassRegistration),
-      child: Container(
-        width: double.infinity,
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 22),
-        decoration: BoxDecoration(
-          gradient: const LinearGradient(
-            colors: [Color(0xFF1C1C1E), Color(0xFF2C2C2E)],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: const Color(0xFFD0FD3E).withValues(alpha: 0.15), width: 1),
-        ),
-        child: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: const Color(0xFFD0FD3E).withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(15),
-              ),
-              child: const Icon(Icons.add_task, color: Color(0xFFD0FD3E), size: 24),
-            ),
-            const SizedBox(width: 15),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: const [
-                  Text(
-                    "Đăng ký mở lớp học mới",
-                    style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
-                  ),
-                  SizedBox(height: 4),
-                  Text(
-                    "ĐĂNG KÝ LỊCH VÀ KHUNG GIỜ GIẢNG DẠY",
-                    style: TextStyle(color: Colors.grey, fontSize: 10, fontWeight: FontWeight.bold, letterSpacing: 0.5),
-                  ),
-                ],
-              ),
-            ),
-            const Icon(Icons.arrow_forward_ios, color: Colors.grey, size: 16),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildHubCard({
-    required IconData icon,
-    required String title,
-    required String subtitle,
-    required Color iconColor,
-    required VoidCallback onTap,
-  }) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.all(15),
-        decoration: BoxDecoration(
-          color: const Color(0xFF1C1C1E),
-          borderRadius: BorderRadius.circular(20),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Icon(icon, color: iconColor, size: 24),
-            const SizedBox(height: 15),
-            Text(title, style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 4),
-            Text(subtitle, style: const TextStyle(color: Colors.grey, fontSize: 8, fontWeight: FontWeight.bold)),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildSectionHeader(String title, VoidCallback onTap) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text(
-          title,
-          style: const TextStyle(color: Colors.grey, fontSize: 12, fontWeight: FontWeight.bold),
-        ),
-        GestureDetector(
-          onTap: onTap,
-          child: const Text(
-            "XEM TẤT CẢ",
-            style: TextStyle(color: Color(0xFFD0FD3E), fontSize: 10, fontWeight: FontWeight.bold),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildRecentActivityList(String ptId) {
-    return StreamBuilder<QuerySnapshot>(
-      stream: FirebaseFirestore.instance
-          .collection('pt_activities')
-          .where('ptId', isEqualTo: ptId)
-          .orderBy('timestamp', descending: true)
-          .limit(3)
-          .snapshots(),
-      builder: (context, snapshot) {
-        if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-          return const Center(
-            child: Padding(
-              padding: EdgeInsets.symmetric(vertical: 20),
-              child: Text("Chưa có hoạt động nào gần đây", style: TextStyle(color: Colors.grey)),
-            ),
-          );
-        }
-
-        return Container(
-          decoration: BoxDecoration(
-            color: const Color(0xFF1C1C1E),
-            borderRadius: BorderRadius.circular(20),
-          ),
-          child: ListView.separated(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            itemCount: snapshot.data!.docs.length,
-            separatorBuilder: (context, index) => const Divider(color: Colors.black, height: 1),
-            itemBuilder: (context, index) {
-              var data = snapshot.data!.docs[index].data() as Map<String, dynamic>;
-              DateTime time = data['timestamp'] != null 
-                  ? (data['timestamp'] as Timestamp).toDate() 
-                  : DateTime.now();
-              
-              return ListTile(
-                contentPadding: const EdgeInsets.symmetric(horizontal: 15, vertical: 8),
-                leading: Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: Colors.black,
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Icon(
-                    _getActivityIcon(data['type']),
-                    color: _getActivityColor(data['type']),
-                    size: 20
-                  ),
+              )
+            else
+              SliverPadding(
+                padding: const EdgeInsets.fromLTRB(20, 8, 20, 40),
+                sliver: SliverList.separated(
+                  itemCount: myPosts.length,
+                  separatorBuilder: (context, index) => const SizedBox(height: 16),
+                  itemBuilder: (context, index) {
+                    final post = myPosts[index];
+                    return Stack(
+                      children: [
+                        HomePostCard(post: post),
+                        Positioned(
+                          top: 10,
+                          right: 10,
+                          child: Container(
+                            decoration: const BoxDecoration(
+                              color: Colors.black54,
+                              shape: BoxShape.circle,
+                            ),
+                            child: IconButton(
+                              icon: const Icon(Icons.delete_outline_rounded, color: Colors.redAccent, size: 20),
+                              onPressed: () => _confirmDeletePost(context, post.id),
+                            ),
+                          ),
+                        ),
+                      ],
+                    );
+                  },
                 ),
-                title: Text(data['title'] ?? "", style: const TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.bold)),
-                subtitle: Text(data['subtitle'] ?? "", style: const TextStyle(color: Colors.grey, fontSize: 11)),
-                trailing: Text(DateFormat('HH:mm').format(time), style: const TextStyle(color: Colors.grey, fontSize: 10)),
-              );
-            },
-          ),
-        );
-      }
+              ),
+          ],
+        ),
+      ),
     );
   }
-
   IconData _getActivityIcon(String? type) {
     switch (type) {
       case 'note': return Icons.edit_note;

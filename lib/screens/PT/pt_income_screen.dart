@@ -21,7 +21,7 @@ class PtIncomeScreen extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _buildHeader(),
+              _buildHeader(context),
               const SizedBox(height: 30),
               const Text(
                 "BÁO CÁO THU NHẬP",
@@ -141,7 +141,7 @@ class PtIncomeScreen extends StatelessWidget {
     }
   }
 
-  Widget _buildHeader() {
+  Widget _buildHeader(BuildContext context) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
@@ -160,7 +160,23 @@ class PtIncomeScreen extends StatelessWidget {
             ),
           ],
         ),
-        const Icon(Icons.notifications_none, color: Colors.white, size: 28),
+        Row(
+          children: [
+            const Icon(Icons.notifications_none, color: Colors.white, size: 28),
+            const SizedBox(width: 10),
+            IconButton(
+              icon: const Icon(Icons.logout_rounded, color: Colors.redAccent, size: 24),
+              padding: EdgeInsets.zero,
+              constraints: const BoxConstraints(),
+              onPressed: () async {
+                await FirebaseAuth.instance.signOut();
+                if (context.mounted) {
+                  context.go(Routes.login);
+                }
+              },
+            ),
+          ],
+        ),
       ],
     );
   }

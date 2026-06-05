@@ -46,177 +46,182 @@ class _CustomerHomeProfileTabState extends State<CustomerHomeProfileTab> {
                 right: 24,
                 top: 18,
               ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Center(
-                    child: Container(
-                      width: 44,
-                      height: 5,
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Center(
+                      child: Container(
+                        width: 44,
+                        height: 5,
+                        decoration: BoxDecoration(
+                          color: Colors.white24,
+                          borderRadius: BorderRadius.circular(99),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 18),
+                    const Text(
+                      'CẬP NHẬT THÔNG TIN',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 18,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+
+                    // Họ & Tên
+                    const Text('HỌ VÀ TÊN', style: TextStyle(color: Color(0xFF8E9196), fontSize: 10, fontWeight: FontWeight.bold)),
+                    const SizedBox(height: 8),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
                       decoration: BoxDecoration(
-                        color: Colors.white24,
-                        borderRadius: BorderRadius.circular(99),
+                        color: const Color(0xFF20242B),
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                      child: TextField(
+                        controller: nameController,
+                        style: const TextStyle(color: Colors.white, fontSize: 14),
+                        cursorColor: HomeSocialFeedTheme.accent,
+                        decoration: const InputDecoration(
+                          hintText: 'Nhập họ và tên...',
+                          hintStyle: TextStyle(color: Colors.white30, fontSize: 13),
+                          border: InputBorder.none,
+                          filled: false,
+                        ),
                       ),
                     ),
-                  ),
-                  const SizedBox(height: 18),
-                  const Text(
-                    'CẬP NHẬT THÔNG TIN',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 18,
-                      fontWeight: FontWeight.w900,
-                    ),
-                  ),
-                  const SizedBox(height: 16),
+                    const SizedBox(height: 16),
 
-                  // Họ & Tên
-                  const Text('HỌ VÀ TÊN', style: TextStyle(color: Color(0xFF8E9196), fontSize: 10, fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 8),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF20242B),
-                      borderRadius: BorderRadius.circular(14),
-                    ),
-                    child: TextField(
-                      controller: nameController,
-                      style: const TextStyle(color: Colors.white, fontSize: 14),
-                      cursorColor: HomeSocialFeedTheme.accent,
-                      decoration: const InputDecoration(
-                        hintText: 'Nhập họ và tên...',
-                        hintStyle: TextStyle(color: Colors.white30, fontSize: 13),
-                        border: InputBorder.none,
+                    // Số điện thoại
+                    const Text('SỐ ĐIỆN THOẠI', style: TextStyle(color: Color(0xFF8E9196), fontSize: 10, fontWeight: FontWeight.bold)),
+                    const SizedBox(height: 8),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF20242B),
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                      child: TextField(
+                        controller: phoneController,
+                        keyboardType: TextInputType.phone,
+                        style: const TextStyle(color: Colors.white, fontSize: 14),
+                        cursorColor: HomeSocialFeedTheme.accent,
+                        decoration: const InputDecoration(
+                          hintText: 'Nhập số điện thoại...',
+                          hintStyle: TextStyle(color: Colors.white30, fontSize: 13),
+                          border: InputBorder.none,
+                          filled: false,
+                        ),
                       ),
                     ),
-                  ),
-                  const SizedBox(height: 16),
+                    const SizedBox(height: 16),
 
-                  // Số điện thoại
-                  const Text('SỐ ĐIỆN THOẠI', style: TextStyle(color: Color(0xFF8E9196), fontSize: 10, fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 8),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF20242B),
-                      borderRadius: BorderRadius.circular(14),
-                    ),
-                    child: TextField(
-                      controller: phoneController,
-                      keyboardType: TextInputType.phone,
-                      style: const TextStyle(color: Colors.white, fontSize: 14),
-                      cursorColor: HomeSocialFeedTheme.accent,
-                      decoration: const InputDecoration(
-                        hintText: 'Nhập số điện thoại...',
-                        hintStyle: TextStyle(color: Colors.white30, fontSize: 13),
-                        border: InputBorder.none,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-
-                  // Giới tính
-                  const Text('GIỚI TÍNH', style: TextStyle(color: Color(0xFF8E9196), fontSize: 10, fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 8),
-                  Row(
-                    children: genders.map((gender) {
-                      final isSelected = selectedGender == gender;
-                      return GestureDetector(
-                        onTap: () => setSheetState(() => selectedGender = gender),
-                        child: Container(
-                          margin: const EdgeInsets.only(right: 12),
-                          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                          decoration: BoxDecoration(
-                            color: isSelected ? HomeSocialFeedTheme.accent : const Color(0xFF20242B),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Text(
-                            gender,
-                            style: TextStyle(
-                              color: isSelected ? Colors.black : Colors.white,
-                              fontSize: 13,
-                              fontWeight: FontWeight.bold,
+                    // Giới tính
+                    const Text('GIỚI TÍNH', style: TextStyle(color: Color(0xFF8E9196), fontSize: 10, fontWeight: FontWeight.bold)),
+                    const SizedBox(height: 8),
+                    Row(
+                      children: genders.map((gender) {
+                        final isSelected = selectedGender == gender;
+                        return GestureDetector(
+                          onTap: () => setSheetState(() => selectedGender = gender),
+                          child: Container(
+                            margin: const EdgeInsets.only(right: 12),
+                            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                            decoration: BoxDecoration(
+                              color: isSelected ? HomeSocialFeedTheme.accent : const Color(0xFF20242B),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Text(
+                              gender,
+                              style: TextStyle(
+                                color: isSelected ? Colors.black : Colors.white,
+                                fontSize: 13,
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
                           ),
-                        ),
-                      );
-                    }).toList(),
-                  ),
-                  const SizedBox(height: 16),
-
-                  // Địa chỉ
-                  const Text('ĐỊA CHỈ', style: TextStyle(color: Color(0xFF8E9196), fontSize: 10, fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 8),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF20242B),
-                      borderRadius: BorderRadius.circular(14),
+                        );
+                      }).toList(),
                     ),
-                    child: TextField(
-                      controller: addressController,
-                      style: const TextStyle(color: Colors.white, fontSize: 14),
-                      cursorColor: HomeSocialFeedTheme.accent,
-                      decoration: const InputDecoration(
-                        hintText: 'Nhập địa chỉ của bạn...',
-                        hintStyle: TextStyle(color: Colors.white30, fontSize: 13),
-                        border: InputBorder.none,
+                    const SizedBox(height: 16),
+
+                    // Địa chỉ
+                    const Text('ĐỊA CHỈ', style: TextStyle(color: Color(0xFF8E9196), fontSize: 10, fontWeight: FontWeight.bold)),
+                    const SizedBox(height: 8),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF20242B),
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                      child: TextField(
+                        controller: addressController,
+                        style: const TextStyle(color: Colors.white, fontSize: 14),
+                        cursorColor: HomeSocialFeedTheme.accent,
+                        decoration: const InputDecoration(
+                          hintText: 'Nhập địa chỉ của bạn...',
+                          hintStyle: TextStyle(color: Colors.white30, fontSize: 13),
+                          border: InputBorder.none,
+                          filled: false,
+                        ),
                       ),
                     ),
-                  ),
-                  const SizedBox(height: 24),
+                    const SizedBox(height: 24),
 
-                  // Nút Lưu
-                  SizedBox(
-                    width: double.infinity,
-                    height: 52,
-                    child: FilledButton(
-                      onPressed: () async {
-                        try {
-                          await FirebaseFirestore.instance.collection('users').doc(uid).update({
-                            'fullName': nameController.text.trim(),
-                            'phone': phoneController.text.trim(),
-                            'phoneNumber': phoneController.text.trim(),
-                            'gender': selectedGender,
-                            'address': addressController.text.trim(),
-                            'updatedAt': FieldValue.serverTimestamp(),
-                          });
-                          if (context.mounted) {
-                            Navigator.pop(context);
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                backgroundColor: HomeSocialFeedTheme.accent,
-                                content: Text(
-                                  'Cập nhật thông tin thành công!',
-                                  style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
+                    // Nút Lưu
+                    SizedBox(
+                      width: double.infinity,
+                      height: 52,
+                      child: FilledButton(
+                        onPressed: () async {
+                          try {
+                            await FirebaseFirestore.instance.collection('users').doc(uid).update({
+                              'fullName': nameController.text.trim(),
+                              'phone': phoneController.text.trim(),
+                              'phoneNumber': phoneController.text.trim(),
+                              'gender': selectedGender,
+                              'address': addressController.text.trim(),
+                              'updatedAt': FieldValue.serverTimestamp(),
+                            });
+                            if (context.mounted) {
+                              Navigator.pop(context);
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  backgroundColor: HomeSocialFeedTheme.accent,
+                                  content: Text(
+                                    'Cập nhật thông tin thành công!',
+                                    style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
+                                  ),
                                 ),
-                              ),
-                            );
+                              );
+                            }
+                          } catch (e) {
+                            if (context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text('Lỗi cập nhật: $e')),
+                              );
+                            }
                           }
-                        } catch (e) {
-                          if (context.mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text('Lỗi cập nhật: $e')),
-                            );
-                          }
-                        }
-                      },
-                      style: FilledButton.styleFrom(
-                        backgroundColor: HomeSocialFeedTheme.accent,
-                        foregroundColor: Colors.black,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
+                        },
+                        style: FilledButton.styleFrom(
+                          backgroundColor: HomeSocialFeedTheme.accent,
+                          foregroundColor: Colors.black,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                        ),
+                        child: const Text(
+                          'LƯU THAY ĐỔI',
+                          style: TextStyle(fontSize: 15, fontWeight: FontWeight.w900),
                         ),
                       ),
-                      child: const Text(
-                        'LƯU THAY ĐỔI',
-                        style: TextStyle(fontWeight: FontWeight.w900, letterSpacing: 1.1),
-                      ),
                     ),
-                  ),
-                  const SizedBox(height: 24),
-                ],
+                    const SizedBox(height: 24),
+                  ],
+                ),
               ),
             );
           },
@@ -508,97 +513,7 @@ class _CustomerHomeProfileTabState extends State<CustomerHomeProfileTab> {
                 ),
               ),
 
-              // 5. PERSONAL TRAINER (PT) SECTION
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        'HUẤN LUYỆN VIÊN (PT)',
-                        style: TextStyle(
-                          color: HomeSocialFeedTheme.muted,
-                          fontSize: 11,
-                          fontWeight: FontWeight.w900,
-                          letterSpacing: 1.5,
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-                      // Query active PT contracts or bookings
-                      StreamBuilder<QuerySnapshot>(
-                        stream: FirebaseFirestore.instance
-                            .collection('schedules')
-                            .where('studentUid', isEqualTo: user.uid)
-                            .where('status', isEqualTo: 'approved')
-                            .snapshots(),
-                        builder: (context, schedSnapshot) {
-                          final hasPT = schedSnapshot.hasData && schedSnapshot.data!.docs.isNotEmpty;
-                          String trainerName = 'Chưa đăng ký HLV';
-                          String infoText = 'Bạn chưa có lịch tập nào được duyệt với HLV';
 
-                          if (hasPT) {
-                            final doc = schedSnapshot.data!.docs.first;
-                            final data = doc.data() as Map<String, dynamic>;
-                            trainerName = data['staffName'] ?? 'HLV Cá Nhân';
-                            infoText = 'Có lịch tập được xếp với huấn luyện viên này.';
-                          }
-
-                          return Container(
-                            decoration: BoxDecoration(
-                              color: HomeSocialFeedTheme.card,
-                              borderRadius: BorderRadius.circular(20),
-                              border: Border.all(color: Colors.white.withOpacity(0.05)),
-                            ),
-                            padding: const EdgeInsets.all(16),
-                            child: Row(
-                              children: [
-                                Container(
-                                  padding: const EdgeInsets.all(12),
-                                  decoration: BoxDecoration(
-                                    color: HomeSocialFeedTheme.accent.withOpacity(0.05),
-                                    borderRadius: BorderRadius.circular(14),
-                                    border: Border.all(color: HomeSocialFeedTheme.accent.withOpacity(0.15)),
-                                  ),
-                                  child: const Icon(
-                                    Icons.sports_gymnastics_rounded,
-                                    color: HomeSocialFeedTheme.accent,
-                                    size: 24,
-                                  ),
-                                ),
-                                const SizedBox(width: 16),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        trainerName,
-                                        style: const TextStyle(
-                                          color: Colors.white,
-                                          fontSize: 14,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
-                                      const SizedBox(height: 4),
-                                      Text(
-                                        infoText,
-                                        style: const TextStyle(
-                                          color: HomeSocialFeedTheme.muted,
-                                          fontSize: 12,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ],
-                            ),
-                          );
-                        },
-                      ),
-                    ],
-                  ),
-                ),
-              ),
 
               // 6. OTHER UTILITIES (PLACEHOLDERS FOR UNIMPLEMENTED FEATURES)
               SliverToBoxAdapter(

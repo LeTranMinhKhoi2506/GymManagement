@@ -103,6 +103,8 @@ class _CustomerTrainersTabState extends State<CustomerTrainersTab> {
                 final uid = doc.id;
                 final fullName = data['fullName'] ?? 'Huấn luyện viên';
                 final position = data['position'] ?? 'PT/Trainer';
+                final avatarUrl = data['avatarUrl'] as String?;
+                final hasAvatar = avatarUrl != null && avatarUrl.trim().isNotEmpty;
 
                 // Assign details
                 trainers.add({
@@ -114,9 +116,11 @@ class _CustomerTrainersTabState extends State<CustomerTrainersTab> {
                   'specialities': specOptions[mockIdx % specOptions.length],
                   'price': 50 + (mockIdx % 6) * 10,
                   'position': position,
-                  'imageUrl': mockIdx < _mockTrainers.length 
-                      ? _mockTrainers[mockIdx]['imageUrl'] 
-                      : 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=500&auto=format&fit=crop&q=60',
+                  'imageUrl': hasAvatar
+                      ? avatarUrl
+                      : (mockIdx < _mockTrainers.length 
+                          ? _mockTrainers[mockIdx]['imageUrl'] 
+                          : 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=500&auto=format&fit=crop&q=60'),
                 });
                 mockIdx++;
               }
@@ -515,33 +519,16 @@ class _CustomerTrainersTabState extends State<CustomerTrainersTab> {
                 const SizedBox(height: 12),
                 // Price & Button
                 Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  mainAxisAlignment: MainAxisAlignment.end,
                   children: [
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text(
-                          'STARTING AT',
-                          style: TextStyle(color: Color(0xFF8E9196), fontSize: 8, fontWeight: FontWeight.bold),
-                        ),
-                        Text(
-                          '\$${trainer['price']}/HR',
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 14,
-                            fontWeight: FontWeight.w900,
-                          ),
-                        ),
-                      ],
-                    ),
                     TextButton(
-                      onPressed: () => _showBookingSheet(context, trainer),
+                      onPressed: () => context.push('${Routes.userProfile}/${trainer['uid']}'),
                       style: TextButton.styleFrom(
                         foregroundColor: const Color(0xFFE7F0BD),
                         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                       ),
                       child: const Text(
-                        'Nhắn tin',
+                        'Xem profile PT',
                         style: TextStyle(
                           fontWeight: FontWeight.w900,
                           fontSize: 13,

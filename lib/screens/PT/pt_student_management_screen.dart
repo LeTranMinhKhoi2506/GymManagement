@@ -2,7 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
+
+import '../../app/route/routes.dart';
 
 class PtStudentManagementScreen extends StatefulWidget {
   const PtStudentManagementScreen({super.key});
@@ -368,7 +371,14 @@ class _PtStudentManagementScreenState extends State<PtStudentManagementScreen> {
               const SizedBox(width: 10),
               Expanded(
                 child: ElevatedButton(
-                  onPressed: () => _showSendMessageDialog(ptId, name),
+                  onPressed: () {
+                    final List<String> ids = [studentUid, ptId];
+                    ids.sort();
+                    final chatRoomId = ids.join('_');
+                    context.push(
+                      '${Routes.chat}?chatRoomId=$chatRoomId&otherUserId=$studentUid&otherUserName=$name'
+                    );
+                  },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFFD0FD3E),
                     foregroundColor: Colors.black,
