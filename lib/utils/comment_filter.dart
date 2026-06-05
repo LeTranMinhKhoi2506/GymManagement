@@ -22,11 +22,14 @@ class CommentFilter {
     required DateTime? lastCommentTime,
   }) async {
     final cleanContent = content.trim();
+    debugPrint('CommentFilter: Starting validation for text: "$cleanContent"');
 
     // 1. Kiểm tra rate limit cục bộ (tối thiểu 5 giây giữa các bình luận)
     if (lastCommentTime != null) {
       final difference = DateTime.now().difference(lastCommentTime);
+      debugPrint('CommentFilter: Rate limit check. Seconds since last: ${difference.inSeconds}');
       if (difference.inSeconds < 5) {
+        debugPrint('CommentFilter: Blocked by rate limit');
         return 'Bạn đang bình luận quá nhanh, vui lòng đợi vài giây!';
       }
     }
@@ -34,6 +37,7 @@ class CommentFilter {
     // 2. Kiểm tra trùng lặp nội dung liên tiếp
     if (lastCommentText != null &&
         lastCommentText.trim().toLowerCase() == cleanContent.toLowerCase()) {
+      debugPrint('CommentFilter: Blocked by duplicate content check');
       return 'Bình luận trùng lặp, vui lòng không spam cùng một câu!';
     }
 
@@ -41,6 +45,7 @@ class CommentFilter {
     // 3.1. Ký tự lặp liên tục nhiều lần (ví dụ: aaaaa, hhhhh, .......)
     final repeatRegex = RegExp(r'(.)\1{4,}'); // Lặp từ 5 lần trở lên
     if (repeatRegex.hasMatch(cleanContent)) {
+      debugPrint('CommentFilter: Blocked by repeat character check');
       return 'Bình luận chứa các ký tự vô nghĩa hoặc lặp lại quá nhiều!';
     }
 
@@ -48,6 +53,7 @@ class CommentFilter {
     final words = cleanContent.split(RegExp(r'\s+'));
     for (final word in words) {
       if (word.length > 20) {
+        debugPrint('CommentFilter: Blocked by word length check: "$word"');
         return 'Bình luận chứa các từ quá dài hoặc vô nghĩa!';
       }
     }
@@ -57,6 +63,7 @@ class CommentFilter {
     for (final badWord in _vietnameseProfanityList) {
       final regex = RegExp(r'\b' + RegExp.escape(badWord) + r'\b');
       if (regex.hasMatch(lowerContent)) {
+        debugPrint('CommentFilter: Blocked by local Vietnamese profanity: "$badWord"');
         return 'Bình luận chứa từ ngữ không phù hợp, vui lòng điều chỉnh!';
       }
     }
@@ -64,6 +71,7 @@ class CommentFilter {
     // 5. Kiểm tra độc hại qua Perspective API (dành cho tiếng Anh hoặc ngôn ngữ được hỗ trợ)
     if (perspectiveApiKey.isNotEmpty &&
         perspectiveApiKey != 'YOUR_API_KEY_HERE') {
+      debugPrint('CommentFilter: Requesting Perspective API...');
       try {
         final url = Uri.parse(
           'https://commentanalyzer.googleapis.com/v1alpha1/comments:analyze?key=$perspectiveApiKey',
@@ -75,26 +83,31 @@ class CommentFilter {
               headers: {'Content-Type': 'application/json'},
               body: jsonEncode({
                 'comment': {'text': cleanContent},
-                // Bỏ qua tham số languages để API tự động nhận diện ngôn ngữ thích hợp (ví dụ: tiếng Anh)
                 'requestedAttributes': {'TOXICITY': {}},
               }),
             )
             .timeout(const Duration(seconds: 4));
 
+        debugPrint('CommentFilter: Perspective API response status: ${response.statusCode}');
         if (response.statusCode == 200) {
           final data = jsonDecode(response.body);
           final score =
               data['attributeScores']?['TOXICITY']?['summaryScore']?['value']
                   as double?;
+          debugPrint('CommentFilter: Perspective API Toxicity Score: $score');
           if (score != null && score > 0.7) {
+            debugPrint('CommentFilter: Blocked by Perspective API Toxicity (> 0.7)');
             return 'Bình luận chứa từ ngữ không phù hợp, vui lòng điều chỉnh!';
           }
+        } else {
+          debugPrint('CommentFilter: Perspective API returned status ${response.statusCode}: ${response.body}');
         }
       } catch (e) {
-        // Hết thời gian chờ hoặc lỗi kết nối mạng thì bỏ qua
-        debugPrint('Perspective API request failed: $e');
+        debugPrint('CommentFilter: Perspective API request failed with exception: $e');
       }
     }
+
+    debugPrint('CommentFilter: Validation passed successfully!');
 
     return null; // Không phát hiện vi phạm
   }

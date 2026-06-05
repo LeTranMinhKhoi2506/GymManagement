@@ -80,9 +80,12 @@ class SocialPostRepository {
     });
   }
 
-  Stream<List<CommentModel>> watchComments(String postId) {
-    return _firestore
-        .collection('posts')
+  Stream<List<CommentModel>> watchComments(String postId) async* {
+    final postDoc = await _firestore.collection('posts').doc(postId).get();
+    final collection = postDoc.exists ? 'posts' : 'contents';
+
+    yield* _firestore
+        .collection(collection)
         .doc(postId)
         .collection('comments')
         .orderBy('createdAt', descending: false)
@@ -110,7 +113,10 @@ class SocialPostRepository {
     }
 
     final profile = await _loadAuthorProfile(user);
-    final postRef = _firestore.collection('posts').doc(postId);
+    final postDoc = await _firestore.collection('posts').doc(postId).get();
+    final collection = postDoc.exists ? 'posts' : 'contents';
+
+    final postRef = _firestore.collection(collection).doc(postId);
     final commentRef = postRef.collection('comments').doc();
     final comment = CommentModel(
       id: commentRef.id,
