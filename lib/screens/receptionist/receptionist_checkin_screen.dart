@@ -264,10 +264,7 @@ class _ReceptionistCheckInScreenState extends State<ReceptionistCheckInScreen> {
                         final data = doc.data() as Map<String, dynamic>;
                         final fullName = (data['fullName'] ?? '').toString().toLowerCase();
                         final email = (data['email'] ?? '').toString().toLowerCase();
-                        final phoneNumber = (data['phoneNumber'] ?? data['phone'] ?? '').toString().toLowerCase();
-                        final matchesSearch = fullName.contains(_searchQuery) ||
-                            email.contains(_searchQuery) ||
-                            phoneNumber.contains(_searchQuery);
+                        final matchesSearch = fullName.contains(_searchQuery) || email.contains(_searchQuery);
 
                         final status = data['status'] ?? 'Active';
                         final isTraining = data['isCurrentlyTraining'] ?? false;

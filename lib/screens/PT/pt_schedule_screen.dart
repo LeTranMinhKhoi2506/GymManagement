@@ -342,7 +342,7 @@ class _PtScheduleScreenState extends State<PtScheduleScreen> {
       }
     } else if (status == "ONGOING") {
       // Mở Bottom Sheet ghi nhật ký tập và Hoàn thành ca dạy
-      _showTrainingJournalBottomSheet(sessionId, studentName, data['studentUid'] as String?);
+      _showTrainingJournalBottomSheet(sessionId, studentName);
     } else if (status == "COMPLETED") {
       // Xem tóm tắt ca dạy
       _showSessionSummary(studentName, data);
@@ -350,7 +350,7 @@ class _PtScheduleScreenState extends State<PtScheduleScreen> {
   }
 
   // Bottom Sheet ghi nhật ký tập luyện & Hoàn thành ca dạy
-  void _showTrainingJournalBottomSheet(String sessionId, String studentName, String? studentUid) {
+  void _showTrainingJournalBottomSheet(String sessionId, String studentName) {
     final TextEditingController focusController = TextEditingController();
     final TextEditingController notesController = TextEditingController();
 
@@ -446,26 +446,6 @@ class _PtScheduleScreenState extends State<PtScheduleScreen> {
                       'notes': notes,
                       'commission': 30000.0,
                     });
-
-                    // 1.5. Trừ 1 buổi tập còn lại của học viên trong collection students
-                    if (studentUid != null && studentUid.isNotEmpty) {
-                      try {
-                        final studentQuery = await FirebaseFirestore.instance
-                            .collection('students')
-                            .where('ptId', isEqualTo: ptId)
-                            .where('memberId', isEqualTo: studentUid)
-                            .get();
-                        
-                        for (var studentDoc in studentQuery.docs) {
-                          await studentDoc.reference.update({
-                            'remainingSessions': FieldValue.increment(-1),
-                            'lastSession': DateFormat('dd/MM').format(DateTime.now()),
-                          });
-                        }
-                      } catch (e) {
-                        debugPrint("Lỗi cập nhật remainingSessions học viên: $e");
-                      }
-                    }
 
                     // 2. Tạo bản ghi doanh thu pt_sessions
                     await FirebaseFirestore.instance.collection('pt_sessions').add({

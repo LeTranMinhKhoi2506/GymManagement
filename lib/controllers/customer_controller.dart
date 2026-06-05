@@ -74,8 +74,7 @@ class CustomerController extends ChangeNotifier {
     _filteredMembers = _allMembers.where((member) {
       final matchesStatus = _filterStatus == 'All' || member.status == _filterStatus;
       final matchesSearch = member.fullName.toLowerCase().contains(_searchQuery) ||
-          member.email.toLowerCase().contains(_searchQuery) ||
-          (member.phoneNumber ?? '').contains(_searchQuery);
+          member.email.toLowerCase().contains(_searchQuery);
       return matchesStatus && matchesSearch;
     }).toList();
   }
