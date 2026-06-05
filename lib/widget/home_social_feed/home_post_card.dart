@@ -6,13 +6,11 @@ import '../../app/route/routes.dart';
 
 import '../../data/models/comment_model.dart';
 import '../../data/models/social_post_model.dart';
-import '../../data/models/workout_exercise_model.dart';
 import '../../provider/home_provider.dart';
 import 'home_action_chip.dart';
 import 'home_comment_tile.dart';
 import 'home_exercise_list.dart';
 import 'home_latest_comment_hint.dart';
-import 'home_metric_tile.dart';
 import 'home_post_media_gallery.dart';
 import 'home_social_feed_theme.dart';
 
@@ -24,7 +22,6 @@ class HomePostCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final provider = context.read<HomeProvider>();
-    final workoutInfo = _WorkoutInfo.fromExercises(post.exercises);
 
     return Container(
       decoration: BoxDecoration(
@@ -39,9 +36,11 @@ class HomePostCard extends StatelessWidget {
           Row(
             children: [
               GestureDetector(
-                onTap: () {
-                  context.push('${Routes.userProfile}/${post.authorId}');
-                },
+                onTap: post.authorId.startsWith('admin')
+                    ? null
+                    : () {
+                        context.push('${Routes.userProfile}/${post.authorId}');
+                      },
                 child: CircleAvatar(
                   radius: 21,
                   backgroundColor: HomeSocialFeedTheme.cardAlt,
@@ -66,9 +65,11 @@ class HomePostCard extends StatelessWidget {
               const SizedBox(width: 12),
               Expanded(
                 child: GestureDetector(
-                  onTap: () {
-                    context.push('${Routes.userProfile}/${post.authorId}');
-                  },
+                  onTap: post.authorId.startsWith('admin')
+                      ? null
+                      : () {
+                          context.push('${Routes.userProfile}/${post.authorId}');
+                        },
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -94,17 +95,18 @@ class HomePostCard extends StatelessWidget {
                   ),
                 ),
               ),
-              TextButton(
-                onPressed: () {},
-                style: TextButton.styleFrom(
-                  foregroundColor: const Color(0xFFFF8B63),
-                  padding: const EdgeInsets.symmetric(horizontal: 8),
+              if (!post.authorId.startsWith('admin'))
+                TextButton(
+                  onPressed: () {},
+                  style: TextButton.styleFrom(
+                    foregroundColor: const Color(0xFFFF8B63),
+                    padding: const EdgeInsets.symmetric(horizontal: 8),
+                  ),
+                  child: const Text(
+                    '+ Follow',
+                    style: TextStyle(fontWeight: FontWeight.w800),
+                  ),
                 ),
-                child: const Text(
-                  '+ Follow',
-                  style: TextStyle(fontWeight: FontWeight.w800),
-                ),
-              ),
             ],
           ),
           if (post.caption.trim().isNotEmpty) ...[
@@ -127,31 +129,7 @@ class HomePostCard extends StatelessWidget {
             const SizedBox(height: 14),
             HomePostMediaGallery(mediaItems: post.mediaItems),
           ],
-          const SizedBox(height: 14),
-          Row(
-            children: [
-              Expanded(
-                child: HomeMetricTile(
-                  label: 'TIME',
-                  value: workoutInfo.workoutTime,
-                ),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: HomeMetricTile(
-                  label: 'VOLUME',
-                  value: workoutInfo.volumeLabel,
-                ),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: HomeMetricTile(
-                  label: 'COMMENTS',
-                  value: post.commentCount.toString(),
-                ),
-              ),
-            ],
-          ),
+
           const SizedBox(height: 12),
           Row(
             children: [
@@ -371,27 +349,4 @@ class _HomeCommentsSheetState extends State<HomeCommentsSheet> {
   }
 }
 
-class _WorkoutInfo {
-  const _WorkoutInfo({required this.workoutTime, required this.volumeLabel});
 
-  final String workoutTime;
-  final String volumeLabel;
-
-  factory _WorkoutInfo.fromExercises(List<WorkoutExerciseModel> exercises) {
-    if (exercises.isEmpty) {
-      return const _WorkoutInfo(workoutTime: '--', volumeLabel: '--');
-    }
-
-    final totalSets = exercises.fold<int>(0, (sum, item) => sum + item.sets);
-    final totalVolume = exercises.fold<int>(
-      0,
-      (sum, item) => sum + (item.sets * item.reps),
-    );
-    final workoutMinutes = (totalSets * 4).clamp(10, 180);
-
-    return _WorkoutInfo(
-      workoutTime: '${workoutMinutes}m',
-      volumeLabel: '$totalVolume reps',
-    );
-  }
-}

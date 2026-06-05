@@ -31,14 +31,45 @@ class SocialPostRepository {
         .orderBy('createdAt', descending: true)
         .snapshots()
         .asyncMap((snapshot) async {
-      final posts = snapshot.docs.map(_fromDoc).toList();
+      final allPosts = snapshot.docs.map(_fromDoc).toList();
+      
+      // Filter posts to only show those authored by Admin or Trainer/PT
+      final authorIds = allPosts.map((p) => p.authorId).toSet().toList();
+      final userDocs = await Future.wait(
+        authorIds.map((uid) => _firestore.collection('users').doc(uid).get()),
+      );
+      final allowedUserIds = <String>{};
+      for (final doc in userDocs) {
+        if (doc.exists) {
+          final data = doc.data();
+          if (data != null) {
+            final role = data['role'] as String? ?? 'user';
+            final position = (data['position'] as String? ?? '').toLowerCase();
+            final isTrainerOrAdmin = role == 'admin' ||
+                role == 'trainer' ||
+                position.contains('trainer') ||
+                position.contains('pt');
+            if (isTrainerOrAdmin) {
+              allowedUserIds.add(doc.id);
+            }
+          }
+        }
+      }
+
+      final posts = allPosts.where((p) => allowedUserIds.contains(p.authorId)).toList();
+
       if (currentUserId == null) {
         return posts;
       }
 
       final likedDocs = await Future.wait(
-        snapshot.docs.map(
-          (doc) => doc.reference.collection('likes').doc(currentUserId).get(),
+        posts.map(
+          (post) => _firestore
+              .collection('posts')
+              .doc(post.id)
+              .collection('likes')
+              .doc(currentUserId)
+              .get(),
         ),
       );
 

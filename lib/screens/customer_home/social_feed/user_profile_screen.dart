@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:intl/intl.dart';
 
 import '../../../data/models/social_post_model.dart';
 import '../../../data/models/user_model.dart';
@@ -11,6 +14,53 @@ class UserProfileScreen extends StatelessWidget {
   const UserProfileScreen({super.key, required this.userId});
 
   final String userId;
+
+  static final List<Map<String, dynamic>> _mockTrainers = [
+    {
+      'uid': 'mock_alex',
+      'fullName': 'ALEX THORNE',
+      'rating': 5.0,
+      'experience': '12+ Yrs',
+      'clients': '310',
+      'specialities': ['STRENGTH', 'CONDITIONING'],
+      'price': 90,
+      'position': 'Elite Strength & Conditioning',
+      'imageUrl': 'https://images.unsplash.com/photo-1567013127542-490d757e51fc?w=500&auto=format&fit=crop&q=60',
+    },
+    {
+      'uid': 'mock_marcus',
+      'fullName': 'COACH MARCUS',
+      'rating': 4.9,
+      'experience': '8+ Yrs',
+      'clients': '124',
+      'specialities': ['BODYBUILDING', 'NUTRITION'],
+      'price': 65,
+      'position': 'PT/Trainer',
+      'imageUrl': 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=500&auto=format&fit=crop&q=60',
+    },
+    {
+      'uid': 'mock_sarah',
+      'fullName': 'SARAH CHEN',
+      'rating': 5.0,
+      'experience': '6+ Yrs',
+      'clients': '89',
+      'specialities': ['HIIT', 'PILATES'],
+      'price': 80,
+      'position': 'PT/Trainer',
+      'imageUrl': 'https://images.unsplash.com/photo-1548690312-e3b507d8c110?w=500&auto=format&fit=crop&q=60',
+    },
+    {
+      'uid': 'mock_david',
+      'fullName': 'DAVID MILLER',
+      'rating': 4.8,
+      'experience': '10+ Yrs',
+      'clients': '210',
+      'specialities': ['CROSSFIT', 'KETTLEBELL'],
+      'price': 75,
+      'position': 'PT/Trainer',
+      'imageUrl': 'https://images.unsplash.com/photo-1507398941214-572c25f4b1bc?w=500&auto=format&fit=crop&q=60',
+    },
+  ];
 
   @override
   Widget build(BuildContext context) {
@@ -48,9 +98,31 @@ class UserProfileScreen extends StatelessWidget {
           }
 
           final user = userSnapshot.data;
-          final displayName = user?.fullName ?? 'Thành viên';
-          final email = user?.email ?? '';
-          final position = user?.position ?? (user?.role == 'admin' ? 'Quản trị viên' : 'Hội viên');
+          UserModel? resolvedUser = user;
+          String? mockImageUrl;
+
+          if (userId.startsWith('mock_')) {
+            final mock = _mockTrainers.firstWhere((t) => t['uid'] == userId, orElse: () => {});
+            if (mock.isNotEmpty) {
+              resolvedUser = UserModel(
+                uid: mock['uid'],
+                fullName: mock['fullName'],
+                email: '${mock['uid']}@kinetic.com',
+                role: 'trainer',
+                position: mock['position'],
+              );
+              mockImageUrl = mock['imageUrl'];
+            }
+          }
+
+          final displayName = resolvedUser?.fullName ?? 'Thành viên';
+          final email = resolvedUser?.email ?? '';
+          final position = resolvedUser?.position ?? (resolvedUser?.role == 'admin' ? 'Quản trị viên' : 'Hội viên');
+
+          // Check if this user is a Trainer (PT)
+          final isTrainer = resolvedUser?.role == 'trainer' || 
+                            resolvedUser?.position?.toLowerCase().contains('trainer') == true ||
+                            resolvedUser?.position?.toLowerCase().contains('pt') == true;
 
           return CustomScrollView(
             slivers: [
@@ -70,14 +142,17 @@ class UserProfileScreen extends StatelessWidget {
                         CircleAvatar(
                           radius: 48,
                           backgroundColor: HomeSocialFeedTheme.cardAlt,
-                          child: Text(
-                            displayName.isNotEmpty ? displayName[0].toUpperCase() : '?',
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 36,
-                              fontWeight: FontWeight.w900,
-                            ),
-                          ),
+                          backgroundImage: mockImageUrl != null ? NetworkImage(mockImageUrl) : null,
+                          child: mockImageUrl == null
+                              ? Text(
+                                  displayName.isNotEmpty ? displayName[0].toUpperCase() : '?',
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 36,
+                                    fontWeight: FontWeight.w900,
+                                  ),
+                                )
+                              : null,
                         ),
                         const SizedBox(height: 16),
                         Text(
@@ -132,6 +207,98 @@ class UserProfileScreen extends StatelessWidget {
                   ),
                 ),
               ),
+
+              // HIRE PT SECTION (Only for Trainers)
+              if (isTrainer)
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 4.0),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: HomeSocialFeedTheme.card,
+                        borderRadius: BorderRadius.circular(24),
+                        border: Border.all(color: const Color(0xFFE7F0BD).withOpacity(0.2)),
+                      ),
+                      padding: const EdgeInsets.all(20),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.all(10),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFF20242B),
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: const Icon(
+                                  Icons.fitness_center_rounded,
+                                  color: Color(0xFFE7F0BD),
+                                  size: 20,
+                                ),
+                              ),
+                              const SizedBox(width: 14),
+                              const Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      'THUÊ HUẤN LUYỆN VIÊN',
+                                      style: TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w900,
+                                      ),
+                                    ),
+                                    SizedBox(height: 3),
+                                    Text(
+                                      'Đồng hành tập luyện 1-1 tối ưu',
+                                      style: TextStyle(
+                                        color: Color(0xFF8E9196),
+                                        fontSize: 11,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 16),
+                          const Text(
+                            'Sẵn sàng lên lịch trình, giáo án và đồng hành 1-1 cùng bạn để hoàn thành mục tiêu tập luyện nhanh nhất.',
+                            style: TextStyle(
+                              color: Colors.white70,
+                              fontSize: 13,
+                              height: 1.4,
+                            ),
+                          ),
+                          const SizedBox(height: 20),
+                          SizedBox(
+                            width: double.infinity,
+                            height: 50,
+                            child: FilledButton(
+                              onPressed: () => _showBookingSheet(context, user!),
+                              style: FilledButton.styleFrom(
+                                backgroundColor: const Color(0xFFE7F0BD),
+                                foregroundColor: Colors.black,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(16),
+                                ),
+                              ),
+                              child: const Text(
+                                'LIÊN HỆ NGAY',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.w900,
+                                  letterSpacing: 1.1,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
 
               // SECTION POSTS LABEL
               const SliverToBoxAdapter(
@@ -204,6 +371,270 @@ class UserProfileScreen extends StatelessWidget {
           );
         },
       ),
+    );
+  }
+
+  void _showBookingSheet(BuildContext context, UserModel trainer) {
+    DateTime now = DateTime.now();
+    DateTime selectedDate = now;
+    String selectedSlot = '08:00 - 09:30';
+    final TextEditingController noteController = TextEditingController();
+
+    final List<String> slots = [
+      '08:00 - 09:30',
+      '10:00 - 11:30',
+      '14:00 - 15:30',
+      '16:00 - 17:30',
+      '18:00 - 19:30',
+    ];
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: const Color(0xFF14161A),
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+      ),
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setSheetState) {
+            return Padding(
+              padding: EdgeInsets.only(
+                bottom: MediaQuery.of(context).viewInsets.bottom,
+                left: 24,
+                right: 24,
+                top: 18,
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Center(
+                    child: Container(
+                      width: 44,
+                      height: 5,
+                      decoration: BoxDecoration(
+                        color: Colors.white24,
+                        borderRadius: BorderRadius.circular(99),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 18),
+                  Text(
+                    'ĐẶT LỊCH HẸN VỚI ${trainer.fullName.toUpperCase()}',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 18,
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+
+                  // 1. CHỌN NGÀY
+                  const Text('CHỌN NGÀY TẬP', style: TextStyle(color: Color(0xFF8E9196), fontSize: 10, fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 8),
+                  SizedBox(
+                    height: 70,
+                    child: ListView.builder(
+                      scrollDirection: Axis.horizontal,
+                      itemCount: 7,
+                      itemBuilder: (context, index) {
+                        final date = now.add(Duration(days: index));
+                        final isSame = DateUtils.isSameDay(date, selectedDate);
+                        final weekday = DateFormat('E').format(date).toUpperCase();
+                        final dayStr = date.day.toString();
+
+                        return GestureDetector(
+                          onTap: () => setSheetState(() => selectedDate = date),
+                          child: Container(
+                            width: 60,
+                            margin: const EdgeInsets.only(right: 8),
+                            decoration: BoxDecoration(
+                              color: isSame ? const Color(0xFFE7F0BD) : const Color(0xFF20242B),
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Text(
+                                  weekday,
+                                  style: TextStyle(
+                                    color: isSame ? Colors.black : Colors.white60,
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                const SizedBox(height: 6),
+                                Text(
+                                  dayStr,
+                                  style: TextStyle(
+                                    color: isSame ? Colors.black : Colors.white,
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.w900,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+
+                  // 2. CHỌN KHUNG GIỜ
+                  const Text('CHỌN KHUNG GIỜ', style: TextStyle(color: Color(0xFF8E9196), fontSize: 10, fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 8),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: slots.map((slot) {
+                      final isSelected = selectedSlot == slot;
+                      return GestureDetector(
+                        onTap: () => setSheetState(() => selectedSlot = slot),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                          decoration: BoxDecoration(
+                            color: isSelected ? const Color(0xFFE7F0BD) : const Color(0xFF20242B),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Text(
+                            slot,
+                            style: TextStyle(
+                              color: isSelected ? Colors.black : Colors.white,
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      );
+                    }).toList(),
+                  ),
+                  const SizedBox(height: 20),
+
+                  // 3. GHI CHÚ
+                  const Text('MỤC TIÊU & GHI CHÚ BUỔI TẬP', style: TextStyle(color: Color(0xFF8E9196), fontSize: 10, fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 8),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF20242B),
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    child: TextField(
+                      controller: noteController,
+                      style: const TextStyle(color: Colors.white, fontSize: 14),
+                      maxLines: 3,
+                      cursorColor: const Color(0xFFE7F0BD),
+                      decoration: const InputDecoration(
+                        hintText: 'VD: Tập trung nâng cơ ngực, sửa tư thế squat...',
+                        hintStyle: TextStyle(color: Colors.white30, fontSize: 13),
+                        border: InputBorder.none,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+
+                  // NÚT BOOKING
+                  SizedBox(
+                    width: double.infinity,
+                    height: 52,
+                    child: FilledButton(
+                      onPressed: () async {
+                        final user = FirebaseAuth.instance.currentUser;
+                        if (user == null) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Vui lòng đăng nhập để đặt lịch.')),
+                          );
+                          return;
+                        }
+
+                        // Parse time from slot
+                        final startHour = int.parse(selectedSlot.split(' - ')[0].split(':')[0]);
+                        final startMin = int.parse(selectedSlot.split(' - ')[0].split(':')[1]);
+                        final startTime = DateTime(
+                          selectedDate.year,
+                          selectedDate.month,
+                          selectedDate.day,
+                          startHour,
+                          startMin,
+                        );
+
+                        final endHour = int.parse(selectedSlot.split(' - ')[1].split(':')[0]);
+                        final endMin = int.parse(selectedSlot.split(' - ')[1].split(':')[1]);
+                        final endTime = DateTime(
+                          selectedDate.year,
+                          selectedDate.month,
+                          selectedDate.day,
+                          endHour,
+                          endMin,
+                        );
+
+                        // Save to Firebase collection 'schedules'
+                        try {
+                          await FirebaseFirestore.instance.collection('schedules').add({
+                            'staffUid': trainer.uid,
+                            'staffName': trainer.fullName,
+                            'studentUid': user.uid,
+                            'studentName': user.displayName ?? (user.email ?? 'Client').split('@').first,
+                            'startTime': Timestamp.fromDate(startTime),
+                            'endTime': Timestamp.fromDate(endTime),
+                            'status': 'pending',
+                            'task': noteController.text.trim().isNotEmpty 
+                                ? 'Ca tập: ${noteController.text.trim()}' 
+                                : 'Ca tập cá nhân với HLV',
+                            'createdAt': FieldValue.serverTimestamp(),
+                          });
+
+                          // Add activity track
+                          await FirebaseFirestore.instance.collection('pt_activities').add({
+                            'ptId': trainer.uid,
+                            'type': 'booking',
+                            'title': 'Lịch hẹn mới',
+                            'subtitle': 'Học viên đặt lịch tập vào ${DateFormat('dd/MM HH:mm').format(startTime)}',
+                            'timestamp': FieldValue.serverTimestamp(),
+                          });
+
+                          if (context.mounted) {
+                            Navigator.pop(context);
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                backgroundColor: Color(0xFFE7F0BD),
+                                content: Text(
+                                  'Đăng ký ca tập thành công! HLV sẽ duyệt lịch sớm.',
+                                  style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
+                                ),
+                              ),
+                            );
+                          }
+                        } catch (e) {
+                          if (context.mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text('Đặt lịch thất bại: $e')),
+                            );
+                          }
+                        }
+                      },
+                      style: FilledButton.styleFrom(
+                        backgroundColor: const Color(0xFFE7F0BD),
+                        foregroundColor: Colors.black,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                      ),
+                      child: const Text(
+                        'XÁC NHẬN ĐẶT LỊCH',
+                        style: TextStyle(fontWeight: FontWeight.w900, letterSpacing: 1.1),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                ],
+              ),
+            );
+          },
+        );
+      },
     );
   }
 }

@@ -44,7 +44,7 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
   Widget build(BuildContext context) {
     final loading = context.select<AuthProvider, bool>((p) => p.loading);
     final pages = <Widget>[
-      const HomeScreenCustomer(showCreateFab: true, bottomPadding: 120),
+      const HomeScreenCustomer(showCreateFab: false, bottomPadding: 120),
       const CustomerTrainersTab(),
       const CustomerHomeTabPlaceholder(title: 'WORKOUTS'),
       CustomerHomeProfileTab(onLogout: _handleLogout, loading: loading),
