@@ -3,7 +3,9 @@ import 'package:go_router/go_router.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
 import '../../app/route/routes.dart';
+import '../../controllers/auth_controller.dart';
 import '../PT/pt_dashboard_screen.dart'; // Import QRScannerDialog
 
 class ReceptionistDashboardScreen extends StatefulWidget {
@@ -84,7 +86,7 @@ class _ReceptionistDashboardScreenState extends State<ReceptionistDashboardScree
         IconButton(
           icon: const Icon(Icons.logout, color: Colors.redAccent, size: 24),
           onPressed: () async {
-            await FirebaseAuth.instance.signOut();
+            await context.read<AuthController>().signOut();
             if (mounted) context.go(Routes.login);
           },
         ),

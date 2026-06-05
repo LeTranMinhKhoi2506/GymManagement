@@ -13,6 +13,7 @@ import '../../screens/admins/financials/financial_management_screen.dart';
 import '../../screens/admins/financials/payment_management_screen.dart';
 import '../../screens/admins/financials/payroll_management_screen.dart';
 import '../../screens/admins/operations/equipment_management_screen.dart';
+
 import '../../screens/admins/communications/notification_management_screen.dart';
 import '../../screens/admins/communications/feedback_management_screen.dart';
 import '../../screens/admins/content/content_management_screen.dart';
@@ -27,7 +28,7 @@ import '../../screens/PT/pt_dashboard_screen.dart';
 import '../../screens/PT/pt_schedule_screen.dart';
 import '../../screens/PT/pt_student_management_screen.dart';
 import '../../screens/PT/pt_income_screen.dart';
-import '../../screens/PT/pt_class_registration_screen.dart';
+
 import '../../data/models/user_model.dart';
 
 // Receptionist Screens
@@ -71,12 +72,12 @@ class Routes {
   static const String developerTool = '/developer-tool';
   static const String accountManagement = '/account-management';
 
+
   // PT Routes
   static const String ptDashboard = '/pt-dashboard';
   static const String ptSchedule = '/pt-schedule';
   static const String ptStudentManagement = '/pt-student-management';
   static const String ptIncome = '/pt-income';
-  static const String ptClassRegistration = '/pt-class-registration';
 
   // Receptionist Routes
   static const String receptionistDashboard = '/receptionist-dashboard';
@@ -212,6 +213,15 @@ class Routes {
         path: sessionManagement,
         builder: (context, state) => const SessionManagementScreen(),
       ),
+      GoRoute(
+        path: developerTool,
+        builder: (context, state) => const DeveloperToolScreen(),
+      ),
+      GoRoute(
+        path: accountManagement,
+        builder: (context, state) => const AccountManagementScreen(),
+      ),
+
 
       // PT Routes
       StatefulShellRoute(
@@ -262,10 +272,7 @@ class Routes {
           ),
         ],
       ),
-      GoRoute(
-        path: ptClassRegistration,
-        builder: (context, state) => const PtClassRegistrationScreen(),
-      ),
+
 
       // Receptionist Routes
       StatefulShellRoute(
@@ -330,14 +337,16 @@ class Routes {
   static String dashboardForUser(UserModel? user) {
     if (user == null) return customerHome;
 
+    final email = user.email.toLowerCase().trim();
     final role = user.role.toLowerCase().trim();
     final position = (user.position ?? '').toLowerCase().trim();
 
-    if (role == 'admin') return adminDashboard;
-    if (role == 'trainer' || position == 'trainer') return ptDashboard;
+    if (role == 'admin' || email == 'admin@kinetic.com') return adminDashboard;
+    if (role == 'trainer' || position == 'trainer' || email.startsWith('pt.')) return ptDashboard;
     if (role == 'receptionist' ||
         role == 'staff' ||
-        position == 'receptionist') {
+        position == 'receptionist' ||
+        email.startsWith('receptionist.')) {
       return receptionistDashboard;
     }
     return customerHome;

@@ -430,30 +430,6 @@ class DeveloperSeedData {
     }
   ];
 
-  static const List<Map<String, dynamic>> classes = [
-    {
-      "id": "class_yoga_01",
-      "title": "Lớp Yoga Căn Bản",
-      "time": "08:00 - 09:30",
-      "room": "Phòng Yoga 1",
-      "trainer": "Trần Thị Linh"
-    },
-    {
-      "id": "class_hiit_01",
-      "title": "Cardio HIIT Đốt Mỡ",
-      "time": "15:00 - 16:00",
-      "room": "Khu Functional",
-      "trainer": "Nguyễn Văn Hùng"
-    },
-    {
-      "id": "class_zumba_01",
-      "title": "Zumba Dance Sôi Động",
-      "time": "18:00 - 19:30",
-      "room": "Phòng Group X",
-      "trainer": "Lê Trần Minh Khôi"
-    }
-  ];
-
   static const List<Map<String, dynamic>> roles = [
     {
       "id": "role_admin",
@@ -485,6 +461,70 @@ class DeveloperSeedData {
       "permissions": [
         "create_content", "edit_content", "publish_content", "delete_content", "manage_media"
       ]
+    }
+  ];
+
+  static const List<Map<String, dynamic>> defaultStudents = [
+    {
+      "ptId": "pt_uid_01",
+      "name": "Trần Thảo Vy",
+      "goal": "WEIGHT LOSS",
+      "lastSession": "Chưa dạy",
+      "photoUrl": "https://i.pravatar.cc/150?u=user_uid_02",
+      "phone": "0956789012",
+      "memberId": "user_uid_02"
+    },
+    {
+      "ptId": "pt_uid_02",
+      "name": "Nguyễn Hoàng Minh",
+      "goal": "HYPERTROPHY",
+      "lastSession": "Chưa dạy",
+      "photoUrl": "https://i.pravatar.cc/150?u=user_uid_01",
+      "phone": "0945678901",
+      "memberId": "user_uid_01"
+    }
+  ];
+
+  static const List<Map<String, dynamic>> defaultProgress = [
+    {
+      "ptId": "pt_uid_01",
+      "studentName": "Trần Thảo Vy",
+      "weight": 65.5,
+      "bodyFat": 28.5,
+      "muscleMass": 22.1,
+      "timestamp": "2026-05-10T08:00:00Z"
+    },
+    {
+      "ptId": "pt_uid_01",
+      "studentName": "Trần Thảo Vy",
+      "weight": 63.2,
+      "bodyFat": 26.2,
+      "muscleMass": 22.5,
+      "timestamp": "2026-05-20T08:00:00Z"
+    },
+    {
+      "ptId": "pt_uid_01",
+      "studentName": "Trần Thảo Vy",
+      "weight": 61.0,
+      "bodyFat": 24.0,
+      "muscleMass": 23.0,
+      "timestamp": "2026-06-01T08:00:00Z"
+    },
+    {
+      "ptId": "pt_uid_02",
+      "studentName": "Nguyễn Hoàng Minh",
+      "weight": 78.0,
+      "bodyFat": 19.5,
+      "muscleMass": 34.0,
+      "timestamp": "2026-05-15T08:00:00Z"
+    },
+    {
+      "ptId": "pt_uid_02",
+      "studentName": "Nguyễn Hoàng Minh",
+      "weight": 76.5,
+      "bodyFat": 18.0,
+      "muscleMass": 35.2,
+      "timestamp": "2026-06-01T08:00:00Z"
     }
   ];
 }

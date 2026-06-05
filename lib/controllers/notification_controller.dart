@@ -59,4 +59,12 @@ class NotificationController extends ChangeNotifier {
   Future<void> markAsRead(String id) async {
     await _repository.markAsRead(id);
   }
+
+  Future<void> markAllAsRead() async {
+    try {
+      await _repository.markAllAsRead();
+    } catch (e) {
+      debugPrint("NotificationController - markAllAsRead error: $e");
+    }
+  }
 }

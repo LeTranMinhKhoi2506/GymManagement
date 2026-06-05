@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
 import '../../../app/route/routes.dart';
+import '../../../controllers/auth_controller.dart';
 
 class SidebarWidget extends StatefulWidget {
   const SidebarWidget({super.key});
@@ -188,7 +190,14 @@ class _SidebarWidgetState extends State<SidebarWidget> {
         visualDensity: const VisualDensity(vertical: -2),
         leading: Icon(icon, size: 18, color: isActive ? const Color(0xFFFF6B35) : Colors.blueGrey[400]),
         title: Text(title, style: TextStyle(fontSize: 12, color: isActive ? const Color(0xFFFF6B35) : Colors.blueGrey[300], fontWeight: isActive ? FontWeight.w600 : FontWeight.normal)),
-        onTap: () => context.go(route),
+        onTap: () async {
+          if (route == Routes.login) {
+            await context.read<AuthController>().signOut();
+          }
+          if (context.mounted) {
+            context.go(route);
+          }
+        },
       ),
     );
   }

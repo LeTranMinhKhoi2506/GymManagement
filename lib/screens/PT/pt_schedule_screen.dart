@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
+import 'package:go_router/go_router.dart';
 import '../../app/route/routes.dart';
+import '../../controllers/auth_controller.dart';
 
 class PtScheduleScreen extends StatefulWidget {
   const PtScheduleScreen({super.key});
@@ -45,52 +47,59 @@ class _PtScheduleScreenState extends State<PtScheduleScreen> {
                     .collection('schedules')
                     .where('staffUid', isEqualTo: ptId)
                     .snapshots(),
-                builder: (context, snapshot) {
-                  if (snapshot.hasError) {
-                    return Center(child: Text("Lỗi: ${snapshot.error}", style: const TextStyle(color: Colors.red)));
+                builder: (context, schedulesSnapshot) {
+                  if (schedulesSnapshot.hasError) {
+                    return Center(child: Text("Lỗi: ${schedulesSnapshot.error}", style: const TextStyle(color: Colors.red)));
                   }
-                  if (snapshot.connectionState == ConnectionState.waiting) {
+                  if (schedulesSnapshot.connectionState == ConnectionState.waiting) {
                     return const Center(child: CircularProgressIndicator(color: Color(0xFFD0FD3E)));
                   }
 
-                  if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-                    return const Center(
-                      child: Padding(
-                        padding: EdgeInsets.symmetric(vertical: 40),
-                        child: Text("Không có ca dạy nào", style: TextStyle(color: Colors.grey)),
-                      ),
-                    );
-                  }
-
-                  // Lọc theo ngày và Sắp xếp thủ công tại local
-                  final dailySessions = snapshot.data!.docs.where((doc) {
+                  // 1. Lọc schedules của ngày được chọn
+                  final dailySessions = schedulesSnapshot.data?.docs.where((doc) {
                     final data = doc.data() as Map<String, dynamic>;
                     if (data['startTime'] == null) return false;
                     final startTime = (data['startTime'] as Timestamp).toDate();
                     return DateUtils.isSameDay(startTime, selectedDate);
-                  }).toList();
+                  }).toList() ?? [];
 
-                  // Sắp xếp theo thời gian tăng dần
-                  dailySessions.sort((a, b) {
-                    final aTime = (a.data() as Map<String, dynamic>)['startTime'] as Timestamp;
-                    final bTime = (b.data() as Map<String, dynamic>)['startTime'] as Timestamp;
-                    return aTime.compareTo(bTime);
-                  });
+                  final List<Map<String, dynamic>> combinedList = [];
 
-                  if (dailySessions.isEmpty) {
+                  for (var doc in dailySessions) {
+                    final data = doc.data() as Map<String, dynamic>;
+                    final classId = data['classId']?.toString();
+                    combinedList.add({
+                      'id': doc.id,
+                      'isClassTemplate': false,
+                      'task': data['task'] ?? "Công việc",
+                      'startTime': data['startTime'] as Timestamp,
+                      'endTime': data['endTime'] as Timestamp,
+                      'status': data['status'] ?? "pending",
+                      'category': classId != null ? "LỚP PT" : "CÁ NHÂN",
+                      'fullData': data,
+                    });
+                  }
+
+                  if (combinedList.isEmpty) {
                     return const Center(
                       child: Padding(
                         padding: EdgeInsets.symmetric(vertical: 40),
-                        child: Text("Không có ca dạy nào trong ngày này", style: TextStyle(color: Colors.grey)),
+                        child: Text("Không có lịch trình nào trong ngày này", style: TextStyle(color: Colors.grey)),
                       ),
                     );
                   }
 
+                  combinedList.sort((a, b) {
+                    final aTime = a['startTime'] as Timestamp;
+                    final bTime = b['startTime'] as Timestamp;
+                    return aTime.compareTo(bTime);
+                  });
+
                   return Column(
-                    children: dailySessions.map((doc) {
-                      var data = doc.data() as Map<String, dynamic>;
-                      DateTime startTime = (data['startTime'] as Timestamp).toDate();
-                      String status = (data['status'] ?? "pending").toUpperCase();
+                    children: combinedList.map((item) {
+                      final startTime = (item['startTime'] as Timestamp).toDate();
+                      final status = (item['status'] as String).toUpperCase();
+                      final isClassTemplate = item['isClassTemplate'] as bool;
                       
                       String displayStatus = "SẮP TỚI";
                       if (status == "ONGOING") displayStatus = "ĐANG DẠY";
@@ -98,14 +107,20 @@ class _PtScheduleScreenState extends State<PtScheduleScreen> {
 
                       return _buildTimelineSession(
                         time: DateFormat('HH:mm').format(startTime),
-                        name: data['task'] ?? "Công việc",
-                        category: "HUẤN LUYỆN",
+                        name: item['task'] ?? "Công việc",
+                        category: item['category'] ?? "HUẤN LUYỆN",
                         status: displayStatus,
+                        rawStatus: status,
                         statusColor: _getStatusColor(status),
                         actionText: _getActionText(status),
                         isCurrent: status == "ONGOING",
-                        sessionId: doc.id,
-                        fullData: data,
+                        sessionId: item['id'],
+                        fullData: {
+                          ...item['fullData'] as Map<String, dynamic>,
+                          'isClassTemplate': isClassTemplate,
+                          'targetStartTime': item['startTime'],
+                          'targetEndTime': item['endTime'],
+                        },
                       );
                     }).toList(),
                   );
@@ -151,7 +166,21 @@ class _PtScheduleScreenState extends State<PtScheduleScreen> {
             const Text("KINETIC", style: TextStyle(color: Color(0xFFD0FD3E), fontSize: 18, fontWeight: FontWeight.bold)),
           ],
         ),
-        const Icon(Icons.notifications_none, color: Colors.white, size: 28),
+        Row(
+          children: [
+            const Icon(Icons.notifications_none, color: Colors.white, size: 28),
+            const SizedBox(width: 10),
+            IconButton(
+              icon: const Icon(Icons.logout, color: Colors.white, size: 26),
+              onPressed: () async {
+                await context.read<AuthController>().signOut();
+                if (context.mounted) {
+                  context.go(Routes.login);
+                }
+              },
+            ),
+          ],
+        ),
       ],
     );
   }
@@ -222,6 +251,7 @@ class _PtScheduleScreenState extends State<PtScheduleScreen> {
     required String name,
     required String category,
     required String status,
+    required String rawStatus,
     required Color statusColor,
     required String actionText,
     required bool isCurrent,
@@ -290,7 +320,7 @@ class _PtScheduleScreenState extends State<PtScheduleScreen> {
                     children: [
                       Expanded(
                         child: ElevatedButton(
-                          onPressed: () => _handleSessionAction(sessionId, status, name, fullData),
+                          onPressed: () => _handleSessionAction(sessionId, rawStatus, name, fullData),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: isCurrent ? const Color(0xFFD0FD3E) : const Color(0xFF2C2C2E),
                             foregroundColor: isCurrent ? Colors.black : Colors.white,
@@ -322,30 +352,32 @@ class _PtScheduleScreenState extends State<PtScheduleScreen> {
 
   // Xử lý các nút bấm Bắt đầu / Tiếp tục / Xem tóm tắt
   void _handleSessionAction(String sessionId, String status, String studentName, Map<String, dynamic> data) async {
+    final messenger = ScaffoldMessenger.of(context);
+    final cleanStudentName = studentName.replaceFirst("Huấn luyện học viên ", "");
     if (status == "PENDING") {
-      // Đổi sang ongoing
-      await FirebaseFirestore.instance.collection('schedules').doc(sessionId).update({
-        'status': 'ongoing',
-      });
-      // Tạo hoạt động bắt đầu ca dạy
-      await FirebaseFirestore.instance.collection('pt_activities').add({
-        'ptId': ptId,
-        'type': 'session',
-        'title': 'Bắt đầu ca dạy',
-        'subtitle': 'Đang huấn luyện học viên $studentName',
-        'timestamp': FieldValue.serverTimestamp(),
-      });
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Đã bắt đầu ca dạy học viên $studentName!")),
+      try {
+        await FirebaseFirestore.instance.collection('schedules').doc(sessionId).update({
+          'status': 'ongoing',
+        });
+        await FirebaseFirestore.instance.collection('pt_activities').add({
+          'ptId': ptId,
+          'type': 'session',
+          'title': 'Bắt đầu ca dạy',
+          'subtitle': 'Đang huấn luyện học viên $cleanStudentName',
+          'timestamp': FieldValue.serverTimestamp(),
+        });
+        messenger.showSnackBar(
+          SnackBar(content: Text("Đã bắt đầu ca dạy học viên $cleanStudentName!")),
+        );
+      } catch (e) {
+        messenger.showSnackBar(
+          SnackBar(content: Text("Lỗi bắt đầu ca dạy: $e"), backgroundColor: Colors.redAccent),
         );
       }
     } else if (status == "ONGOING") {
-      // Mở Bottom Sheet ghi nhật ký tập và Hoàn thành ca dạy
-      _showTrainingJournalBottomSheet(sessionId, studentName);
+      _showTrainingJournalBottomSheet(sessionId, cleanStudentName);
     } else if (status == "COMPLETED") {
-      // Xem tóm tắt ca dạy
-      _showSessionSummary(studentName, data);
+      _showSessionSummary(cleanStudentName, data);
     }
   }
 
@@ -520,6 +552,7 @@ class _PtScheduleScreenState extends State<PtScheduleScreen> {
 
   // Xem tóm tắt ca dạy đã hoàn thành
   void _showSessionSummary(String studentName, Map<String, dynamic> data) {
+    final cleanStudentName = studentName.replaceFirst("Huấn luyện học viên ", "");
     String focus = data['focus'] ?? "Chưa ghi chép";
     String notes = data['notes'] ?? "Chưa ghi chép";
     double commission = (data['commission'] as num?)?.toDouble() ?? 30000.0;
@@ -553,7 +586,7 @@ class _PtScheduleScreenState extends State<PtScheduleScreen> {
                 ],
               ),
               const SizedBox(height: 10),
-              Text(studentName, style: const TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold)),
+              Text(cleanStudentName, style: const TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold)),
               const SizedBox(height: 20),
               
               const Text("TRỌNG TÂM TẬP LUYỆN", style: TextStyle(color: Colors.grey, fontSize: 10, fontWeight: FontWeight.bold)),
