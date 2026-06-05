@@ -322,9 +322,35 @@ class _HomeCommentsSheetState extends State<HomeCommentsSheet> {
                             );
                             if (!context.mounted) return;
                             if (error != null) {
-                              ScaffoldMessenger.of(context)
-                                ..hideCurrentSnackBar()
-                                ..showSnackBar(SnackBar(content: Text(error)));
+                              showDialog<void>(
+                                context: context,
+                                builder: (dialogContext) => AlertDialog(
+                                  backgroundColor: const Color(0xFF1B1E24),
+                                  title: const Text(
+                                    'Thông báo',
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  content: Text(
+                                    error,
+                                    style: const TextStyle(color: Colors.white70),
+                                  ),
+                                  actions: [
+                                    TextButton(
+                                      onPressed: () => Navigator.pop(dialogContext),
+                                      child: const Text(
+                                        'Đồng ý',
+                                        style: TextStyle(
+                                          color: HomeSocialFeedTheme.accent,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              );
                               return;
                             }
                             _controller.clear();

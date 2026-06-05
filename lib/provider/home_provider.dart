@@ -11,6 +11,7 @@ import '../data/models/user_model.dart';
 import '../data/models/workout_exercise_model.dart';
 import '../data/repository/content_repository.dart';
 import '../data/repository/social_post_repository.dart';
+import '../utils/comment_filter.dart';
 
 enum HomeFeedMode { discover, following }
 
@@ -59,6 +60,8 @@ class HomeProvider extends ChangeNotifier {
   List<SocialPostModel> _posts = [];
   List<DraftExerciseInput> _draftExercises;
   final Set<String> _likedPostIds = <String>{};
+  String? _lastCommentText;
+  DateTime? _lastCommentTime;
 
   int get selectedIndex => _selectedIndex;
   HomeFeedMode get feedMode => _feedMode;
@@ -209,14 +212,26 @@ class HomeProvider extends ChangeNotifier {
   }) async {
     final trimmed = content.trim();
     if (trimmed.isEmpty) {
-      return 'Binh luan khong duoc de trong.';
+      return 'Bình luận không được để trống.';
+    }
+
+    final validationError = await CommentFilter.validateComment(
+      content: trimmed,
+      lastCommentText: _lastCommentText,
+      lastCommentTime: _lastCommentTime,
+    );
+
+    if (validationError != null) {
+      return validationError;
     }
 
     try {
       await _repository.addComment(postId: postId, content: trimmed);
+      _lastCommentText = trimmed;
+      _lastCommentTime = DateTime.now();
       return null;
     } catch (_) {
-      return 'Dang binh luan that bai. Vui long thu lai.';
+      return 'Đăng bình luận thất bại. Vui lòng thử lại.';
     }
   }
 
