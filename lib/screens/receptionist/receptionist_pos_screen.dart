@@ -145,33 +145,9 @@ class _ReceptionistPOSScreenState extends State<ReceptionistPOSScreen> with Sing
       // 3. Update customer LTV + activity log if registered
       if (_selectedCustomer != null) {
         final memberRef = firestore.collection('members').doc(customerId);
-        
-        final Map<String, dynamic> updateData = {
+        batch.update(memberRef, {
           'ltv': FieldValue.increment(totalAmount),
-        };
-
-        // Tìm xem trong giỏ hàng có MembershipPlan nào không
-        MembershipPlan? purchasedPlan;
-        for (var entry in _cart.entries) {
-          final item = _cartItems[entry.key];
-          if (item is MembershipPlan) {
-            purchasedPlan = item;
-            break;
-          }
-        }
-
-        if (purchasedPlan != null) {
-          updateData['membershipType'] = purchasedPlan.name;
-          final now = DateTime.now();
-          final durationMonths = purchasedPlan.durationMonths;
-          final nextRenewal = durationMonths > 0
-              ? now.add(Duration(days: durationMonths * 30))
-              : now.add(const Duration(days: 365 * 10)); // Mặc định 10 năm nếu thời hạn bằng 0 hoặc dùng thử
-          updateData['nextRenewal'] = Timestamp.fromDate(nextRenewal);
-          updateData['status'] = 'Active';
-        }
-
-        batch.update(memberRef, updateData);
+        });
 
         // Activity log with correct type (Product or Membership)
         final activityRef = memberRef.collection('activity_logs').doc();

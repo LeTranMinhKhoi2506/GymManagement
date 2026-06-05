@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/foundation.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_app_check/firebase_app_check.dart';
 import 'package:provider/provider.dart';
@@ -15,7 +14,6 @@ void main() async {
   await FirebaseAppCheck.instance.activate(
     androidProvider: AndroidProvider.playIntegrity,
     appleProvider: AppleProvider.appAttest,
-    webProvider: ReCaptchaV3Provider('927a3cb8-3143-4ac3-baf8-f595d7309874'),
   );
 
   // Khởi tạo dữ liệu ngôn ngữ tiếng Việt cho Intl

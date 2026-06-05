@@ -4,9 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:intl/intl.dart';
 import 'dart:async';
-import 'package:provider/provider.dart';
 import '../../app/route/routes.dart';
-import '../../controllers/auth_controller.dart';
 
 class PtDashboardScreen extends StatefulWidget {
   const PtDashboardScreen({super.key});
@@ -113,6 +111,8 @@ class _PtDashboardScreenState extends State<PtDashboardScreen> {
               _buildMyScheduleCard(context, ptId),
               const SizedBox(height: 15),
               _buildHubSecondaryRow(context),
+              const SizedBox(height: 15),
+              _buildHubThirdRow(context),
               const SizedBox(height: 30),
               _buildSectionHeader("HOẠT ĐỘNG GẦN ĐÂY", () {}),
               const SizedBox(height: 15),
@@ -145,21 +145,7 @@ class _PtDashboardScreenState extends State<PtDashboardScreen> {
             ),
           ],
         ),
-        Row(
-          children: [
-            const Icon(Icons.notifications_none, color: Colors.white, size: 28),
-            const SizedBox(width: 10),
-            IconButton(
-              icon: const Icon(Icons.logout, color: Colors.white, size: 26),
-              onPressed: () async {
-                await context.read<AuthController>().signOut();
-                if (context.mounted) {
-                  context.go(Routes.login);
-                }
-              },
-            ),
-          ],
-        ),
+        const Icon(Icons.notifications_none, color: Colors.white, size: 28),
       ],
     );
   }
@@ -641,7 +627,55 @@ class _PtDashboardScreenState extends State<PtDashboardScreen> {
     );
   }
 
-
+  // Dòng thẻ quản lý thứ ba: Nút điều hướng đến "ĐĂNG KÝ MỞ LỚP" (Class registration) cực đẹp
+  Widget _buildHubThirdRow(BuildContext context) {
+    return GestureDetector(
+      onTap: () => context.push(Routes.ptClassRegistration),
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 22),
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            colors: [Color(0xFF1C1C1E), Color(0xFF2C2C2E)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: const Color(0xFFD0FD3E).withValues(alpha: 0.15), width: 1),
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: const Color(0xFFD0FD3E).withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(15),
+              ),
+              child: const Icon(Icons.add_task, color: Color(0xFFD0FD3E), size: 24),
+            ),
+            const SizedBox(width: 15),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: const [
+                  Text(
+                    "Đăng ký mở lớp học mới",
+                    style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
+                  ),
+                  SizedBox(height: 4),
+                  Text(
+                    "ĐĂNG KÝ LỊCH VÀ KHUNG GIỜ GIẢNG DẠY",
+                    style: TextStyle(color: Colors.grey, fontSize: 10, fontWeight: FontWeight.bold, letterSpacing: 0.5),
+                  ),
+                ],
+              ),
+            ),
+            const Icon(Icons.arrow_forward_ios, color: Colors.grey, size: 16),
+          ],
+        ),
+      ),
+    );
+  }
 
   Widget _buildHubCard({
     required IconData icon,
@@ -696,6 +730,8 @@ class _PtDashboardScreenState extends State<PtDashboardScreen> {
       stream: FirebaseFirestore.instance
           .collection('pt_activities')
           .where('ptId', isEqualTo: ptId)
+          .orderBy('timestamp', descending: true)
+          .limit(3)
           .snapshots(),
       builder: (context, snapshot) {
         if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
@@ -707,17 +743,6 @@ class _PtDashboardScreenState extends State<PtDashboardScreen> {
           );
         }
 
-        // Sắp xếp cục bộ theo timestamp giảm dần và giới hạn 3 mục
-        final docs = List<QueryDocumentSnapshot>.from(snapshot.data!.docs);
-        docs.sort((a, b) {
-          final aData = a.data() as Map<String, dynamic>;
-          final bData = b.data() as Map<String, dynamic>;
-          final aTime = aData['timestamp'] != null ? (aData['timestamp'] as Timestamp).toDate() : DateTime(1970);
-          final bTime = bData['timestamp'] != null ? (bData['timestamp'] as Timestamp).toDate() : DateTime(1970);
-          return bTime.compareTo(aTime);
-        });
-        final limitedDocs = docs.take(3).toList();
-
         return Container(
           decoration: BoxDecoration(
             color: const Color(0xFF1C1C1E),
@@ -726,10 +751,10 @@ class _PtDashboardScreenState extends State<PtDashboardScreen> {
           child: ListView.separated(
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
-            itemCount: limitedDocs.length,
+            itemCount: snapshot.data!.docs.length,
             separatorBuilder: (context, index) => const Divider(color: Colors.black, height: 1),
             itemBuilder: (context, index) {
-              var data = limitedDocs[index].data() as Map<String, dynamic>;
+              var data = snapshot.data!.docs[index].data() as Map<String, dynamic>;
               DateTime time = data['timestamp'] != null 
                   ? (data['timestamp'] as Timestamp).toDate() 
                   : DateTime.now();

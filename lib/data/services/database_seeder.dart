@@ -65,9 +65,8 @@ class DatabaseSeeder {
       'categories',
       'contents',
       'media_library',
-      'roles',
-      'students',
-      'pt_progress'
+      'classes',
+      'roles'
     ];
     for (var col in collections) {
       await clearCollection(col);
@@ -136,17 +135,13 @@ class DatabaseSeeder {
           sourceData = DeveloperSeedData.media;
           idField = 'id';
           break;
+        case 'classes':
+          sourceData = DeveloperSeedData.classes;
+          idField = 'id';
+          break;
         case 'roles':
           sourceData = DeveloperSeedData.roles;
           idField = 'id';
-          break;
-        case 'students':
-          sourceData = DeveloperSeedData.defaultStudents;
-          idField = 'memberId';
-          break;
-        case 'pt_progress':
-          sourceData = DeveloperSeedData.defaultProgress;
-          idField = 'timestamp';
           break;
         default:
           onLog("⚠️ Collection '$collectionName' không được hỗ trợ.");
@@ -190,8 +185,7 @@ class DatabaseSeeder {
       'endTime',
       'nextRenewal',
       'memberSince',
-      'uploadedAt',
-      'timestamp'
+      'uploadedAt'
     ];
     for (var key in map.keys) {
       if (dateFields.contains(key) && map[key] is String) {
@@ -217,9 +211,8 @@ class DatabaseSeeder {
       'categories',
       'contents',
       'media_library',
-      'roles',
-      'students',
-      'pt_progress'
+      'classes',
+      'roles'
     ];
     for (var col in collections) {
       await seedDefault(col);
@@ -624,35 +617,22 @@ class DatabaseSeeder {
     onLog("⚡ Bắt đầu sinh ngẫu nhiên $count Lịch làm việc...");
     try {
       // Fetch staff members first
-      final usersSnapshot = await _db.collection('users').get();
-      List<DocumentSnapshot> staffList = usersSnapshot.docs.where((doc) {
-        final data = doc.data();
-        final role = data['role']?.toString().toLowerCase() ?? '';
-        return role == 'staff' || role == 'trainer' || role == 'receptionist';
-      }).toList();
+      final staffSnapshot = await _db.collection('users').where('role', isEqualTo: 'staff').get();
+      List<DocumentSnapshot> staffList = staffSnapshot.docs;
 
       if (staffList.isEmpty) {
         onLog("⚠️ Chưa có nhân viên trong hệ thống. Đang tự động sinh 5 nhân viên...");
         await generateRandomStaff(5);
-        final newUsersSnapshot = await _db.collection('users').get();
-        staffList = newUsersSnapshot.docs.where((doc) {
-          final data = doc.data();
-          final role = data['role']?.toString().toLowerCase() ?? '';
-          return role == 'staff' || role == 'trainer' || role == 'receptionist';
-        }).toList();
+        final newStaffSnapshot = await _db.collection('users').where('role', isEqualTo: 'staff').get();
+        staffList = newStaffSnapshot.docs;
       }
 
-      // Fetch students list
-      final studentsSnapshot = await _db.collection('students').get();
-      final studentsList = studentsSnapshot.docs;
-
       final batch = _db.batch();
-
       final ptTasks = [
         'Huấn luyện học viên gói Pro Elite ca sáng',
         'Huấn luyện học viên gói Pro Elite ca tối',
-        'Huấn luyện học viên mới làm quen thiết bị',
-        'Hướng dẫn phục hồi chức năng & kéo giãn cơ'
+        'Dạy lớp Group X đạp xe trong nhà',
+        'Dạy lớp Yoga cơ bản'
       ];
       final receptionTasks = [
         'Trực quầy lễ tân ca sáng',
@@ -665,7 +645,6 @@ class DatabaseSeeder {
         'Hỗ trợ khách hàng tại khu tạ'
       ];
 
-      final Map<String, List<Map<String, DateTime>>> busyTimes = {};
       final statuses = ['pending', 'ongoing', 'completed'];
 
       for (int i = 0; i < count; i++) {
@@ -676,72 +655,31 @@ class DatabaseSeeder {
         final staffData = staffDoc.data() as Map<String, dynamic>;
         final staffUid = staffDoc.id;
         final staffName = staffData['fullName'] ?? 'Nhân viên';
-        final role = staffData['role']?.toString().toLowerCase() ?? '';
         final position = staffData['position'] ?? '';
 
         String task = '';
-        bool isPT = position == 'PT/Trainer' || role == 'trainer';
-
-        if (isPT) {
-          // Lọc học viên gán cho PT này
-          final myStudents = studentsList.where((doc) {
-            final data = doc.data();
-            return data['ptId'] == staffUid;
-          }).toList();
-
-          if (myStudents.isNotEmpty) {
-            final studentDoc = myStudents[_random.nextInt(myStudents.length)];
-            final studentData = studentDoc.data();
-            final studentName = studentData['name'] ?? 'Học viên';
-            task = "Huấn luyện học viên $studentName";
-          } else {
-            task = ptTasks[_random.nextInt(ptTasks.length)];
-          }
-        } else if (position == 'Receptionist' || role == 'receptionist') {
+        if (position == 'PT/Trainer') {
+          task = ptTasks[_random.nextInt(ptTasks.length)];
+        } else if (position == 'Receptionist') {
           task = receptionTasks[_random.nextInt(receptionTasks.length)];
         } else {
           task = genericTasks[_random.nextInt(genericTasks.length)];
         }
 
-        // Thiết lập giờ trống không trùng lịch
-        DateTime startTime;
-        DateTime endTime;
-        int durationHours = isPT ? 1 : (4 + _random.nextInt(4)); // Dạy PT 1 tiếng, trực ca 4-8 tiếng
-        int attempts = 0;
-
-        // Mặc định sinh giờ bắt đầu (60% hôm nay, 40% ngày lân cận)
+        // Generate schedule date (60% on today, 40% on nearby days)
         final bool isToday = _random.nextDouble() > 0.4;
-        DateTime scheduleDate = isToday ? DateTime.now() : DateTime.now().add(Duration(days: _random.nextBool() ? 1 : -1));
-        int startHour = _random.nextBool() ? 6 + _random.nextInt(4) : 14 + _random.nextInt(4);
-
-        startTime = DateTime(scheduleDate.year, scheduleDate.month, scheduleDate.day, startHour, 0);
-        endTime = startTime.add(Duration(hours: durationHours));
-
-        while (attempts < 20) {
-          bool conflict = false;
-          final staffBusy = busyTimes[staffUid] ?? [];
-          for (var range in staffBusy) {
-            final s = range['start']!;
-            final e = range['end']!;
-            // Nếu có sự giao nhau thời gian (overlap)
-            if (startTime.isBefore(e) && endTime.isAfter(s)) {
-              conflict = true;
-              break;
-            }
-          }
-
-          if (!conflict) {
-            break; // Tìm được khe giờ trống
-          }
-
-          // Dịch chuyển giờ bắt đầu tiếp theo (cộng thời gian ca + 15 phút nghỉ ngơi)
-          startTime = startTime.add(Duration(hours: durationHours, minutes: 15));
-          endTime = startTime.add(Duration(hours: durationHours));
-          attempts++;
+        DateTime scheduleDate;
+        if (isToday) {
+          scheduleDate = DateTime.now();
+        } else {
+          scheduleDate = DateTime.now().add(Duration(days: _random.nextBool() ? 1 : -1));
         }
 
-        // Lưu vào busyTimes
-        busyTimes.putIfAbsent(staffUid, () => []).add({'start': startTime, 'end': endTime});
+        final int startHour = _random.nextBool() ? 6 + _random.nextInt(4) : 14 + _random.nextInt(4);
+        final int durationHours = 4 + _random.nextInt(5);
+
+        final startTime = DateTime(scheduleDate.year, scheduleDate.month, scheduleDate.day, startHour, 0);
+        final endTime = startTime.add(Duration(hours: durationHours));
 
         String status = 'pending';
         final now = DateTime.now();

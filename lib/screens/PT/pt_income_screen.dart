@@ -3,9 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:intl/intl.dart';
-import 'package:provider/provider.dart';
 import '../../app/route/routes.dart';
-import '../../controllers/auth_controller.dart';
 
 class PtIncomeScreen extends StatelessWidget {
   const PtIncomeScreen({super.key});
@@ -23,7 +21,7 @@ class PtIncomeScreen extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _buildHeader(context),
+              _buildHeader(),
               const SizedBox(height: 30),
               const Text(
                 "BÁO CÁO THU NHẬP",
@@ -89,10 +87,13 @@ class PtIncomeScreen extends StatelessWidget {
               _buildSectionHeader("CÁC KHOẢN THANH TOÁN GẦN ĐÂY", () {}),
               const SizedBox(height: 15),
               
+              // Recent Payouts List with Firebase
               StreamBuilder<QuerySnapshot>(
                 stream: FirebaseFirestore.instance
                     .collection('pt_payouts')
                     .where('ptId', isEqualTo: ptId)
+                    .orderBy('timestamp', descending: true)
+                    .limit(5)
                     .snapshots(),
                 builder: (context, snapshot) {
                   if (snapshot.hasError) return const Text("Lỗi tải dữ liệu", style: TextStyle(color: Colors.red));
@@ -103,19 +104,8 @@ class PtIncomeScreen extends StatelessWidget {
                     return const Center(child: Text("Chưa có thanh toán nào", style: TextStyle(color: Colors.grey)));
                   }
 
-                  // Sắp xếp các khoản thanh toán cục bộ theo timestamp giảm dần và giới hạn 5 mục
-                  final docs = List<QueryDocumentSnapshot>.from(snapshot.data!.docs);
-                  docs.sort((a, b) {
-                    final aData = a.data() as Map<String, dynamic>;
-                    final bData = b.data() as Map<String, dynamic>;
-                    final aTime = aData['timestamp'] != null ? (aData['timestamp'] as Timestamp).toDate() : DateTime(1970);
-                    final bTime = bData['timestamp'] != null ? (bData['timestamp'] as Timestamp).toDate() : DateTime(1970);
-                    return bTime.compareTo(aTime);
-                  });
-                  final limitedDocs = docs.take(5).toList();
-
                   return Column(
-                    children: limitedDocs.map((doc) {
+                    children: snapshot.data!.docs.map((doc) {
                       var data = doc.data() as Map<String, dynamic>;
                       DateTime date = data['timestamp'] != null 
                           ? (data['timestamp'] as Timestamp).toDate() 
@@ -151,7 +141,7 @@ class PtIncomeScreen extends StatelessWidget {
     }
   }
 
-  Widget _buildHeader(BuildContext context) {
+  Widget _buildHeader() {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
@@ -170,21 +160,7 @@ class PtIncomeScreen extends StatelessWidget {
             ),
           ],
         ),
-        Row(
-          children: [
-            const Icon(Icons.notifications_none, color: Colors.white, size: 28),
-            const SizedBox(width: 10),
-            IconButton(
-              icon: const Icon(Icons.logout, color: Colors.white, size: 26),
-              onPressed: () async {
-                await context.read<AuthController>().signOut();
-                if (context.mounted) {
-                  context.go(Routes.login);
-                }
-              },
-            ),
-          ],
-        ),
+        const Icon(Icons.notifications_none, color: Colors.white, size: 28),
       ],
     );
   }
@@ -304,6 +280,7 @@ class PtIncomeScreen extends StatelessWidget {
       stream: FirebaseFirestore.instance
           .collection('pt_payouts')
           .where('ptId', isEqualTo: ptId)
+          .where('timestamp', isGreaterThanOrEqualTo: Timestamp.fromDate(startOfWeekDate))
           .snapshots(),
       builder: (context, snapshot) {
         List<double> weeklyEarnings = List.filled(7, 0.0);
@@ -313,12 +290,9 @@ class PtIncomeScreen extends StatelessWidget {
             var data = doc.data() as Map<String, dynamic>;
             if (data['timestamp'] != null && data['amount'] != null) {
               DateTime time = (data['timestamp'] as Timestamp).toDate();
-              // Lọc thủ công theo ngày trong tuần hiện tại
-              if (time.isAfter(startOfWeekDate) || time.isAtSameMomentAs(startOfWeekDate)) {
-                int dayIndex = time.weekday - 1; // 0 (Mon) -> 6 (Sun)
-                if (dayIndex >= 0 && dayIndex < 7) {
-                  weeklyEarnings[dayIndex] += (data['amount'] as num).toDouble();
-                }
+              int dayIndex = time.weekday - 1; // 0 (Mon) -> 6 (Sun)
+              if (dayIndex >= 0 && dayIndex < 7) {
+                weeklyEarnings[dayIndex] += (data['amount'] as num).toDouble();
               }
             }
           }

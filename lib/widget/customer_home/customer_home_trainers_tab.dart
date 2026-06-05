@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
+import '../../app/route/routes.dart';
 import '../home_social_feed/home_social_feed_theme.dart';
 
 class CustomerTrainersTab extends StatefulWidget {
@@ -182,9 +184,8 @@ class _CustomerTrainersTabState extends State<CustomerTrainersTab> {
                           child: Container(
                             height: 52,
                             decoration: BoxDecoration(
-                              color: const Color(0xFF14161A),
+                              color: const Color(0xFF070809),
                               borderRadius: BorderRadius.circular(16),
-                              border: Border.all(color: Colors.white10),
                             ),
                             child: TextField(
                               onChanged: (value) => setState(() => _searchQuery = value),
@@ -194,9 +195,14 @@ class _CustomerTrainersTabState extends State<CustomerTrainersTab> {
                                 hintText: 'Find your trainer...',
                                 hintStyle: TextStyle(color: Color(0xFF686B72), fontSize: 15),
                                 prefixIcon: Icon(Icons.search, color: Color(0xFF686B72)),
+                                filled: true,
+                                fillColor: Colors.transparent,
                                 border: InputBorder.none,
                                 enabledBorder: InputBorder.none,
                                 focusedBorder: InputBorder.none,
+                                disabledBorder: InputBorder.none,
+                                errorBorder: InputBorder.none,
+                                focusedErrorBorder: InputBorder.none,
                                 contentPadding: EdgeInsets.symmetric(vertical: 14),
                               ),
                             ),
@@ -411,15 +417,19 @@ class _CustomerTrainersTabState extends State<CustomerTrainersTab> {
   }
 
   Widget _buildTrainerCard(BuildContext context, Map<String, dynamic> trainer) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 16),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: const Color(0xFF14161A),
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: Colors.white10),
-      ),
-      child: Row(
+    return GestureDetector(
+      onTap: () {
+        context.push('${Routes.userProfile}/${trainer['uid']}');
+      },
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 16),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: const Color(0xFF14161A),
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(color: Colors.white10),
+        ),
+        child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Photo
@@ -531,7 +541,7 @@ class _CustomerTrainersTabState extends State<CustomerTrainersTab> {
                         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                       ),
                       child: const Text(
-                        'BOOK NOW',
+                        'Nhắn tin',
                         style: TextStyle(
                           fontWeight: FontWeight.w900,
                           fontSize: 13,
@@ -546,8 +556,9 @@ class _CustomerTrainersTabState extends State<CustomerTrainersTab> {
           ),
         ],
       ),
-    );
-  }
+    ),
+  );
+}
 
   void _showTrainerDetailsDialog(BuildContext context, Map<String, dynamic> trainer) {
     showDialog(
