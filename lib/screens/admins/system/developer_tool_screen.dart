@@ -36,8 +36,9 @@ class _DeveloperToolScreenState extends State<DeveloperToolScreen> {
     {'name': 'categories', 'title': 'Danh mục (categories)', 'desc': 'Các nhóm danh mục cho nội dung, trang thiết bị...'},
     {'name': 'media_library', 'title': 'Thư viện Media (media_library)', 'desc': 'Tệp hình ảnh phòng tập & sản phẩm'},
     {'name': 'contents', 'title': 'Bài viết & Tin tức (contents)', 'desc': 'Các bài viết tin tức, khuyến mãi trên app'},
-    {'name': 'classes', 'title': 'Lớp học (classes)', 'desc': 'Lớp học Yoga, HIIT, Zumba...'},
     {'name': 'roles', 'title': 'Quyền & Vai trò (roles)', 'desc': 'Phân quyền cấp bậc truy cập hệ thống'},
+    {'name': 'students', 'title': 'Học viên PT (students)', 'desc': 'Học viên được gán huấn luyện cho PT'},
+    {'name': 'pt_progress', 'title': 'Tiến độ học viên (pt_progress)', 'desc': 'Chỉ số cơ thể (cân, cơ, mỡ) của học viên'},
   ];
 
   @override
@@ -372,7 +373,7 @@ class _DeveloperToolScreenState extends State<DeveloperToolScreen> {
               ),
               const SizedBox(height: 12),
               // Custom generator input
-              if (name == 'members' || name == 'transactions' || name == 'products' || name == 'equipment' || name == 'feedbacks' || name == 'users' || name == 'schedules' || name == 'checkins' || name == 'categories' || name == 'media_library' || name == 'contents' || name == 'classes' || name == 'roles')
+              if (name == 'members' || name == 'transactions' || name == 'products' || name == 'equipment' || name == 'feedbacks' || name == 'users' || name == 'schedules' || name == 'checkins' || name == 'categories' || name == 'media_library' || name == 'contents' || name == 'roles' || name == 'students' || name == 'pt_progress')
                 Row(
                   children: [
                     Expanded(
@@ -426,6 +427,10 @@ class _DeveloperToolScreenState extends State<DeveloperToolScreen> {
                                   await _seeder.seedDefault('classes');
                                 } else if (name == 'roles') {
                                   await _seeder.seedDefault('roles');
+                                } else if (name == 'students') {
+                                  await _seeder.seedDefault('students');
+                                } else if (name == 'pt_progress') {
+                                  await _seeder.seedDefault('pt_progress');
                                 }
                               });
                             },

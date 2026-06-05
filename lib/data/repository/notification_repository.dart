@@ -28,4 +28,17 @@ class NotificationRepository {
   Future<void> markAsRead(String id) async {
     await _db.collection(_collection).doc(id).update({'isRead': true});
   }
+
+  Future<void> markAllAsRead() async {
+    final unreadDocs = await _db
+        .collection(_collection)
+        .where('isRead', isEqualTo: false)
+        .get();
+    
+    final batch = _db.batch();
+    for (var doc in unreadDocs.docs) {
+      batch.update(doc.reference, {'isRead': true});
+    }
+    await batch.commit();
+  }
 }

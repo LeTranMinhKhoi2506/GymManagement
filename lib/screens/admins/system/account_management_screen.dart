@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../controllers/user_controller.dart';
+import '../../../controllers/auth_controller.dart';
 import '../../../data/models/user_model.dart';
 import '../../../common/widgets/admin_dashboard_widgets/sidebar_widget.dart';
 import '../../../common/widgets/admin_dashboard_widgets/header_widget.dart';
@@ -379,10 +380,17 @@ class _AccountManagementScreenState extends State<AccountManagementScreen> {
                       children: [
                         IconButton(
                           icon: const Icon(Icons.edit, size: 18, color: Colors.blue),
+                          tooltip: "Chỉnh sửa thông tin",
                           onPressed: () => _showUserDialog(context, user: user),
                         ),
                         IconButton(
+                          icon: const Icon(Icons.lock_reset, size: 18, color: Colors.orange),
+                          tooltip: "Đặt lại mật khẩu",
+                          onPressed: () => _showResetPasswordDialog(context, user),
+                        ),
+                        IconButton(
                           icon: const Icon(Icons.delete, size: 18, color: Colors.red),
+                          tooltip: "Xóa tài khoản",
                           onPressed: () => _confirmDelete(context, controller, user),
                         ),
                       ],
@@ -624,6 +632,101 @@ class _AccountManagementScreenState extends State<AccountManagementScreen> {
               }
             }, 
             child: const Text("Xóa tài khoản", style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showResetPasswordDialog(BuildContext context, UserModel user) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Row(
+          children: const [
+            Icon(Icons.lock_outline, color: Color(0xFFFF6B35)),
+            SizedBox(width: 10),
+            Text("Đặt lại mật khẩu"),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              "Hệ thống bảo mật Firebase sẽ gửi một email hướng dẫn đặt lại mật khẩu đến hộp thư của người dùng này:",
+              style: TextStyle(fontSize: 14, color: Colors.black87),
+            ),
+            const SizedBox(height: 12),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.grey[100],
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: Colors.grey[300]!),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    user.fullName,
+                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: Color(0xFF0A192F)),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    user.email,
+                    style: TextStyle(color: Colors.grey[700], fontSize: 13),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 12),
+            const Text(
+              "Người dùng sẽ nhận được đường dẫn để tự thiết lập mật khẩu mới.",
+              style: TextStyle(fontSize: 12, color: Colors.grey, fontStyle: FontStyle.italic),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text("Hủy", style: TextStyle(color: Colors.grey)),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              Navigator.pop(context);
+              final authController = Provider.of<AuthController>(context, listen: false);
+              final result = await authController.resetPassword(user.email);
+              if (context.mounted) {
+                if (result == "success") {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text("Đã gửi email đặt lại mật khẩu thành công tới ${user.email}!"),
+                      backgroundColor: Colors.green,
+                      behavior: SnackBarBehavior.floating,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    ),
+                  );
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text("Lỗi khi gửi email: $result"),
+                      backgroundColor: Colors.redAccent,
+                      behavior: SnackBarBehavior.floating,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    ),
+                  );
+                }
+              }
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFFFF6B35),
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            ),
+            child: const Text("Gửi email đặt lại"),
           ),
         ],
       ),
