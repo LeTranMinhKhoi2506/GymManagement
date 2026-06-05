@@ -4,8 +4,11 @@ import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
+import 'package:path/path.dart' as p;
+
 import '../models/comment_model.dart';
 import '../models/social_post_model.dart';
+import '../models/user_model.dart';
 import '../models/workout_exercise_model.dart';
 
 class SocialPostRepository {
@@ -13,9 +16,9 @@ class SocialPostRepository {
     FirebaseFirestore? firestore,
     FirebaseAuth? auth,
     FirebaseStorage? storage,
-  }) : _firestore = firestore ?? FirebaseFirestore.instance,
-       _auth = auth ?? FirebaseAuth.instance,
-       _storage = storage ?? FirebaseStorage.instance;
+  })  : _firestore = firestore ?? FirebaseFirestore.instance,
+        _auth = auth ?? FirebaseAuth.instance,
+        _storage = storage ?? FirebaseStorage.instance;
 
   final FirebaseFirestore _firestore;
   final FirebaseAuth _auth;
@@ -28,23 +31,22 @@ class SocialPostRepository {
         .orderBy('createdAt', descending: true)
         .snapshots()
         .asyncMap((snapshot) async {
-          final posts = snapshot.docs.map(_fromDoc).toList();
-          if (currentUserId == null) {
-            return posts;
-          }
+      final posts = snapshot.docs.map(_fromDoc).toList();
+      if (currentUserId == null) {
+        return posts;
+      }
 
-          final likedDocs = await Future.wait(
-            snapshot.docs.map(
-              (doc) =>
-                  doc.reference.collection('likes').doc(currentUserId).get(),
-            ),
-          );
+      final likedDocs = await Future.wait(
+        snapshot.docs.map(
+          (doc) => doc.reference.collection('likes').doc(currentUserId).get(),
+        ),
+      );
 
-          return [
-            for (var index = 0; index < posts.length; index++)
-              posts[index].copyWith(isLiked: likedDocs[index].exists),
-          ];
-        });
+      return [
+        for (var index = 0; index < posts.length; index++)
+          posts[index].copyWith(isLiked: likedDocs[index].exists),
+      ];
+    });
   }
 
   Stream<List<CommentModel>> watchComments(String postId) {
@@ -55,11 +57,11 @@ class SocialPostRepository {
         .orderBy('createdAt', descending: false)
         .snapshots()
         .map((snapshot) {
-          return snapshot.docs
-              .map((doc) => _commentFromDoc(doc))
-              .where((comment) => !comment.isDeleted)
-              .toList();
-        });
+      return snapshot.docs
+          .map((doc) => _commentFromDoc(doc))
+          .where((comment) => !comment.isDeleted)
+          .toList();
+    });
   }
 
   Future<void> addComment({
@@ -200,13 +202,20 @@ class SocialPostRepository {
 
     for (var index = 0; index < mediaItems.length; index++) {
       final item = mediaItems[index];
-      final fileName = _buildUploadFileName(item, index);
+      final file = File(item.path);
+
+      if (!file.existsSync()) {
+        result.add(item);
+        continue;
+      }
+
+      final fileName = p.basename(item.path);
       final storageRef = _storage
           .ref()
           .child('social_posts')
           .child(userId)
           .child(postId)
-          .child(fileName);
+          .child('$index-$fileName');
 
       final metadata = SettableMetadata(
         contentType: item.type == SocialMediaType.video
@@ -214,28 +223,9 @@ class SocialPostRepository {
             : _guessImageMimeType(fileName),
       );
 
-      try {
-        final bytes = item.bytes;
-        if (bytes != null && bytes.isNotEmpty) {
-          await storageRef.putData(bytes, metadata);
-        } else {
-          final file = File(item.path);
-          if (!await file.exists()) {
-            result.add(item);
-            continue;
-          }
-
-          await storageRef.putFile(file, metadata);
-        }
-
-        final downloadUrl = await storageRef.getDownloadURL();
-        result.add(item.copyWith(path: downloadUrl, bytes: null));
-      } on FirebaseException catch (e) {
-        throw StateError(
-          'Khong the tai media len Firebase Storage (${e.code}). '
-          'Hay kiem tra App Check, Storage rules va ket noi mang.',
-        );
-      }
+      await storageRef.putFile(file, metadata);
+      final downloadUrl = await storageRef.getDownloadURL();
+      result.add(item.copyWith(path: downloadUrl));
     }
 
     return result;
@@ -261,23 +251,6 @@ class SocialPostRepository {
     return 'image/jpeg';
   }
 
-  String _buildUploadFileName(SocialMediaModel item, int index) {
-    final extension = _guessFileExtension(item.path, item.type);
-    final timestamp = DateTime.now().millisecondsSinceEpoch;
-    return '$timestamp-$index$extension';
-  }
-
-  String _guessFileExtension(String pathValue, SocialMediaType type) {
-    final lower = pathValue.toLowerCase();
-    if (lower.endsWith('.png')) return '.png';
-    if (lower.endsWith('.webp')) return '.webp';
-    if (lower.endsWith('.gif')) return '.gif';
-    if (lower.endsWith('.mov')) return '.mov';
-    if (lower.endsWith('.mkv')) return '.mkv';
-    if (lower.endsWith('.mp4')) return '.mp4';
-    return type == SocialMediaType.video ? '.mp4' : '.jpg';
-  }
-
   String _formatRelativeTime(DateTime dateTime) {
     final diff = DateTime.now().difference(dateTime);
     if (diff.inMinutes < 1) return 'Just now';
@@ -285,6 +258,42 @@ class SocialPostRepository {
     if (diff.inDays < 1) return '${diff.inHours}h ago';
     if (diff.inDays == 1) return 'Yesterday';
     return '${diff.inDays}d ago';
+  }
+
+  Stream<List<SocialPostModel>> watchPostsByUserId(String userId) {
+    final currentUserId = _auth.currentUser?.uid;
+    return _firestore
+        .collection('posts')
+        .where('authorId', isEqualTo: userId)
+        .snapshots()
+        .asyncMap((snapshot) async {
+      final posts = snapshot.docs.map(_fromDoc).toList();
+      posts.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+      if (currentUserId == null) {
+        return posts;
+      }
+
+      final likedDocs = await Future.wait(
+        snapshot.docs.map(
+          (doc) => doc.reference.collection('likes').doc(currentUserId).get(),
+        ),
+      );
+
+      return [
+        for (var index = 0; index < posts.length; index++)
+          posts[index].copyWith(isLiked: likedDocs[index].exists),
+      ];
+    });
+  }
+
+  Future<UserModel?> getUserById(String userId) async {
+    try {
+      final doc = await _firestore.collection('users').doc(userId).get();
+      if (!doc.exists) return null;
+      return UserModel.fromMap(doc.data()!);
+    } catch (_) {
+      return null;
+    }
   }
 }
 
