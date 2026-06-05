@@ -22,7 +22,8 @@ class _AccountManagementScreenState extends State<AccountManagementScreen> {
     'admin': 'Quản trị viên (Admin)',
     'trainer': 'Huấn luyện viên (PT)',
     'receptionist': 'Lễ tân',
-    'user': 'Hội viên',
+    'user': 'Hội viên (User)',
+    'member': 'Hội viên (Member)',
   };
 
   final Map<String, String> _statusTranslations = {
@@ -39,6 +40,7 @@ class _AccountManagementScreenState extends State<AccountManagementScreen> {
       case 'receptionist':
         return Colors.blue;
       case 'user':
+      case 'member':
       default:
         return Colors.teal;
     }
@@ -292,7 +294,10 @@ class _AccountManagementScreenState extends State<AccountManagementScreen> {
                   u.email.toLowerCase().contains(term) ||
                   (u.phoneNumber != null && u.phoneNumber!.contains(term));
               
-              final matchesRole = filterRole == "Tất cả" || u.role == filterRole;
+              final matchesRole = filterRole == "Tất cả" || 
+                  u.role == filterRole || 
+                  (filterRole == "user" && u.role == "member") || 
+                  (filterRole == "member" && u.role == "user");
               final matchesStatus = filterStatus == "Tất cả" || u.status == filterStatus;
 
               return matchesSearch && matchesRole && matchesStatus;

@@ -34,7 +34,7 @@ class MemberModel {
       id: documentId,
       fullName: map['fullName'] ?? '',
       email: map['email'] ?? '',
-      phoneNumber: map['phoneNumber'],
+      phoneNumber: map['phoneNumber'] ?? map['phone'],
       membershipType: map['membershipType'] ?? 'Standard',
       status: map['status'] ?? 'Active',
       isCurrentlyTraining: map['isCurrentlyTraining'] ?? false,

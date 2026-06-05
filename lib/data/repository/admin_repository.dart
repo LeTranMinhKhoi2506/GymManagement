@@ -5,7 +5,7 @@ class AdminRepository {
 
   Stream<int> getTotalMembersStream() {
     return _db.collection('users')
-        .where('role', isEqualTo: 'user')
+        .where('role', whereIn: const ['user', 'member'])
         .snapshots()
         .map((snapshot) => snapshot.docs.length)
         .handleError((error) => 0);
@@ -13,7 +13,7 @@ class AdminRepository {
 
   Stream<Map<String, dynamic>> getMembersGrowthStream() {
     return _db.collection('users')
-        .where('role', isEqualTo: 'user')
+        .where('role', whereIn: const ['user', 'member'])
         .snapshots()
         .asyncMap((snapshot) async {
           int current = snapshot.docs.length;
@@ -22,7 +22,7 @@ class AdminRepository {
           DateTime endOfLastMonth = DateTime(now.year, now.month, 0, 23, 59, 59);
 
           var lastMonthSnapshot = await _db.collection('users')
-              .where('role', isEqualTo: 'user')
+              .where('role', whereIn: const ['user', 'member'])
               .where('createdAt', isGreaterThanOrEqualTo: startOfLastMonth)
               .where('createdAt', isLessThanOrEqualTo: endOfLastMonth)
               .get();
