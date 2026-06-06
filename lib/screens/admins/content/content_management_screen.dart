@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../../controllers/content_controller.dart';
 import '../../../controllers/category_controller.dart';
 import '../../../controllers/media_controller.dart';
@@ -22,32 +23,79 @@ class _ContentManagementScreenState extends State<ContentManagementScreen> {
     final contentController = Provider.of<ContentController>(context);
     final authController = Provider.of<AuthController>(context);
 
-    return Scaffold(
-      backgroundColor: const Color(0xFFF8F9FA),
-      body: Row(
-        children: [
-          const SidebarWidget(),
-          Expanded(
-            child: Column(
-              children: [
-                const HeaderWidget(),
-                Expanded(
-                  child: SingleChildScrollView(
-                    padding: const EdgeInsets.all(32.0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        _buildHeader(context, contentController, authController),
-                        const SizedBox(height: 32),
-                        _buildContentGrid(contentController, authController),
-                      ],
+    return DefaultTabController(
+      length: 2,
+      child: Scaffold(
+        backgroundColor: const Color(0xFFF8F9FA),
+        body: Row(
+          children: [
+            const SidebarWidget(),
+            Expanded(
+              child: Column(
+                children: [
+                  const HeaderWidget(),
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.all(32.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          _buildHeader(context, contentController, authController),
+                          const SizedBox(height: 24),
+                          const TabBar(
+                            labelColor: Color(0xFFFF6B35),
+                            unselectedLabelColor: Colors.grey,
+                            indicatorColor: Color(0xFFFF6B35),
+                            tabs: [
+                              Tab(
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(Icons.article_outlined, size: 18),
+                                    SizedBox(width: 8),
+                                    Text("Bài viết hệ thống (Admin)"),
+                                  ],
+                                ),
+                              ),
+                              Tab(
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(Icons.forum_outlined, size: 18),
+                                    SizedBox(width: 8),
+                                    Text("Bài đăng mạng xã hội (PT)"),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 24),
+                          Expanded(
+                            child: TabBarView(
+                              children: [
+                                // Tab 1: System Articles
+                                SingleChildScrollView(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      _buildContentGrid(contentController, authController),
+                                    ],
+                                  ),
+                                ),
+                                // Tab 2: PT Social Posts
+                                _buildPTPostsList(context),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -202,7 +250,7 @@ class _ContentManagementScreenState extends State<ContentManagementScreen> {
                         child: selectedImageUrl != null
                             ? ClipRRect(
                                 borderRadius: BorderRadius.circular(8),
-                                child: Image.network(selectedImageUrl!, fit: BoxFit.cover, errorBuilder: (_, __, ___) => const Icon(Icons.broken_image)),
+                                child: Image.network(selectedImageUrl!, fit: BoxFit.cover, errorBuilder: (context, error, stackTrace) => const Icon(Icons.broken_image)),
                               )
                             : const Icon(Icons.image_outlined, color: Colors.grey),
                       ),
@@ -318,7 +366,7 @@ class _ContentManagementScreenState extends State<ContentManagementScreen> {
                         ),
                         child: ClipRRect(
                           borderRadius: BorderRadius.circular(8),
-                          child: Image.network(media.url, fit: BoxFit.cover, errorBuilder: (_, __, ___) => const Center(child: Icon(Icons.broken_image))),
+                          child: Image.network(media.url, fit: BoxFit.cover, errorBuilder: (context, error, stackTrace) => const Center(child: Icon(Icons.broken_image))),
                         ),
                       ),
                     );
@@ -327,6 +375,207 @@ class _ContentManagementScreenState extends State<ContentManagementScreen> {
         ),
         actions: [
           TextButton(onPressed: () => Navigator.pop(context), child: const Text("Đóng")),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPTPostsList(BuildContext context) {
+    return StreamBuilder<QuerySnapshot>(
+      stream: FirebaseFirestore.instance.collection('posts').orderBy('createdAt', descending: true).snapshots(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator(color: Color(0xFFFF6B35)));
+        }
+        if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+          return const Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.forum_outlined, size: 48, color: Colors.grey),
+                SizedBox(height: 16),
+                Text("Chưa có bài đăng nào từ PT.", style: TextStyle(color: Colors.grey)),
+              ],
+            ),
+          );
+        }
+
+        final docs = snapshot.data!.docs;
+
+        return ListView.separated(
+          padding: const EdgeInsets.only(bottom: 40),
+          itemCount: docs.length,
+          separatorBuilder: (context, index) => const SizedBox(height: 16),
+          itemBuilder: (context, index) {
+            final doc = docs[index];
+            final data = doc.data() as Map<String, dynamic>;
+            final postId = doc.id;
+            final authorName = data['authorName'] ?? 'Huấn luyện viên';
+            final authorAvatarUrl = data['authorAvatarUrl'];
+            final caption = data['caption'] ?? '';
+            final likeCount = data['likeCount'] ?? 0;
+            final commentCount = data['commentCount'] ?? 0;
+            
+            DateTime? createdAt;
+            if (data['createdAt'] != null) {
+              if (data['createdAt'] is Timestamp) {
+                createdAt = (data['createdAt'] as Timestamp).toDate();
+              } else if (data['createdAt'] is String) {
+                createdAt = DateTime.tryParse(data['createdAt']);
+              }
+            }
+
+            final mediaItems = data['mediaItems'] as List<dynamic>? ?? [];
+
+            return Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.04),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  )
+                ],
+              ),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Author Avatar
+                  CircleAvatar(
+                    radius: 24,
+                    backgroundColor: Colors.grey[200],
+                    backgroundImage: (authorAvatarUrl != null && authorAvatarUrl.toString().isNotEmpty)
+                        ? NetworkImage(authorAvatarUrl.toString())
+                        : null,
+                    child: (authorAvatarUrl == null || authorAvatarUrl.toString().isEmpty)
+                        ? const Icon(Icons.person, color: Colors.grey)
+                        : null,
+                  ),
+                  const SizedBox(width: 16),
+                  
+                  // Content
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Author Name & Date
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              authorName,
+                              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Color(0xFF0A192F)),
+                            ),
+                            if (createdAt != null)
+                              Text(
+                                DateFormat('dd/MM/yyyy HH:mm').format(createdAt),
+                                style: const TextStyle(color: Colors.grey, fontSize: 12),
+                              ),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                        
+                        // Caption
+                        Text(
+                          caption,
+                          style: const TextStyle(fontSize: 14, height: 1.4, color: Colors.black87),
+                        ),
+                        const SizedBox(height: 12),
+                        
+                        // Media preview
+                        if (mediaItems.isNotEmpty)
+                          SizedBox(
+                            height: 120,
+                            child: ListView.separated(
+                              scrollDirection: Axis.horizontal,
+                              itemCount: mediaItems.length,
+                              separatorBuilder: (context, index) => const SizedBox(width: 8),
+                              itemBuilder: (context, mIdx) {
+                                final media = mediaItems[mIdx];
+                                final path = media['path'] ?? '';
+                                final isImage = media['type'] == 'image' || media['type'] == 0;
+                                
+                                return Container(
+                                  width: 160,
+                                  decoration: BoxDecoration(
+                                    color: Colors.grey[100],
+                                    borderRadius: BorderRadius.circular(8),
+                                    border: Border.all(color: Colors.grey.shade200),
+                                  ),
+                                  child: ClipRRect(
+                                    borderRadius: BorderRadius.circular(8),
+                                    child: isImage && path.isNotEmpty
+                                        ? Image.network(path, fit: BoxFit.cover, errorBuilder: (context, error, stackTrace) => const Center(child: Icon(Icons.broken_image, color: Colors.grey)))
+                                        : const Center(child: Icon(Icons.play_circle_fill, size: 36, color: Colors.grey)),
+                                  ),
+                                );
+                              },
+                            ),
+                          ),
+                        if (mediaItems.isNotEmpty) const SizedBox(height: 16),
+
+                        // Stats (Likes, Comments)
+                        Row(
+                          children: [
+                            Icon(Icons.favorite_border, size: 16, color: Colors.grey[600]),
+                            const SizedBox(width: 4),
+                            Text("$likeCount lượt thích", style: TextStyle(fontSize: 13, color: Colors.grey[600])),
+                            const SizedBox(width: 20),
+                            Icon(Icons.comment_outlined, size: 16, color: Colors.grey[600]),
+                            const SizedBox(width: 4),
+                            Text("$commentCount bình luận", style: TextStyle(fontSize: 13, color: Colors.grey[600])),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 24),
+                  
+                  // Actions (Delete)
+                  IconButton(
+                    icon: const Icon(Icons.delete_outline, color: Colors.redAccent),
+                    tooltip: "Xóa bài đăng",
+                    onPressed: () => _confirmDeletePTPost(context, postId),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  void _confirmDeletePTPost(BuildContext context, String postId) {
+    showDialog(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text("Xác nhận xóa"),
+        content: const Text("Bạn có chắc chắn muốn xóa bài đăng mạng xã hội này của PT không?"),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: const Text("Hủy"),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              Navigator.pop(dialogContext);
+              await FirebaseFirestore.instance.collection('posts').doc(postId).delete();
+              if (context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text("Đã xóa bài đăng của PT thành công"),
+                    backgroundColor: Colors.orange,
+                  ),
+                );
+              }
+            },
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.redAccent, foregroundColor: Colors.white),
+            child: const Text("Xóa"),
+          ),
         ],
       ),
     );

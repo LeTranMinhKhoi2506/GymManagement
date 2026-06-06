@@ -6,7 +6,7 @@ class StaffRepository {
 
   Stream<List<UserModel>> getStaffStream() {
     return _db.collection('users')
-        .where('role', isEqualTo: 'staff')
+        .where('role', whereIn: ['staff', 'receptionist', 'trainer'])
         .snapshots()
         .map((snapshot) => snapshot.docs
             .map((doc) => UserModel.fromMap(doc.data()))

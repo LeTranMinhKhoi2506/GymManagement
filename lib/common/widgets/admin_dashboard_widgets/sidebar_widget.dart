@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
 import '../../../app/route/routes.dart';
+import '../../../controllers/auth_controller.dart';
 
 class SidebarWidget extends StatefulWidget {
   const SidebarWidget({super.key});
@@ -188,7 +190,41 @@ class _SidebarWidgetState extends State<SidebarWidget> {
         visualDensity: const VisualDensity(vertical: -2),
         leading: Icon(icon, size: 18, color: isActive ? const Color(0xFFFF6B35) : Colors.blueGrey[400]),
         title: Text(title, style: TextStyle(fontSize: 12, color: isActive ? const Color(0xFFFF6B35) : Colors.blueGrey[300], fontWeight: isActive ? FontWeight.w600 : FontWeight.normal)),
-        onTap: () => context.go(route),
+        onTap: () async {
+          if (title == "Đăng xuất") {
+            final confirm = await showDialog<bool>(
+              context: context,
+              builder: (context) => AlertDialog(
+                title: const Text("Xác nhận đăng xuất"),
+                content: const Text("Bạn có chắc chắn muốn đăng xuất khỏi hệ thống không?"),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.pop(context, false),
+                    child: const Text("Hủy"),
+                  ), 
+                  ElevatedButton(
+                    onPressed: () => Navigator.pop(context, true),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.redAccent,
+                      foregroundColor: Colors.white,
+                    ),
+                    child: const Text("Đăng xuất"),
+                  ),
+                ],
+              ),
+            );
+            if (confirm == true) {
+              if (context.mounted) {
+                await Provider.of<AuthController>(context, listen: false).signOut();
+                if (context.mounted) {
+                  context.go(Routes.login);
+                }
+              }
+            }
+          } else {
+            context.go(route);
+          }
+        },
       ),
     );
   }
