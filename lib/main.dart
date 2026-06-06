@@ -14,6 +14,7 @@ void main() async {
   await FirebaseAppCheck.instance.activate(
     androidProvider: AndroidProvider.playIntegrity,
     appleProvider: AppleProvider.appAttest,
+    webProvider: ReCaptchaEnterpriseProvider('YOUR_RECAPTCHA_ENTERPRISE_SITE_KEY'),
   );
 
   // Khởi tạo dữ liệu ngôn ngữ tiếng Việt cho Intl
