@@ -53,17 +53,16 @@ class AdminRepository {
   // STREAM: Số nhân viên đang online/active (giả định dựa trên field status hoặc checkin)
   Stream<int> getActiveStaffCountStream() {
     return _db.collection('users')
-        .where('role', isEqualTo: 'staff')
-        .where('status', isEqualTo: 'active') // Bạn cần có field status: 'active' trong Firestore
+        .where('role', whereIn: ['staff', 'receptionist', 'trainer'])
         .snapshots()
-        .map((snapshot) => snapshot.docs.length)
+        .map((snapshot) => snapshot.docs.where((doc) => doc.data()['status'] == 'active').length)
         .handleError((error) => 0);
   }
 
   // STREAM: Tổng số nhân viên trong hệ thống
   Stream<int> getTotalStaffStream() {
     return _db.collection('users')
-        .where('role', isEqualTo: 'staff')
+        .where('role', whereIn: ['staff', 'receptionist', 'trainer'])
         .snapshots()
         .map((snapshot) => snapshot.docs.length)
         .handleError((error) => 0);

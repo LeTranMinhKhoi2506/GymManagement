@@ -7,7 +7,6 @@ import '../../../common/widgets/admin_dashboard_widgets/summary_cards.dart';
 import '../../../common/widgets/admin_dashboard_widgets/revenue_chart.dart';
 import '../../../common/widgets/admin_dashboard_widgets/member_flow_chart.dart';
 import '../../../common/widgets/admin_dashboard_widgets/recent_checkins_log.dart';
-import '../../../common/widgets/admin_dashboard_widgets/upcoming_classes_stream.dart';
 import '../../../common/widgets/admin_dashboard_widgets/equipment_status_stream.dart';
 
 class AdminDashboardScreen extends StatefulWidget {
@@ -95,9 +94,6 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                                 Expanded(flex: 1, child: MemberFlowChart(controller: adminController)),
                               ],
                             ),
-                            const SizedBox(height: 32),
-                            UpcomingClassesStream(controller: adminController),
-                            const SizedBox(height: 32),
                             RecentCheckinsLog(controller: adminController),
                             const SizedBox(height: 32),
                             EquipmentStatusStream(controller: adminController),
