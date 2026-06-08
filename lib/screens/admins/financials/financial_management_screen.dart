@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
+import 'package:excel/excel.dart' hide Border;
+import '../../../utils/file_saver/file_saver.dart';
 import '../../../controllers/financial_controller.dart';
 import '../../../controllers/payment_controller.dart';
 import '../../../controllers/payroll_controller.dart';
@@ -662,14 +664,7 @@ class _FinancialManagementScreenState extends State<FinancialManagementScreen>
                     ),
                   ),
                   ElevatedButton.icon(
-                    onPressed: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Đang tạo file báo cáo tài chính...'),
-                          backgroundColor: Colors.green,
-                        ),
-                      );
-                    },
+                    onPressed: () => _exportToExcel(controller),
                     icon: const Icon(Icons.download, size: 18),
                     label: const Text('Tải báo cáo'),
                     style: ElevatedButton.styleFrom(
@@ -689,6 +684,106 @@ class _FinancialManagementScreenState extends State<FinancialManagementScreen>
         );
       },
     );
+  }
+
+  Future<void> _exportToExcel(FinancialController controller) async {
+    try {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Đang tạo file báo cáo tài chính...'),
+          backgroundColor: Colors.blueAccent,
+          duration: Duration(seconds: 1),
+        ),
+      );
+
+      final excel = Excel.createExcel();
+      
+      // Sheet 1: Overview
+      final Sheet overviewSheet = excel['Tong_Quan'];
+      overviewSheet.appendRow([TextCellValue('BÁO CÁO TÀI CHÍNH - TỔNG QUAN')]);
+      overviewSheet.appendRow([TextCellValue('')]);
+      overviewSheet.appendRow([TextCellValue('Chỉ số'), TextCellValue('Giá trị')]);
+      
+      final currencyFormat = NumberFormat.currency(
+        symbol: '₫',
+        locale: 'vi_VN',
+        decimalDigits: 0,
+      );
+      
+      overviewSheet.appendRow([TextCellValue('Tổng Doanh Thu'), TextCellValue(currencyFormat.format(controller.totalRevenue))]);
+      overviewSheet.appendRow([TextCellValue('Tổng Chi Phí'), TextCellValue(currencyFormat.format(controller.totalExpense))]);
+      overviewSheet.appendRow([TextCellValue('Lợi Nhuận Thuần'), TextCellValue(currencyFormat.format(controller.netProfit))]);
+      overviewSheet.appendRow([TextCellValue('Tỷ Suất Lợi Nhuận'), TextCellValue('${controller.profitMargin.toStringAsFixed(1)}%')]);
+      
+      // Sheet 2: Doanh Thu
+      final Sheet revSheet = excel['Doanh_Thu'];
+      revSheet.appendRow([
+        TextCellValue('Mã Giao Dịch'),
+        TextCellValue('Danh Mục'),
+        TextCellValue('Mô Tả'),
+        TextCellValue('Số Tiền'),
+        TextCellValue('Ngày'),
+        TextCellValue('Hình Thức')
+      ]);
+      for (final tx in controller.revenues) {
+        revSheet.appendRow([
+          TextCellValue(tx.id),
+          TextCellValue(tx.category),
+          TextCellValue(tx.description),
+          DoubleCellValue(tx.amount),
+          TextCellValue(DateFormat('yyyy-MM-dd HH:mm').format(tx.transactionDate)),
+          TextCellValue(tx.paymentMethod)
+        ]);
+      }
+      
+      // Sheet 3: Chi Phí
+      final Sheet expSheet = excel['Chi_Phi'];
+      expSheet.appendRow([
+        TextCellValue('Mã Giao Dịch'),
+        TextCellValue('Danh Mục'),
+        TextCellValue('Mô Tả'),
+        TextCellValue('Số Tiền'),
+        TextCellValue('Ngày'),
+        TextCellValue('Hình Thức')
+      ]);
+      for (final tx in controller.expenses) {
+        expSheet.appendRow([
+          TextCellValue(tx.id),
+          TextCellValue(tx.category),
+          TextCellValue(tx.description),
+          DoubleCellValue(tx.amount),
+          TextCellValue(DateFormat('yyyy-MM-dd HH:mm').format(tx.transactionDate)),
+          TextCellValue(tx.paymentMethod)
+        ]);
+      }
+      
+      // Delete the default sheet if it exists
+      excel.delete('Sheet1');
+      
+      final fileBytes = excel.encode();
+      if (fileBytes != null) {
+        final fileName = 'Bao_Cao_Tai_Chinh_${DateTime.now().year}_${DateTime.now().month}.xlsx';
+        await saveFile(fileBytes, fileName, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Xuất báo cáo tài chính Excel thành công!'),
+              backgroundColor: Colors.green,
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Lỗi khi xuất Excel: $e'),
+            backgroundColor: Colors.redAccent,
+          ),
+        );
+      }
+    }
   }
 
   void _showAddTransactionDialog(String type) {

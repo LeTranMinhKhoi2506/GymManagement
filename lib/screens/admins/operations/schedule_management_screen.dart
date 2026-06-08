@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:excel/excel.dart' hide Border;
+import 'package:intl/intl.dart';
+import '../../../utils/file_saver/file_saver.dart';
+import '../../../data/models/schedule_model.dart';
 import '../../../controllers/schedule_controller.dart';
 import '../../../common/widgets/admin_dashboard_widgets/sidebar_widget.dart';
 import '../../../common/widgets/admin_dashboard_widgets/header_widget.dart';
@@ -66,7 +70,7 @@ class _ScheduleManagementScreenState extends State<ScheduleManagementScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        _buildPageHeader(context),
+                        _buildPageHeader(context, controller),
                         const SizedBox(height: 32),
                         Row(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -109,7 +113,7 @@ class _ScheduleManagementScreenState extends State<ScheduleManagementScreen> {
     );
   }
 
-  Widget _buildPageHeader(BuildContext context) {
+  Widget _buildPageHeader(BuildContext context, ScheduleController controller) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       crossAxisAlignment: CrossAxisAlignment.end,
@@ -141,11 +145,7 @@ class _ScheduleManagementScreenState extends State<ScheduleManagementScreen> {
         Row(
           children: [
             ElevatedButton.icon(
-              onPressed: () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text("Đang xuất nhật ký file CSV...")),
-                );
-              },
+              onPressed: () => _exportWorkLog(controller),
               icon: const Icon(Icons.file_download, size: 18),
               label: const Text("Xuất nhật ký"),
               style: ElevatedButton.styleFrom(
@@ -174,6 +174,72 @@ class _ScheduleManagementScreenState extends State<ScheduleManagementScreen> {
         ),
       ],
     );
+  }
+
+  Future<void> _exportWorkLog(ScheduleController controller) async {
+    try {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Đang trích xuất nhật ký làm việc...'),
+          backgroundColor: Colors.blueAccent,
+          duration: Duration(seconds: 1),
+        ),
+      );
+
+      final List<ScheduleModel> schedules = await controller.schedulesStream.first;
+
+      final excel = Excel.createExcel();
+      final Sheet sheet = excel['Nhat_Ky_Lam_Viec'];
+
+      sheet.appendRow([
+        TextCellValue('Mã Ca'),
+        TextCellValue('ID Nhân Viên'),
+        TextCellValue('Tên Nhân Viên'),
+        TextCellValue('Nhiệm Vụ / Ca làm'),
+        TextCellValue('Bắt Đầu'),
+        TextCellValue('Kết Thúc'),
+        TextCellValue('Trạng Thái')
+      ]);
+
+      for (final s in schedules) {
+        sheet.appendRow([
+          TextCellValue(s.id),
+          TextCellValue(s.staffUid),
+          TextCellValue(s.staffName),
+          TextCellValue(s.task),
+          TextCellValue(DateFormat('yyyy-MM-dd HH:mm').format(s.startTime)),
+          TextCellValue(DateFormat('yyyy-MM-dd HH:mm').format(s.endTime)),
+          TextCellValue(s.status)
+        ]);
+      }
+
+      excel.delete('Sheet1');
+
+      final fileBytes = excel.encode();
+      if (fileBytes != null) {
+        final dateStr = DateFormat('yyyyMMdd').format(controller.selectedDate);
+        final fileName = 'Nhat_Ky_Lam_Viec_$dateStr.xlsx';
+        await saveFile(fileBytes, fileName, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Xuất nhật ký làm việc Excel thành công!'),
+              backgroundColor: Colors.green,
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Lỗi khi xuất nhật ký Excel: $e'),
+            backgroundColor: Colors.redAccent,
+          ),
+        );
+      }
+    }
   }
 
   void _showAddScheduleDialog(BuildContext context) {

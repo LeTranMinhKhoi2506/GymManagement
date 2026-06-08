@@ -1,5 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:go_router/go_router.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 
 import '../../data/models/user_model.dart';
 import '../../screens/PT/pt_class_registration_screen.dart';
@@ -38,6 +39,8 @@ import '../../screens/customer_home/social_feed/user_profile_screen.dart';
 import '../../screens/customer_login/login_screen.dart' as customer_login;
 import '../../screens/customer_login/signup_screen.dart' as customer_signup;
 import '../../screens/forgot_password_screen.dart';
+import '../../screens/admins/auth/admin_login_screen.dart';
+import '../../screens/admins/auth/admin_forgot_password_screen.dart';
 import '../../screens/receptionist/receptionist_checkin_screen.dart';
 import '../../screens/receptionist/receptionist_dashboard_screen.dart';
 import '../../screens/receptionist/receptionist_facility_screen.dart';
@@ -54,6 +57,8 @@ class Routes {
   static const String socialNotifications = '/social-notifications';
   static const String userProfile = '/user-profile';
   static const String forgotPassword = '/forgot-password';
+  static const String adminLogin = '/admin/login';
+  static const String adminForgotPassword = '/admin/forgot-password';
   static const String adminDashboard = '/admin-dashboard';
   static const String personnelManagement = '/personnel-management';
   static const String scheduleManagement = '/schedule-management';
@@ -89,7 +94,7 @@ class Routes {
   static const String receptionistFacility = '/receptionist-facility';
 
   static final GoRouter router = GoRouter(
-    initialLocation: login,
+    initialLocation: kIsWeb ? adminLogin : login,
     redirect: (context, state) {
       final user = FirebaseAuth.instance.currentUser;
       final location = state.matchedLocation;
@@ -98,10 +103,12 @@ class Routes {
               location == customerLogin ||
               location == signup ||
               location == customerSignup ||
-              location == forgotPassword;
+              location == forgotPassword ||
+              location == adminLogin ||
+              location == adminForgotPassword;
 
       if (user == null) {
-        return isAuthPage ? null : login;
+        return isAuthPage ? null : (kIsWeb ? adminLogin : login);
       }
 
       return null;
@@ -145,6 +152,14 @@ class Routes {
       GoRoute(
         path: forgotPassword,
         builder: (context, state) => const ForgotPasswordScreen(),
+      ),
+      GoRoute(
+        path: adminLogin,
+        builder: (context, state) => const AdminLoginScreen(),
+      ),
+      GoRoute(
+        path: adminForgotPassword,
+        builder: (context, state) => const AdminForgotPasswordScreen(),
       ),
       GoRoute(
         path: adminDashboard,

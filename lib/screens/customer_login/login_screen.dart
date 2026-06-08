@@ -90,6 +90,27 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
+  Future<void> _loginWithGoogle() async {
+    final authController = context.read<AuthController>();
+    final result = await authController.signInWithGoogle();
+
+    if (!mounted) return;
+
+    if (result['status'] == 'success') {
+      final user = authController.currentUser;
+      final targetRoute =
+          (result['route'] as String?) ?? Routes.dashboardForUser(user);
+
+      context.go(targetRoute);
+      _showSnackBar('Chào mừng ${user?.fullName ?? 'bạn'}!', Colors.green);
+    } else {
+      _showSnackBar(
+        result['message']?.toString() ?? 'Đăng nhập Google thất bại',
+        Colors.red,
+      );
+    }
+  }
+
   void _showSnackBar(String message, Color color) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -119,13 +140,13 @@ class _LoginScreenState extends State<LoginScreen> {
                 const SizedBox(height: 58),
                 AuthTextField(
                   controller: _emailController,
-                  hint: 'Email Address',
+                  hint: 'Địa chỉ Email',
                   keyboardType: TextInputType.emailAddress,
                 ),
                 const SizedBox(height: 18),
                 AuthTextField(
                   controller: _passwordController,
-                  hint: 'Password',
+                  hint: 'Mật khẩu',
                   obscureText: _obscurePassword,
                   suffix: IconButton(
                     onPressed: () {
@@ -154,7 +175,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                 .resetPassword(email);
                             if (!context.mounted) return;
                             if (message == 'success') {
-                              _showSnackBar(
+                               _showSnackBar(
                                 'Đã gửi email đặt lại mật khẩu.',
                                 Colors.green,
                               );
@@ -166,7 +187,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             }
                           },
                     child: const Text(
-                      'Forgot Password?',
+                      'Quên mật khẩu?',
                       style: TextStyle(
                         color: AppColors.primarySoft,
                         fontSize: 16,
@@ -177,29 +198,19 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
                 const SizedBox(height: 16),
                 PrimaryButton(
-                  text: 'SIGN IN',
+                  text: 'ĐĂNG NHẬP',
                   loading: loading,
                   onPressed: loading ? null : _submit,
                 ),
                 const SizedBox(height: 52),
-                const DividerText(text: 'OR CONTINUE WITH'),
+                const DividerText(text: 'HOẶC TIẾP TỤC VỚI'),
                 const SizedBox(height: 32),
                 Row(
                   children: [
                     SocialButton(
                       label: 'Google',
                       leading: const GoogleMark(),
-                      onTap: () {},
-                    ),
-                    const SizedBox(width: 16),
-                    SocialButton(
-                      label: 'Apple',
-                      leading: const Icon(
-                        Icons.apple,
-                        color: AppColors.text,
-                        size: 30,
-                      ),
-                      onTap: () {},
+                      onTap: loading ? () {} : _loginWithGoogle,
                     ),
                   ],
                 ),
@@ -208,13 +219,13 @@ class _LoginScreenState extends State<LoginScreen> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     const Text(
-                      "Don't have an account? ",
+                      "Chưa có tài khoản? ",
                       style: TextStyle(color: Color(0xFF9E9E9E), fontSize: 16),
                     ),
                     GestureDetector(
                       onTap: () => context.push(Routes.customerSignup),
                       child: const Text(
-                        'Sign Up',
+                        'Đăng ký',
                         style: TextStyle(
                           color: AppColors.primarySoft,
                           fontSize: 16,

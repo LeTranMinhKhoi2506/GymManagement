@@ -1,13 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:go_router/go_router.dart';
 import '../../app/theme/app_theme.dart';
-import '../../app/route/routes.dart';
 import '../../provider/auth_provider.dart';
 import '../../widget/loginAndSignInWidget/auth_background.dart';
 import '../../widget/loginAndSignInWidget/auth_text_field.dart';
 import '../../widget/loginAndSignInWidget/primary_button.dart';
-import '../../widget/loginAndSignInWidget/status_card.dart';
 import '../../widget/loginAndSignInWidget/step_indicator.dart';
 
 class SignUpScreen extends StatelessWidget {
@@ -47,7 +44,7 @@ class SignUpScreen extends StatelessWidget {
               ),
               const SizedBox(height: 40),
               const Text(
-                'CREATE\nACCOUNT',
+                'TẠO\nTÀI KHOẢN',
                 style: TextStyle(
                   fontSize: 40,
                   fontWeight: FontWeight.w900,
@@ -61,7 +58,7 @@ class SignUpScreen extends StatelessWidget {
               const SizedBox(
                 width: 320,
                 child: Text(
-                  'Join the kinetic movement and track your elite performance.',
+                  'Tham gia cùng Kinetic và theo dõi hiệu suất vượt trội của bạn.',
                   style: TextStyle(
                     color: Color(0xFFADADAD),
                     fontSize: 18,
@@ -72,30 +69,30 @@ class SignUpScreen extends StatelessWidget {
               const SizedBox(height: 34),
               AuthTextField(
                 controller: provider.signUpNameController,
-                label: 'FULL NAME',
-                hint: 'ALEX RIVERA',
+                label: 'HỌ VÀ TÊN',
+                hint: 'NGUYỄN VĂN A',
                 suffix: const Icon(Icons.person, color: Color(0xFF696969)),
               ),
               const SizedBox(height: 22),
               AuthTextField(
                 controller: provider.signUpEmailController,
-                label: 'EMAIL ADDRESS',
-                hint: 'ALEX@KINETIC.APP',
+                label: 'ĐỊA CHỈ EMAIL',
+                hint: 'NGUYEN@KINETIC.VN',
                 keyboardType: TextInputType.emailAddress,
                 suffix: const Icon(Icons.alternate_email, color: Color(0xFF696969)),
               ),
               const SizedBox(height: 22),
               AuthTextField(
                 controller: provider.signUpPhoneController,
-                label: 'PHONE NUMBER',
-                hint: '+1 (555) 000-0000',
+                label: 'SỐ ĐIỆN THOẠI',
+                hint: '0901234567',
                 keyboardType: TextInputType.phone,
                 suffix: const Icon(Icons.smartphone, color: Color(0xFF696969)),
               ),
               const SizedBox(height: 22),
               AuthTextField(
                 controller: provider.signUpPasswordController,
-                label: 'PASSWORD',
+                label: 'MẬT KHẨU',
                 hint: '••••••••••••',
                 obscureText: hidden,
                 suffix: IconButton(
@@ -136,7 +133,7 @@ class SignUpScreen extends StatelessWidget {
                           TextSpan(
                             children: [
                               TextSpan(
-                                text: 'I agree to the ',
+                                text: 'Tôi đồng ý với ',
                                 style: TextStyle(
                                   color: Color(0xFFCCCCCC),
                                   fontSize: 16,
@@ -144,7 +141,7 @@ class SignUpScreen extends StatelessWidget {
                                 ),
                               ),
                               TextSpan(
-                                text: 'Terms & Conditions',
+                                text: 'Điều khoản & Điều kiện',
                                 style: TextStyle(
                                   color: AppColors.text,
                                   fontWeight: FontWeight.w800,
@@ -153,14 +150,15 @@ class SignUpScreen extends StatelessWidget {
                                 ),
                               ),
                               TextSpan(
-                                text: ' and ',
+                                text: ' và ',
                                 style: TextStyle(
                                   color: Color(0xFFCCCCCC),
                                   fontSize: 16,
+                                  height: 1.5,
                                 ),
                               ),
                               TextSpan(
-                                text: 'Privacy Policy.',
+                                text: 'Chính sách bảo mật.',
                                 style: TextStyle(
                                   color: AppColors.text,
                                   fontWeight: FontWeight.w800,
@@ -178,7 +176,7 @@ class SignUpScreen extends StatelessWidget {
               ),
               const SizedBox(height: 28),
               PrimaryButton(
-                text: 'CONTINUE',
+                text: 'TIẾP TỤC',
                 icon: Icons.arrow_forward,
                 loading: loading,
                 onPressed: () => provider.continueSignUp(context),
@@ -188,13 +186,13 @@ class SignUpScreen extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   const Text(
-                    'Already have an account? ',
+                    'Đã có tài khoản? ',
                     style: TextStyle(color: Color(0xFF9E9E9E), fontSize: 16),
                   ),
                   GestureDetector(
                     onTap: () => Navigator.pop(context),
                     child: const Text(
-                      'LOG IN',
+                      'ĐĂNG NHẬP',
                       style: TextStyle(
                         color: AppColors.orange,
                         fontSize: 16,
@@ -204,8 +202,6 @@ class SignUpScreen extends StatelessWidget {
                   ),
                 ],
               ),
-              const SizedBox(height: 34),
-              const StatusCard(),
             ],
           ),
         ),

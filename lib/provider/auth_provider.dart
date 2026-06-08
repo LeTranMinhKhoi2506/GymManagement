@@ -75,7 +75,7 @@ class AuthProvider extends ChangeNotifier {
       _showSnackBar(context, _mapFirebaseAuthError(e));
     } catch (_) {
       if (!context.mounted) return false;
-      _showSnackBar(context, 'Dang nhap that bai. Vui long thu lai.');
+      _showSnackBar(context, 'Đăng nhập thất bại. Vui lòng thử lại.');
     } finally {
       _setLoading(false);
     }
@@ -118,13 +118,13 @@ class AuthProvider extends ChangeNotifier {
       loginPasswordController.text = password;
 
       if (!context.mounted) return;
-      _showSnackBar(context, 'Tao tai khoan thanh cong. Ban da san sang dang nhap.');
+      _showSnackBar(context, 'Tạo tài khoản thành công. Bạn đã sẵn sàng đăng nhập.');
     } on FirebaseAuthException catch (e) {
       if (!context.mounted) return;
       _showSnackBar(context, _mapFirebaseAuthError(e));
     } catch (_) {
       if (!context.mounted) return;
-      _showSnackBar(context, 'Dang ky that bai. Vui long thu lai.');
+      _showSnackBar(context, 'Đăng ký thất bại. Vui lòng thử lại.');
     } finally {
       _setLoading(false);
     }
@@ -133,7 +133,7 @@ class AuthProvider extends ChangeNotifier {
   Future<void> sendPasswordReset(BuildContext context) async {
     final email = loginEmailController.text.trim();
     if (!_isValidEmail(email)) {
-      _showSnackBar(context, 'Vui long nhap email hop le de lay lai mat khau.');
+      _showSnackBar(context, 'Vui lòng nhập email hợp lệ để lấy lại mật khẩu.');
       return;
     }
 
@@ -141,13 +141,13 @@ class AuthProvider extends ChangeNotifier {
     try {
       await _authService.sendPasswordResetEmail(email);
       if (!context.mounted) return;
-      _showSnackBar(context, 'Da gui email dat lai mat khau.');
+      _showSnackBar(context, 'Đã gửi email đặt lại mật khẩu.');
     } on FirebaseAuthException catch (e) {
       if (!context.mounted) return;
       _showSnackBar(context, _mapFirebaseAuthError(e));
     } catch (_) {
       if (!context.mounted) return;
-      _showSnackBar(context, 'Khong the gui email luc nay.');
+      _showSnackBar(context, 'Không thể gửi email lúc này.');
     } finally {
       _setLoading(false);
     }
@@ -160,10 +160,10 @@ class AuthProvider extends ChangeNotifier {
 
   String? _validateLogin({required String email, required String password}) {
     if (!_isValidEmail(email)) {
-      return 'Email khong hop le.';
+      return 'Email không hợp lệ.';
     }
     if (password.isEmpty) {
-      return 'Vui long nhap mat khau.';
+      return 'Vui lòng nhập mật khẩu.';
     }
     return null;
   }
@@ -175,19 +175,19 @@ class AuthProvider extends ChangeNotifier {
     required String password,
   }) {
     if (fullName.length < 2) {
-      return 'Ho ten toi thieu 2 ky tu.';
+      return 'Họ tên tối thiểu 2 ký tự.';
     }
     if (!_isValidEmail(email)) {
-      return 'Email khong hop le.';
+      return 'Email không hợp lệ.';
     }
     if (!_isValidPhone(phone)) {
-      return 'So dien thoai khong hop le.';
+      return 'Số điện thoại không hợp lệ.';
     }
     if (password.length < 6) {
-      return 'Mat khau phai co it nhat 6 ky tu.';
+      return 'Mật khẩu phải có ít nhất 6 ký tự.';
     }
     if (!_agreeTerms) {
-      return 'Ban can dong y Terms & Privacy Policy.';
+      return 'Bạn cần đồng ý với Điều khoản & Chính sách bảo mật.';
     }
     return null;
   }
@@ -207,21 +207,21 @@ class AuthProvider extends ChangeNotifier {
   String _mapFirebaseAuthError(FirebaseAuthException e) {
     switch (e.code) {
       case 'invalid-email':
-        return 'Email khong dung dinh dang.';
+        return 'Email không đúng định dạng.';
       case 'user-not-found':
       case 'wrong-password':
       case 'invalid-credential':
-        return 'Sai email hoac mat khau.';
+        return 'Sai email hoặc mật khẩu.';
       case 'email-already-in-use':
-        return 'Email nay da ton tai.';
+        return 'Email này đã tồn tại.';
       case 'weak-password':
-        return 'Mat khau qua yeu.';
+        return 'Mật khẩu quá yếu.';
       case 'too-many-requests':
-        return 'Ban thao tac qua nhanh. Vui long thu lai sau.';
+        return 'Bạn thao tác quá nhanh. Vui lòng thử lại sau.';
       case 'network-request-failed':
-        return 'Loi ket noi mang. Vui long kiem tra Internet.';
+        return 'Lỗi kết nối mạng. Vui lòng kiểm tra Internet.';
       default:
-        return e.message ?? 'Da co loi xay ra.';
+        return e.message ?? 'Đã có lỗi xảy ra.';
     }
   }
 

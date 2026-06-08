@@ -1,5 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:google_sign_in/google_sign_in.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import '../models/user_model.dart';
 import 'dart:developer' as dev;
 
@@ -21,6 +23,34 @@ class AuthRepository {
   // Đăng nhập
   Future<UserCredential> signIn(String email, String password) async {
     return await _auth.signInWithEmailAndPassword(email: email, password: password);
+  }
+
+  // Đăng nhập bằng Google
+  Future<UserCredential> signInWithGoogle() async {
+    try {
+      if (kIsWeb) {
+        GoogleAuthProvider googleProvider = GoogleAuthProvider();
+        return await _auth.signInWithPopup(googleProvider);
+      } else {
+        final GoogleSignIn googleSignIn = GoogleSignIn();
+        final GoogleSignInAccount? googleUser = await googleSignIn.signIn();
+        if (googleUser == null) {
+          throw FirebaseAuthException(
+            code: 'ERROR_ABORTED_BY_USER',
+            message: 'Đăng nhập Google bị hủy bởi người dùng.',
+          );
+        }
+        final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
+        final AuthCredential credential = GoogleAuthProvider.credential(
+          accessToken: googleAuth.accessToken,
+          idToken: googleAuth.idToken,
+        );
+        return await _auth.signInWithCredential(credential);
+      }
+    } catch (e) {
+      dev.log("AuthRepository - signInWithGoogle error: $e");
+      rethrow;
+    }
   }
 
   // Quên mật khẩu

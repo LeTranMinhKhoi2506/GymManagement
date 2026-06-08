@@ -66,6 +66,57 @@ class AuthController extends ChangeNotifier {
     }
   }
 
+  // Đăng nhập bằng Google
+  Future<Map<String, dynamic>> signInWithGoogle() async {
+    _setLoading(true);
+    try {
+      UserCredential result = await _repository.signInWithGoogle();
+      User? user = result.user;
+
+      if (user != null) {
+        _currentUser = await _repository.getUserData(user.uid);
+
+        if (_currentUser == null) {
+          _currentUser = UserModel(
+            uid: user.uid,
+            email: user.email ?? "",
+            fullName: user.displayName ?? "User từ Google",
+            role: kIsWeb ? 'admin' : 'user',
+          );
+          await _repository.saveUserData(_currentUser!);
+        }
+
+        // Ghi lại Session đăng nhập (Session Management)
+        await _sessionRepository.logSession(
+          SessionModel(
+            id: '',
+            userId: _currentUser!.uid,
+            userName: _currentUser!.fullName,
+            device: kIsWeb ? "Web Browser" : "Mobile App",
+            ipAddress: "192.168.1.1",
+            loginAt: DateTime.now(),
+          ),
+        );
+
+        _setLoading(false);
+        notifyListeners();
+        return {
+          "status": "success",
+          "user": _currentUser,
+          "route": _resolveLandingRoute(_currentUser),
+        };
+      }
+      _setLoading(false);
+      return {"status": "error", "message": "Không thể lấy thông tin đăng nhập Google."};
+    } on FirebaseAuthException catch (e) {
+      _setLoading(false);
+      return {"status": "error", "message": e.message};
+    } catch (e) {
+      _setLoading(false);
+      return {"status": "error", "message": e.toString()};
+    }
+  }
+
   // Đăng ký
   Future<String?> signUp({
     required String email,

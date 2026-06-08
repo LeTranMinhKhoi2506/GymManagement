@@ -1,10 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
-import 'package:csv/csv.dart';
-import 'package:share_plus/share_plus.dart';
-import 'dart:io';
-import 'package:path_provider/path_provider.dart';
 import '../../../controllers/membership_controller.dart';
 import '../../../controllers/customer_controller.dart';
 import '../../../controllers/admin_controller.dart';
@@ -55,39 +51,7 @@ class _MembershipManagementScreenState extends State<MembershipManagementScreen>
     super.dispose();
   }
 
-  // Hàm xuất file CSV chuyên nghiệp
-  Future<void> _exportToCSV(List<MembershipPlan> plans) async {
-    if (plans.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Không có dữ liệu để xuất")),
-      );
-      return;
-    }
 
-    List<List<dynamic>> rows = [];
-    // Tiêu đề cột
-    rows.add(["ID", "Tên gói", "Mô tả", "Giá (VNĐ)", "Thời hạn (Tháng)", "Có PT", "Trạng thái"]);
-
-    for (var plan in plans) {
-      rows.add([
-        plan.id,
-        plan.name,
-        plan.description,
-        plan.price,
-        plan.durationMonths,
-        plan.hasPT ? "Có" : "Không",
-        plan.isActive ? "Hoạt động" : "Lưu trữ"
-      ]);
-    }
-
-    String csvContent = const ListToCsvConverter().convert(rows);
-    final directory = await getTemporaryDirectory();
-    final path = "${directory.path}/danh_sach_goi_tap_${DateTime.now().millisecondsSinceEpoch}.csv";
-    final file = File(path);
-    await file.writeAsString(csvContent);
-
-    await Share.shareXFiles([XFile(path)], text: 'Dữ liệu gói tập Gym');
-  }
 
   void _showFilterDialog(BuildContext context) {
     final controller = context.read<MembershipController>();
@@ -287,8 +251,6 @@ class _MembershipManagementScreenState extends State<MembershipManagementScreen>
             ),
             const SizedBox(width: 12),
             _buildActionIcon(Icons.filter_list, () => _showFilterDialog(context), "Lọc & Sắp xếp"),
-            const SizedBox(width: 12),
-            _buildActionIcon(Icons.download, () => _exportToCSV(controller.plans), "Xuất CSV"),
           ],
         ),
       ],
