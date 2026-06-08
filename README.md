@@ -84,7 +84,7 @@ Sau khi kết nối và nạp dữ liệu mẫu vào Firebase, bạn có thể s
 | **pt.hung@kinetic.com** | `123456` | **trainer** | Giao diện Huấn luyện viên cá nhân (Theo dõi lịch dạy, danh sách học viên phụ trách). |
 | **customer.minh@gmail.com** | `123456` | **user** | Đăng nhập App di động dành cho hội viên (Đặt lịch, mua gói tập, xem tin tức). |
 
-*Chú ý:* Khi liên kết với dự án Firebase mới hoàn toàn trống, các tài khoản trên chưa tồn tại trong Firebase Authentication của bạn. Để kích hoạt tài khoản Admin đầu tiên và gieo mầm dữ liệu hệ thống, hãy thực hiện một trong hai cách dưới đây:
+*Chú ý:* Khi liên kết với dự án Firebase mới hoàn toàn trống, các tài khoản trên chưa tồn tại trong Firebase Authentication của bạn. Để kích hoạt tài khoản Admin đầu tiên và seed data cho hệ thống, hãy thực hiện một trong hai cách dưới đây:
 
 #### Cách 1: Đăng ký qua ứng dụng di động và nâng quyền trong Firestore Console (Khuyên dùng)
 1. **Đăng ký**: Mở ứng dụng khách hàng (Mobile) và đăng ký một tài khoản mới bằng email (ví dụ: `admin@kinetic.com`).
